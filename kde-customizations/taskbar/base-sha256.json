@@ -1,0 +1,13 @@
+{
+  "modules/bar/Bar.qml": "61b98b7d7bcc4aa49119c0f86ef7fda6ae0bbd06835181c33d16b38bccb3105f",
+  "modules/bar/components/Dock.qml": "3fc68562c241392fa19452927b0c960ceecc21e48dd2079f679a809c59e2614b",
+  "modules/bar/popouts/ClipWrapper.qml": "61c910854f68551103b30bc090e13ec319bd47d54b02e3e382e07f443e41603c",
+  "modules/bar/popouts/Content.qml": "553d71901e69c1981a136e2ca1aa97b417c40c2dcc9504028f1b9dc0f2d36b57",
+  "modules/drawers/ContentWindow.qml": "8706eaa8b1e945cec929663af8031142f3821c9105a242330de0c3e35a8da1f1",
+  "modules/drawers/Drawers.qml": "ec83046de62153afe90f4bb37d6a257c09a2bfcd057f7ea603fd040c4d1875d2",
+  "modules/drawers/Exclusions.qml": "576762f1c037473391d5eabf499a01280992922342b2135f92190f0a11db2ae1",
+  "modules/drawers/Interactions.qml": "a1f26a7ec27155b2d2bd155ed0d21c13c08e2051fa386ab8948f853ccd115e0d",
+  "modules/drawers/Regions.qml": "1369be6d6ad61d4c44c4597483cac21ad77d0b4195695b067206091cc4206758",
+  "modules/nexus/PageDictionary.qml": "fc34c74c2e7bc79aeae87a1abe78ad706a42b844ccaad576b5f5a2c3d4a019b2",
+  "modules/nexus/pages/panels/TaskbarPanel.qml": "fe959761ed1535c2fde2266b6af8f4ba76d299bb439eb337e138a1911981a09e"
+}

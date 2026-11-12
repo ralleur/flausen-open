@@ -1,0 +1,29 @@
+.cache/
+dist/
+**/__pycache__/
+ralleur-desktop/build/
+*.zip
+*.png
+!ralleur-caelestia-codex-handoff/reference/*.png
+!ralleur-desktop/evidence/*.png
+!ralleur-desktop/assets/wallpapers/*.png
+
+!kde-customizations/taskbar/evidence/topbar-detail.png
+!kde-customizations/taskbar/evidence/dock-detail.png
+!kde-customizations/taskbar/evidence/scaling-settings.png
+
+!branding/flausen/**/*.png
+
+# Reviewed showcase captures, cards and the selected presentation background.
+!showcase/**/*.png
+
+# Lokale Dolphin-Ordnerdarstellung
+.directory
+
+# Vom Nutzer geliefertes Task-Manager-Logo.
+!kde-customizations/task-manager/icon.png
+
+# 4K-Wallpaper für die drei System-Sets.
+!kde-customizations/wallpapers/png/*.png
+!kde-customizations/wallpapers/flausen/dark/png/*.png
+!kde-customizations/wallpapers/flausen/light/png/*.png

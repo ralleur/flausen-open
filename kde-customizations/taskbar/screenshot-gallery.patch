@@ -1,0 +1,505 @@
+--- modules/bar/popouts/ScreenCapture.qml
++++ modules/bar/popouts/ScreenCapture.qml
+@@ -31,6 +31,7 @@
+     PersistentProperties {
+         id: cardProps
+ 
++        property bool screenshotListExpanded: false
+         property string captureMode: "shot"
+         property string recordingMode
+     }
+--- modules/utilities/cards/ScreenshotList.qml
++++ modules/utilities/cards/ScreenshotList.qml
+@@ -1,18 +1,16 @@
+ pragma ComponentBehavior: Bound
+ 
+ import QtQuick
++import QtQuick.Controls
+ import QtQuick.Layouts
+ import Qt.labs.folderlistmodel
+ import Quickshell
+-import Quickshell.Widgets
++import Quickshell.Io
+ import Caelestia
+ import Caelestia.Config
+-import Caelestia.Models
+ import qs.components
+-import qs.components.containers
+ import qs.components.controls
+ import qs.services
+-import qs.utils
+ 
+ ColumnLayout {
+     id: root
+@@ -21,256 +19,234 @@
+     required property DrawerVisibilities visibilities
+ 
+     property string confirmDelete: ""
++    property string pendingCopy: ""
++    property string feedback: ""
+     readonly property string shotsdir: GlobalConfig.paths.screenshotsDir
+-
+-    spacing: 0
+-
+-    WrapperMouseArea {
++    spacing: Tokens.spacing.small
++
++    function openImage(path: string): void {
++        clickTimer.stop();
++        root.pendingCopy = "";
++        root.visibilities.utilities = false;
++        if (!Visibilities.sidebarPinned)
++            root.visibilities.sidebar = false;
++        Quickshell.execDetached(["xdg-open", path]);
++    }
++
++    function queueCopy(path: string): void {
++        root.pendingCopy = path;
++        clickTimer.restart();
++    }
++
++    Timer {
++        id: clickTimer
++        // Wait for the double-click window so opening does not also copy.
++        interval: Qt.styleHints.mouseDoubleClickInterval
++        onTriggered: {
++            if (!copyProcess.running) {
++                copyProcess.command = ["bash", "-c", 'wl-copy --type image/png < "$1"', "screenshot-gallery", root.pendingCopy];
++                copyProcess.running = true;
++            }
++        }
++    }
++
++    Process {
++        id: copyProcess
++        onExited: (exitCode, exitStatus) => {
++            root.feedback = exitCode === 0 ? qsTr("Image copied") : qsTr("Could not copy image");
++            feedbackTimer.restart();
++        }
++    }
++
++    Timer {
++        id: feedbackTimer
++        interval: 2200
++        onTriggered: root.feedback = ""
++    }
++
++    RowLayout {
+         Layout.fillWidth: true
+-
+-        cursorShape: Qt.PointingHandCursor
+-        onClicked: root.props.screenshotListExpanded = !root.props.screenshotListExpanded
+-
+-        RowLayout {
+-            spacing: Tokens.spacing.medium
+-
+-            MaterialIcon {
+-                Layout.alignment: Qt.AlignVCenter
+-                text: "list"
+-                fontStyle: Tokens.font.icon.large
+-            }
+-
+-            StyledText {
+-                Layout.alignment: Qt.AlignVCenter
+-                Layout.fillWidth: true
+-                text: qsTr("Screenshots")
+-                font: Tokens.font.body.medium
+-            }
+-
+-            IconButton {
+-                icon: root.props.screenshotListExpanded ? "unfold_less" : "unfold_more"
+-                type: IconButton.Text
+-                label.animate: true
+-                onClicked: root.props.screenshotListExpanded = !root.props.screenshotListExpanded
+-            }
+-        }
+-    }
+-
+-    StyledListView {
+-        id: list
+-
++        spacing: Tokens.spacing.small
++
++        MaterialIcon {
++            text: root.feedback ? "check_circle" : "photo_library"
++            color: root.feedback ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
++        }
++
++        StyledText {
++            Layout.fillWidth: true
++            text: root.feedback || qsTr("Screenshots")
++            font: Tokens.font.body.medium
++            color: root.feedback ? Colours.palette.m3primary : Colours.palette.m3onSurface
++            elide: Text.ElideRight
++        }
++
++        IconButton {
++            icon: "folder_open"
++            type: IconButton.Text
++            ToolTip.visible: hovered
++            ToolTip.text: qsTr("Open screenshots folder")
++            onClicked: Quickshell.execDetached(["xdg-open", root.shotsdir])
++        }
++
++        IconButton {
++            icon: root.props.screenshotListExpanded ? "unfold_less" : "unfold_more"
++            type: IconButton.Text
++            label.animate: true
++            onClicked: root.props.screenshotListExpanded = !root.props.screenshotListExpanded
++        }
++    }
++
++    GridView {
++        id: gallery
++
++        readonly property int columns: width >= 460 ? 3 : 2
++        readonly property real tileHeight: cellWidth * 0.62 + 32
+         model: FolderListModel {
+             folder: "file://" + root.shotsdir
+-            nameFilters: ["screenshot-*.png"]
++            nameFilters: ["*.png"]
++            showDirs: false
+             sortField: FolderListModel.Time
+             sortReversed: false
+         }
+ 
+         Layout.fillWidth: true
+-        Layout.rightMargin: -Tokens.spacing.small
+-        implicitHeight: (Tokens.font.body.large.pointSize + Tokens.padding.small) * (root.props.screenshotListExpanded ? 10 : 3)
++        implicitHeight: Math.max(64, Math.min(Math.ceil(count / columns), root.props.screenshotListExpanded ? 4 : 2) * cellHeight)
++        cellWidth: width / columns
++        cellHeight: tileHeight + Tokens.spacing.small
+         clip: true
+-
+-        StyledScrollBar.vertical: StyledScrollBar {
+-            flickable: list
+-        }
+-
+-        delegate: RowLayout {
++        boundsBehavior: Flickable.StopAtBounds
++        cacheBuffer: cellHeight
++
++        ScrollBar.vertical: StyledScrollBar { flickable: gallery }
++
++        delegate: Item {
+             id: shot
+-
+-            required property string fileBaseName
++            required property string fileName
+             required property string filePath
+-
+-            property string baseName: fileBaseName
+-            property string path: filePath
+-            property bool confirming: root.confirmDelete === path
+-
+-            anchors.left: list.contentItem.left
+-            anchors.right: list.contentItem.right
+-            anchors.rightMargin: Tokens.spacing.small
+-            spacing: Tokens.spacing.extraSmall
+-
+-            StyledText {
+-                Layout.fillWidth: true
+-                Layout.rightMargin: Tokens.spacing.extraSmall
+-                visible: !shot.confirming
+-                text: {
+-                    const time = shot.baseName;
+-                    const matches = time.match(/^screenshot-(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})/);
+-                    if (!matches)
+-                        return time;
+-                    const date = new Date(matches[1], matches[2] - 1, matches[3], matches[4], matches[5], matches[6]);
+-                    return qsTr("Screenshot at %1").arg(Qt.formatDateTime(date, Qt.locale()));
+-                }
+-                color: Colours.palette.m3onSurfaceVariant
+-                elide: Text.ElideRight
++            required property url fileUrl
++            readonly property bool confirming: root.confirmDelete === filePath
++            width: gallery.cellWidth
++            height: gallery.cellHeight
++
++            StyledRect {
++                anchors.fill: parent
++                anchors.rightMargin: Tokens.spacing.small
++                anchors.bottomMargin: Tokens.spacing.small
++                radius: Tokens.rounding.small
++                color: pointer.containsMouse ? Colours.palette.m3surfaceContainerHigh : Colours.palette.m3surfaceContainerLow
++                clip: true
++
++                Image {
++                    id: preview
++                    anchors.left: parent.left
++                    anchors.right: parent.right
++                    anchors.top: parent.top
++                    anchors.margins: Tokens.padding.extraSmall
++                    height: parent.height - 32 - Tokens.padding.extraSmall
++                    source: shot.fileUrl
++                    sourceSize.width: 420
++                    sourceSize.height: 260
++                    asynchronous: true
++                    fillMode: Image.PreserveAspectFit
++                }
++
++                MaterialIcon {
++                    anchors.centerIn: preview
++                    visible: preview.status !== Image.Ready
++                    text: preview.status === Image.Error ? "broken_image" : "image"
++                    color: Colours.palette.m3outline
++                }
++
++                MouseArea {
++                    id: pointer
++                    anchors.fill: parent
++                    hoverEnabled: true
++                    cursorShape: Qt.PointingHandCursor
++                    enabled: !shot.confirming
++                    onClicked: root.queueCopy(shot.filePath)
++                    onDoubleClicked: root.openImage(shot.filePath)
++                    ToolTip.visible: containsMouse
++                    ToolTip.delay: 900
++                    ToolTip.text: qsTr("Click to copy · Double-click to open") + "\n" + shot.fileName
++                }
++
++                RowLayout {
++                    anchors.left: parent.left
++                    anchors.right: parent.right
++                    anchors.bottom: parent.bottom
++                    anchors.leftMargin: Tokens.padding.small
++                    height: 32
++                    spacing: 0
++
++                    StyledText {
++                        Layout.fillWidth: true
++                        text: {
++                            const match = shot.fileName.match(/^screenshot-(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})/);
++                            return match ? `${match[3]}.${match[2]}. ${match[4]}:${match[5]}` : shot.fileName;
++                        }
++                        font: Tokens.font.label.small
++                        color: Colours.palette.m3onSurfaceVariant
++                        elide: Text.ElideRight
++                    }
++
++                    IconButton {
++                        icon: "delete_outline"
++                        type: IconButton.Text
++                        font: Tokens.font.icon.small
++                        onClicked: {
++                            clickTimer.stop();
++                            root.confirmDelete = shot.filePath;
++                        }
++                    }
++                }
++
++                StyledRect {
++                    anchors.fill: parent
++                    visible: shot.confirming
++                    color: Colours.palette.m3surfaceContainerHigh
++                    radius: parent.radius
++                    MouseArea { anchors.fill: parent }
++                    ColumnLayout {
++                        anchors.centerIn: parent
++                        width: parent.width - Tokens.padding.small * 2
++                        spacing: Tokens.spacing.small
++                        StyledText {
++                            Layout.fillWidth: true
++                            text: qsTr("Delete this screenshot?")
++                            font: Tokens.font.label.small
++                            wrapMode: Text.Wrap
++                            horizontalAlignment: Text.AlignHCenter
++                        }
++                        RowLayout {
++                            Layout.alignment: Qt.AlignHCenter
++                            IconButton {
++                                icon: "close"
++                                type: IconButton.Text
++                                onClicked: root.confirmDelete = ""
++                            }
++                            IconButton {
++                                icon: "delete_forever"
++                                type: IconButton.Text
++                                label.color: Colours.palette.m3error
++                                onClicked: {
++                                    CUtils.deleteFile(shot.fileUrl);
++                                    root.confirmDelete = "";
++                                }
++                            }
++                        }
++                    }
++                }
+             }
+-
+-            IconButton {
+-                visible: !shot.confirming
+-                icon: "play_arrow"
+-                type: IconButton.Text
+-                onClicked: {
+-                    root.visibilities.utilities = false;
+-                    if (!Visibilities.sidebarPinned)
+-                        root.visibilities.sidebar = false;
+-                    Quickshell.execDetached(["xdg-open", shot.path]);
+-                }
+-            }
+-
+-            IconButton {
+-                visible: !shot.confirming
+-                icon: "folder"
+-                type: IconButton.Text
+-                onClicked: {
+-                    root.visibilities.utilities = false;
+-                    if (!Visibilities.sidebarPinned)
+-                        root.visibilities.sidebar = false;
+-                    Quickshell.execDetached(["xdg-open", root.shotsdir]);
+-                }
+-            }
+-
+-            IconButton {
+-                visible: !shot.confirming
+-                icon: "delete_forever"
+-                type: IconButton.Text
+-                label.color: Colours.palette.m3error
+-                stateLayer.color: Colours.palette.m3error
+-                onClicked: root.confirmDelete = shot.path
+-            }
+-
+-            StyledText {
+-                Layout.fillWidth: true
+-                visible: shot.confirming
+-                text: qsTr("Delete this screenshot?")
+-                color: Colours.palette.m3onSurfaceVariant
+-                elide: Text.ElideRight
+-            }
+-
+-            TextButton {
+-                visible: shot.confirming
+-                text: qsTr("Cancel")
+-                type: TextButton.Text
+-                onClicked: root.confirmDelete = ""
+-            }
+-
+-            TextButton {
+-                visible: shot.confirming
+-                text: qsTr("Delete")
+-                type: TextButton.Text
+-                onClicked: {
+-                    CUtils.deleteFile(Qt.resolvedUrl(shot.path));
+-                    root.confirmDelete = "";
+-                }
+-            }
+-        }
+-
+-        add: Transition {
+-            Anim {
+-                type: Anim.DefaultEffects
+-                property: "opacity"
+-                from: 0
+-                to: 1
+-            }
+-        }
+-
+-        remove: Transition {
+-            Anim {
+-                type: Anim.DefaultEffects
+-                property: "opacity"
+-                to: 0
+-            }
+-        }
+-
+-        displaced: Transition {
+-            Anim {
+-                type: Anim.DefaultEffects
+-                property: "opacity"
+-                to: 1
+-            }
+-            Anim {
+-                property: "y"
+-            }
+-        }
+-
+-        Loader {
+-            asynchronous: true
++        }
++
++        StyledText {
+             anchors.centerIn: parent
+-
+-            opacity: list.count === 0 ? 1 : 0
+-            active: opacity > 0
+-
+-            sourceComponent: ColumnLayout {
+-                spacing: Tokens.spacing.small
+-
+-                MaterialIcon {
+-                    Layout.alignment: Qt.AlignHCenter
+-                    text: "scan_delete"
+-                    color: Colours.palette.m3outline
+-                    fontStyle: Tokens.font.icon.extraLarge
+-
+-                    opacity: root.props.screenshotListExpanded ? 1 : 0
+-                    scale: root.props.screenshotListExpanded ? 1 : 0
+-                    Layout.preferredHeight: root.props.screenshotListExpanded ? implicitHeight : 0
+-
+-                    Behavior on opacity {
+-                        Anim {
+-                            type: Anim.DefaultEffects
+-                        }
+-                    }
+-
+-                    Behavior on scale {
+-                        Anim {}
+-                    }
+-
+-                    Behavior on Layout.preferredHeight {
+-                        Anim {}
+-                    }
+-                }
+-
+-                RowLayout {
+-                    spacing: Tokens.spacing.medium
+-
+-                    MaterialIcon {
+-                        Layout.alignment: Qt.AlignHCenter
+-                        text: "scan_delete"
+-                        color: Colours.palette.m3outline
+-
+-                        opacity: !root.props.screenshotListExpanded ? 1 : 0
+-                        scale: !root.props.screenshotListExpanded ? 1 : 0
+-                        Layout.preferredWidth: !root.props.screenshotListExpanded ? implicitWidth : 0
+-
+-                        Behavior on opacity {
+-                            Anim {
+-                                type: Anim.DefaultEffects
+-                            }
+-                        }
+-
+-                        Behavior on scale {
+-                            Anim {}
+-                        }
+-
+-                        Behavior on Layout.preferredWidth {
+-                            Anim {}
+-                        }
+-                    }
+-
+-                    StyledText {
+-                        text: qsTr("No screenshots found")
+-                        color: Colours.palette.m3outline
+-                    }
+-                }
+-            }
+-
+-            Behavior on opacity {
+-                Anim {
+-                    type: Anim.DefaultEffects
+-                }
+-            }
+-        }
+-
+-        Behavior on implicitHeight {
+-            Anim {}
+-        }
++            visible: gallery.count === 0
++            text: qsTr("No screenshots found")
++            color: Colours.palette.m3outline
++        }
++
++        Behavior on implicitHeight { Anim {} }
+     }
+ }

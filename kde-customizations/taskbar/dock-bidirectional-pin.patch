@@ -1,0 +1,254 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -29,7 +29,8 @@
+     // Keep running and recent apps within the native scrolling view.
+     readonly property int pinnedCount: modelDataArray.filter(app => app.isPinned).length
+     readonly property bool hasSections: bar.dockOnly && bar.isHorizontal
+-        && pinnedCount > 0 && pinnedCount < modelDataArray.length
++        && pinnedCount > 0
++    readonly property bool emptyRightSection: hasSections && pinnedCount === modelDataArray.length
+     readonly property real sectionGap: hasSections ? Math.round(16 * scaleFactor) : 0
+ 
+     function itemOffset(index: int): real {
+@@ -42,11 +43,11 @@
+             separator: hasSections, gap: sectionGap,
+             recent: SplitBarSettings.recentApps(),
+             itemSize: container.itemSize,
+-            actualSeparator: listView.itemAtIndex(root.pinnedCount)?.children.find(child => child.objectName === "dockSectionResize")?.mapToGlobal(root.sectionGap / 2, container.itemSize / 2),
++            actualSeparator: sectionDivider.mapToGlobal(sectionDivider.width / 2, sectionDivider.height / 2),
+             origin: listView.mapToGlobal(0, 0),
+             separatorPosition: listView.mapToGlobal(root.itemOffset(root.pinnedCount) - root.sectionGap / 2 - root.spacing / 2 - listView.contentX, container.itemSize / 2),
+             apps: modelDataArray.map((app, index) => ({
+-                id: app.id, pinned: app.isPinned, windows: app.toplevels.length,
++                id: app.id, desktopId: app.entry?.id, pinned: app.isPinned, windows: app.toplevels.length,
+                 offset: itemOffset(index)
+             }))
+         };
+@@ -86,22 +87,37 @@
+         return true;
+     }
+ 
++    function unpinEntry(entry: var): bool {
++        if (!entry?.isPinned)
++            return false;
++        const id = entry.entry?.id || entry.id;
++        const pinned = GlobalConfig.bar.dock.pinnedApps || [];
++        const remaining = pinned.filter(pattern => !Strings.testRegexList([pattern], id));
++        if (remaining.length === pinned.length)
++            return false;
++        // Keep even a closed launcher available on the right after it is unpinned.
++        SplitBarSettings.saveRecentApps([id, ...SplitBarSettings.recentApps().filter(value => value !== id)]);
++        GlobalConfig.bar.dock.pinnedApps = remaining;
++        return true;
++    }
++
+     function finishIconDrag(entry: var, position: point, moved: bool): void {
+         const contentPosition = position.x + listView.contentX;
+         const boundary = root.itemOffset(root.pinnedCount) - root.sectionGap / 2;
+         const inLeftSection = root.pinnedCount === 0 ? contentPosition <= root.spacing : contentPosition < boundary;
+         const inDock = position.x >= -root.padding && position.x <= listView.width + root.padding
+             && position.y >= -root.padding && position.y <= listView.height + root.padding;
+-        if (moved && bar.dockOnly && !entry?.isPinned && inDock && inLeftSection) {
+-            const slot = Math.round(contentPosition / (container.itemSize + root.spacing));
+-            // Commit any reorder before pinning so it cannot overwrite the new favourite.
+-            root.saveNewOrder();
+-            root.pinAt(entry, slot);
+-            root.rebuildModel();
+-        } else {
+-            root.saveNewOrder();
+-            root.rebuildModel();
+-        }
++        // Commit intra-section reordering before changing the favourites.
++        root.saveNewOrder();
++        if (moved && bar.dockOnly && entry && inDock) {
++            if (!entry.isPinned && inLeftSection) {
++                const slot = Math.round(contentPosition / (container.itemSize + root.spacing));
++                root.pinAt(entry, slot);
++            } else if (entry.isPinned && !inLeftSection) {
++                root.unpinEntry(entry);
++            }
++        }
++        root.rebuildModel();
+     }
+ 
+     function updateRecentApps(apps: var): var {
+@@ -128,7 +144,7 @@
+         for (const id of recent) {
+             if (apps.some(app => app.entry?.id === id))
+                 continue;
+-            const entry = DesktopEntries.applications.values.find(entry => entry.id === id);
++            const entry = DesktopEntries.byId(id);
+             if (!entry)
+                 continue;
+             apps.push({id: id, isPinned: false, entry: entry, toplevels: [],
+@@ -399,7 +415,8 @@
+ 
+         property int __itemCount: dockModel.count
+ 
+-        property real __computedContentWidth: __itemCount > 0 ? __itemCount * itemSize + (__itemCount - 1) * root.spacing + root.sectionGap : 0
++        property real __computedContentWidth: __itemCount > 0 ? __itemCount * itemSize + (__itemCount - 1) * root.spacing + root.sectionGap
++            + (root.emptyRightSection ? itemSize + root.spacing : 0) : 0
+ 
+         implicitWidth: bar.isHorizontal ? (__computedContentWidth + padding * 2) : bar.thickness
+         implicitHeight: bar.isHorizontal ? bar.thickness : (__computedContentWidth + padding * 2)
+@@ -552,6 +569,11 @@
+                     Anim { properties: "x,y"; type: Anim.FastSpatial }
+                 }
+ 
++                footer: Item {
++                    width: root.emptyRightSection ? container.itemSize + root.sectionGap + root.spacing : 0
++                    height: container.itemSize
++                }
++
+                 model: DelegateModel {
+                     id: visualModel
+ 
+@@ -560,55 +582,17 @@
+                 }
+             }
+ 
+-            StyledScrollBar {
+-                flickable: listView
+-                orientation: Qt.Horizontal
+-                size: listView.visibleArea.widthRatio
+-                position: listView.visibleArea.xPosition
+-                shouldBeActive: dockHover.hovered || listView.moving || scrollAnim.running
+-                anchors.left: listView.left
+-                anchors.right: listView.right
+-                anchors.bottom: listView.bottom
+-                anchors.bottomMargin: -root.padding + 2
+-                visible: bar.isHorizontal && listView.contentWidth > listView.width + 1
+-            }
+-
+-            StyledScrollBar {
+-                flickable: listView
+-                orientation: Qt.Vertical
+-                size: listView.visibleArea.heightRatio
+-                position: listView.visibleArea.yPosition
+-                shouldBeActive: dockHover.hovered || listView.moving || scrollAnim.running
+-                anchors.top: listView.top
+-                anchors.bottom: listView.bottom
+-                anchors.right: listView.right
+-                anchors.rightMargin: -root.padding + 2
+-                visible: !bar.isHorizontal && listView.contentHeight > listView.height + 1
+-            }
+-        }
+-
+-        Component {
+-            id: dockDelegate
+-
+             Item {
+-                id: delegateContainer
+-
+-                required property int index
+-                required property string appId
+-
+-                readonly property real sectionInset: root.hasSections && index === root.pinnedCount ? root.sectionGap : 0
+-                width: container.itemSize + sectionInset
++                id: sectionDivider
++                parent: listView.contentItem
++                visible: root.hasSections
++                x: root.pinnedCount * (container.itemSize + root.spacing) - root.spacing / 2
++                width: root.sectionGap
+                 height: container.itemSize
+-                implicitWidth: width
+-                implicitHeight: height
+-
+-                property var modelData: root.modelDataMap[appId] || root.modelDataArray[index]
++                z: 20
+ 
+                 Rectangle {
+-                    id: sectionLine
+-                    visible: delegateContainer.sectionInset > 0
+-                    x: (delegateContainer.sectionInset - root.spacing) / 2 - width / 2
+-                    anchors.verticalCenter: parent.verticalCenter
++                    anchors.centerIn: parent
+                     width: Math.max(1, root.scaleFactor)
+                     height: container.itemSize * 0.65
+                     radius: width / 2
+@@ -619,10 +603,7 @@
+                 MouseArea {
+                     id: resizeHandle
+                     objectName: "dockSectionResize"
+-                    visible: delegateContainer.sectionInset > 0
+-                    x: -root.spacing / 2
+-                    width: delegateContainer.sectionInset
+-                    height: parent.height
++                    anchors.fill: parent
+                     z: 10
+                     hoverEnabled: true
+                     cursorShape: Qt.SizeVerCursor
+@@ -654,6 +635,52 @@
+                     }
+                 }
+ 
++            }
++
++            StyledScrollBar {
++                flickable: listView
++                orientation: Qt.Horizontal
++                size: listView.visibleArea.widthRatio
++                position: listView.visibleArea.xPosition
++                shouldBeActive: dockHover.hovered || listView.moving || scrollAnim.running
++                anchors.left: listView.left
++                anchors.right: listView.right
++                anchors.bottom: listView.bottom
++                anchors.bottomMargin: -root.padding + 2
++                visible: bar.isHorizontal && listView.contentWidth > listView.width + 1
++            }
++
++            StyledScrollBar {
++                flickable: listView
++                orientation: Qt.Vertical
++                size: listView.visibleArea.heightRatio
++                position: listView.visibleArea.yPosition
++                shouldBeActive: dockHover.hovered || listView.moving || scrollAnim.running
++                anchors.top: listView.top
++                anchors.bottom: listView.bottom
++                anchors.right: listView.right
++                anchors.rightMargin: -root.padding + 2
++                visible: !bar.isHorizontal && listView.contentHeight > listView.height + 1
++            }
++        }
++
++        Component {
++            id: dockDelegate
++
++            Item {
++                id: delegateContainer
++
++                required property int index
++                required property string appId
++
++                readonly property real sectionInset: root.hasSections && index === root.pinnedCount ? root.sectionGap : 0
++                width: container.itemSize + sectionInset
++                height: container.itemSize
++                implicitWidth: width
++                implicitHeight: height
++
++                property var modelData: root.modelDataMap[appId] || root.modelDataArray[index]
++
+                 DropArea {
+                     anchors.fill: parent
+                     anchors.margins: Tokens.padding.small
+@@ -720,7 +747,7 @@
+ 
+                         onEntered: {
+                             if (root.isDragging || root.isResizing) return;
+-        if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
++                            if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
+                             bar.popouts.currentName = "dockhover";
+                             bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
+                             bar.popouts.dockModel = modelData;
+@@ -1026,7 +1053,10 @@
+         const pinnedIds = GlobalConfig.bar.dock.pinnedApps || [];
+ 
+         for (const pid of pinnedIds) {
+-            for (const entry of DesktopEntries.applications.values) {
++            // Explicit favourites may be NoDisplay apps, absent from applications.
++            const exact = DesktopEntries.byId(pid);
++            const candidates = exact ? [exact] : DesktopEntries.applications.values;
++            for (const entry of candidates) {
+                 if (Strings.testRegexList([pid], entry.id)) {
+                     if (!apps.some(a => a.id === entry.id)) {
+                         apps.push({

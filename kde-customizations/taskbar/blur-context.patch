@@ -1,0 +1,82 @@
+--- modules/bar/GlassSurface.qml
++++ modules/bar/GlassSurface.qml
+@@ -20,33 +20,54 @@
+             active: root.backdrop !== null && GraphicsInfo.api !== GraphicsInfo.Software
+             sourceComponent: Component {
+                 Item {
++                    id: viewport
++                    readonly property real blurMargin: 64
++                    readonly property rect crop: {
++                        // Follow centering, scale and screen changes along the full ancestor chain.
++                        let geometry = root.backdrop.width + root.backdrop.height
++                        let ancestor = root
++                        while (ancestor) {
++                            geometry += ancestor.x + ancestor.y + ancestor.width + ancestor.height + ancestor.scale
++                            ancestor = ancestor.parent
++                        }
++                        if (!isFinite(geometry)) return Qt.rect(0, 0, 1, 1)
++                        const top = root.mapToItem(root.backdrop, 1, 1)
++                        const bottom = root.mapToItem(root.backdrop, root.width - 1, root.height - 1)
++                        return Qt.rect(top.x, top.y, Math.max(1, bottom.x - top.x), Math.max(1, bottom.y - top.y))
++                    }
++                    readonly property real sx: crop.width / Math.max(1, width)
++                    readonly property real sy: crop.height / Math.max(1, height)
++                    readonly property real extraLeft: Math.min(blurMargin * sx, Math.max(0, crop.x))
++                    readonly property real extraTop: Math.min(blurMargin * sy, Math.max(0, crop.y))
++                    readonly property real extraRight: Math.min(blurMargin * sx, Math.max(0, root.backdrop.width - crop.x - crop.width))
++                    readonly property real extraBottom: Math.min(blurMargin * sy, Math.max(0, root.backdrop.height - crop.y - crop.height))
+                     ShaderEffectSource {
+                         id: sample
+-                        anchors.fill: parent
++                        width: (viewport.crop.width + viewport.extraLeft + viewport.extraRight) / viewport.sx
++                        height: (viewport.crop.height + viewport.extraTop + viewport.extraBottom) / viewport.sy
+                         sourceItem: root.backdrop
+-                        sourceRect: {
+-                            // Register every layout transform as a binding dependency.
+-                            // Dock centering/scaling changes happen on ancestors.
+-                            let geometry = root.backdrop.width + root.backdrop.height
+-                            let ancestor = root
+-                            while (ancestor) {
+-                                geometry += ancestor.x + ancestor.y + ancestor.width + ancestor.height + ancestor.scale
+-                                ancestor = ancestor.parent
+-                            }
+-                            if (!isFinite(geometry)) return Qt.rect(0, 0, 0, 0)
+-                            const top = root.mapToItem(root.backdrop, 1, 1)
+-                            const bottom = root.mapToItem(root.backdrop, root.width - 1, root.height - 1)
+-                            return Qt.rect(top.x, top.y, bottom.x - top.x, bottom.y - top.y)
+-                        }
++                        sourceRect: Qt.rect(viewport.crop.x - viewport.extraLeft, viewport.crop.y - viewport.extraTop,
++                            viewport.crop.width + viewport.extraLeft + viewport.extraRight,
++                            viewport.crop.height + viewport.extraTop + viewport.extraBottom)
+                         live: true
+                         visible: false
+                     }
+                     FastBlur {
+                         id: frost
+-                        anchors.fill: parent
++                        width: sample.width
++                        height: sample.height
+                         source: sample
+                         radius: 48
+                         transparentBorder: false
++                        visible: false
++                    }
++                    ShaderEffectSource {
++                        id: croppedFrost
++                        anchors.fill: parent
++                        sourceItem: frost
++                        sourceRect: Qt.rect(viewport.extraLeft / viewport.sx, viewport.extraTop / viewport.sy,
++                            viewport.width, viewport.height)
++                        live: true
+                         visible: false
+                     }
+                     Rectangle {
+@@ -58,7 +79,7 @@
+                     }
+                     OpacityMask {
+                         anchors.fill: parent
+-                        source: frost
++                        source: croppedFrost
+                         maskSource: roundedMask
+                     }
+                 }

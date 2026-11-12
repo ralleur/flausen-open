@@ -1,0 +1,153 @@
+--- modules/notifications/Content.qml
++++ modules/notifications/Content.qml
+@@ -38,7 +38,7 @@
+         return h === "right" ? parent.right : undefined;
+     }
+ 
+-    implicitWidth: Tokens.sizes.notifs.width
++    implicitWidth: Math.max(Tokens.sizes.notifs.width, Math.min(460, ((QsWindow.window as QsWindow)?.screen?.width ?? 460) - 24))
+     implicitHeight: {
+         const count = list.count;
+         if (count === 0)
+@@ -67,6 +67,25 @@
+         }
+ 
+         return Math.min(((QsWindow.window as QsWindow)?.screen?.height ?? 0) + padding - clampedPadding * 2 - Config.border.thickness, height + padding + clampedPadding);
++    }
++
++    // Read the actual delegate coordinates, including swipe and list movement.
++    function cardGeometry(index: int, target: Item): rect {
++        void list.count; void list.contentY;
++        const wrapper = list.itemAtIndex(index);
++        if (!wrapper || !root.visible || !target) return Qt.rect(0, 0, 0, 0);
++        const card = wrapper.card;
++        void card.x; void card.y; void card.width; void card.height;
++        for (let node = card.parent; node; node = node.parent) {
++            void node.x; void node.y;
++        }
++        const point = card.mapToItem(target, 0, 0);
++        const viewport = list.mapToItem(target, 0, 0);
++        const x = Math.max(point.x, viewport.x);
++        const y = Math.max(point.y, viewport.y);
++        const right = Math.min(point.x + card.width, viewport.x + list.width);
++        const bottom = Math.min(point.y + card.height, viewport.y + list.height);
++        return Qt.rect(x, y, Math.max(0, right - x), Math.max(0, bottom - y));
+     }
+ 
+     ClippingWrapperRectangle {
+@@ -159,6 +178,7 @@
+         required property NotifData modelData
+         required property int index
+         readonly property alias nonAnimHeight: notif.nonAnimHeight
++        readonly property alias card: notif
+         property int idx
+ 
+         onIndexChanged: {
+--- modules/notifications/Wrapper.qml
++++ modules/notifications/Wrapper.qml
+@@ -32,7 +32,11 @@
+     visible: height > 0 && !visibilities.overview && isTargetScreen && isAllowedByFullscreen
+     anchors.topMargin: baseTopMargin
+     implicitWidth: (isTargetScreen && isAllowedByFullscreen) ? Math.max(sidebarPanel.width, content.implicitWidth) : 0
+-    implicitHeight: (isTargetScreen && isAllowedByFullscreen) ? content.implicitHeight : 0
++    implicitHeight: (isTargetScreen && isAllowedByFullscreen && content.implicitHeight > 0) ? content.implicitHeight - baseTopMargin : 0
++
++    function cardGeometry(index: int, target: Item): rect {
++        return visible ? content.cardGeometry(index, target) : Qt.rect(0, 0, 0, 0);
++    }
+ 
+     Content {
+         id: content
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -473,6 +473,7 @@
+         }
+         PanelBg {
+             id: notifsBg
++            group: null // Each notification paints its own smoke card.
+ 
+             panel: panels.notifications
+         }
+@@ -593,6 +594,44 @@
+             }
+         }
+     }
++    // Slots survive notification arrival/removal; reuse the common stable blur pool.
++    Variants {
++        id: notificationSmoke
++        model: Array.from({length: Math.max(0, Math.floor(GlobalConfig.notifs.maxPopups))}, (_, i) => i)
++        Scope {
++            id: slot
++            required property var modelData
++            readonly property rect cardGeometry: panels.notifications.cardGeometry(modelData, root.contentItem)
++            property Region poolRegion: Region {
++                x: slot.cardGeometry.x - notificationPool.windowX
++                y: slot.cardGeometry.y - notificationPool.windowY
++                width: notificationPool.showing ? slot.cardGeometry.width : 0
++                height: notificationPool.showing ? slot.cardGeometry.height : 0
++                radius: 20
++                intersection: Intersection.Combine
++            }
++            property Region cardRegion: Region {
++                x: slot.cardGeometry.x; y: slot.cardGeometry.y
++                width: slot.cardGeometry.width; height: slot.cardGeometry.height
++                radius: 20
++                intersection: Intersection.Combine
++            }
++        }
++    }
++    TaskbarGlass {
++        id: notificationPool
++        screen: root.screen
++        prewarm: true
++        minimumSize: Qt.size(512, 768)
++        active: panels.notifications.visible && panels.notifications.height > 0
++        geometry: Qt.rect(panels.notifications.x + panels.leftMargin,
++            panels.notifications.y + panels.topMargin,
++            panels.notifications.width, panels.notifications.height)
++        customShape: Region {
++            regions: [sentinel, ...notificationSmoke.instances.map(slot => slot.poolRegion)]
++            property Region sentinel: Region { x: -10; y: -10; width: 1; height: 1 }
++        }
++    }
+     // Bar glass uses the same local native passes as the approved calendar.
+     TaskbarGlass {
+         id: topBarSmoke
+@@ -1062,16 +1101,8 @@
+             offsetScale: panels.sidebar.offsetScale
+             deformMatrix: sidebarBg.deformMatrix
+         }
+-        BlurMask {
+-            target: panels.notifications
+-            contentItem: root.contentItem
+-            blurOffsetTop: root.blurOffsetTop
+-            blurOffsetBottom: root.blurOffsetBottom
+-            blurOffsetLeft: root.blurOffsetLeft
+-            blurOffsetRight: root.blurOffsetRight
+-            vAnchor: panels.notifications.vAnchor
+-            hAnchor: panels.notifications.hAnchor
+-            deformMatrix: notifsBg.deformMatrix
++        Region {
++            regions: notificationSmoke.instances.map(slot => slot.cardRegion)
+         }
+         BlurMask {
+             target: panels.osdWrapper
+--- components/TaskbarGlass.qml
++++ components/TaskbarGlass.qml
+@@ -17,6 +17,7 @@
+     property real cornerRadius: 28
+     property rect cutout: Qt.rect(0, 0, 0, 0)
+     property size minimumSize: Qt.size(64, 64)
++    property Region customShape: null
+     property bool ready: false
+     property bool initialized: false
+     property int capacityWidth: minimumSize.width
+@@ -125,7 +126,7 @@
+                 color: "#01000000"
+                 visible: root.showing
+             }
+-            BackgroundEffect.blurRegion: root.blurShape
++            BackgroundEffect.blurRegion: root.customShape ?? root.blurShape
+         }
+     }
+ }

@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.24)
+project(RalleurSessionStyle LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_AUTOMOC ON)
+find_package(Qt6 REQUIRED COMPONENTS Quick)
+add_library(ralleurstyleprobe MODULE tests/probe.cpp)
+target_link_libraries(ralleurstyleprobe PRIVATE Qt6::Quick)
+set_target_properties(ralleurstyleprobe PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins/generic")

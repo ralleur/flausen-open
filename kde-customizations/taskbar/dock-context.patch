@@ -1,0 +1,383 @@
+--- modules/bar/popouts/DockContext.qml
++++ modules/bar/popouts/DockContext.qml
+@@ -11,7 +11,7 @@
+ import qs.services
+ import qs.utils
+ 
+-ColumnLayout {
++Item {
+     id: root
+ 
+     required property PopoutState popouts
+@@ -95,172 +95,170 @@
+     property real fontScale: 1.0
+     property bool _isSidebarOpen: false
+ 
+-    width: 200 * scaleOffset
+-    implicitWidth: 200 * scaleOffset
+-    spacing: Tokens.spacing.medium * scaleOffset
+-
+-    StyledRect {
++    // Geometry follows the mock independently of the shared font/material roles.
++    readonly property real rowHeight: 40 * scaleOffset
++    readonly property bool canQuit: {
++        if (!model?.toplevels?.length) return false;
++        return !model.toplevels.some(t => t.title && String(t.title).startsWith("Nexus"));
++    }
++    width: implicitWidth
++    implicitWidth: Math.max(250 * scaleOffset, pinItem.implicitWidth, newWinItem.implicitWidth, quitItem.implicitWidth)
++    implicitHeight: actions.implicitHeight
++    height: implicitHeight
++
++    component ActionRow: Rectangle {
++        id: action
++        required property string text
++        required property string icon
++        property color iconColour: MenuStyle.ink
++        signal triggered()
+         Layout.fillWidth: true
+-        implicitHeight: cardLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+-        radius: Tokens.rounding.medium * root.scaleOffset
+-        color: MenuStyle.cardFill
+-        clip: true
+-        visible: model && model.entry != null
+-
++        implicitWidth: label.implicitWidth + 68 * root.scaleOffset
++        implicitHeight: Math.max(root.rowHeight, label.implicitHeight + 16 * root.scaleOffset)
++        radius: 10 * root.scaleOffset
++        color: mouse.pressed ? Qt.alpha(MenuStyle.accent, 0.25)
++             : mouse.containsMouse || activeFocus ? Qt.alpha(MenuStyle.accent, 0.16) : "transparent"
++        activeFocusOnTab: visible && enabled
++        Accessible.role: Accessible.MenuItem
++        Accessible.name: text
++        Accessible.onPressAction: triggered()
++        Keys.onReturnPressed: triggered()
++        Keys.onEnterPressed: triggered()
++        Keys.onSpacePressed: triggered()
++
++        MaterialIcon {
++            anchors.left: parent.left
++            anchors.leftMargin: 16 * root.scaleOffset
++            anchors.verticalCenter: parent.verticalCenter
++            text: action.icon
++            color: action.iconColour
++            fontStyle.pointSize: 20 * 0.75 * root.scaleOffset
++        }
++        MenuText {
++            id: label
++            anchors.left: parent.left
++            anchors.leftMargin: 60 * root.scaleOffset
++            anchors.verticalCenter: parent.verticalCenter
++            text: action.text
++            font.pointSize: MenuStyle.bodyPointSize(root.fontScale)
++        }
++        MouseArea {
++            id: mouse
++            anchors.fill: parent
++            hoverEnabled: true
++            cursorShape: Qt.PointingHandCursor
++            onClicked: action.triggered()
++        }
++    }
++
++    ColumnLayout {
++        id: actions
++        width: parent.width
++        spacing: 4 * root.scaleOffset
++
++        ActionRow {
++            id: pinItem
++            visible: root.model?.entry != null
++            text: root.isPinned ? qsTr("Unpin from dock") : qsTr("Pin to dock")
++            icon: root.isPinned ? "keep_off" : "keep"
++            onTriggered: {
++                if (isPinned) {
++                    const current = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
++                    let index = current.indexOf(model.id);
++                    if (index === -1 && model.entry)
++                        index = current.indexOf(model.entry.id);
++                    if (index !== -1) {
++                        current.splice(index, 1);
++                        GlobalConfig.bar.dock.pinnedApps = current;
++                    }
++                } else {
++                    const current = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
++                    const idToPin = model.entry ? model.entry.id : model.id;
++                    if (!current.includes(idToPin)) {
++                        current.push(idToPin);
++                        GlobalConfig.bar.dock.pinnedApps = current;
++                    }
++                }
++                root.popouts.hasCurrent = false;
++            }
++        }
++        ActionRow {
++            id: newWinItem
++            visible: root.model?.entry != null
++            text: qsTr("Open new window")
++            icon: "add_to_queue"
++            onTriggered: {
++                if (root.model.entry) Launch.launchEntry(root.model.entry);
++                root.popouts.hasCurrent = false;
++            }
++        }
+         ColumnLayout {
+-            id: cardLayout
+-
+-            anchors.left: parent.left
+-            anchors.right: parent.right
+-            anchors.top: parent.top
+-            anchors.margins: Tokens.padding.medium * root.scaleOffset
++            Layout.fillWidth: true
++            visible: root.isBattlenet
+             spacing: Tokens.spacing.small * root.scaleOffset
+ 
+-            StyledRect {
+-                id: pinItem
+-
++            RowLayout {
+                 Layout.fillWidth: true
+-                implicitHeight: pinLabel.implicitHeight
+-
+-                radius: Tokens.rounding.full
+-                color: "transparent"
+-
+-                StateLayer {
+-                    anchors.margins: -Tokens.padding.medium / 2 * root.scaleOffset
+-                    anchors.leftMargin: -Tokens.padding.medium * root.scaleOffset
+-                    anchors.rightMargin: -Tokens.padding.medium * root.scaleOffset
+-
+-                    radius: pinItem.radius
+-
+-                    onClicked: {
+-                        if (isPinned) {
+-                            const current = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
+-                            let index = current.indexOf(model.id);
+-                            if (index === -1 && model.entry)
+-                                index = current.indexOf(model.entry.id);
+-                            if (index !== -1) {
+-                                current.splice(index, 1);
+-                                GlobalConfig.bar.dock.pinnedApps = current;
+-                            }
+-                        } else {
+-                            const current = GlobalConfig.bar.dock.pinnedApps ? [...GlobalConfig.bar.dock.pinnedApps] : [];
+-                            const idToPin = model.entry ? model.entry.id : model.id;
+-                            if (!current.includes(idToPin)) {
+-                                current.push(idToPin);
+-                                GlobalConfig.bar.dock.pinnedApps = current;
+-                            }
+-                        }
+-                        root.popouts.hasCurrent = false;
+-                    }
+-                }
+-
+-                StyledText {
+-                    id: pinLabel
+-
+-                    anchors.left: parent.left
+-                    text: isPinned ? qsTr("Unpin from dock") : qsTr("Pin to dock")
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                }
+-            }
+-
+-            StyledRect {
+-                id: newWinItem
+-
++                enabled: root.framegenReady && !root.framegenRunning && !framegenWrite.running
++
++                MenuText {
++                    Layout.fillWidth: true
++                    text: qsTr("Framegen")
++                    color: parent.enabled ? Colours.palette.m3onSurface : Colours.disabledContent
++                    font.pointSize: MenuStyle.bodyPointSize(root.fontScale)
++                }
++
++                StyledSwitch {
++                    id: framegenSwitch
++                    Binding {
++                        target: framegenSwitch
++                        property: "checked"
++                        value: root.framegenEnabled
++                    }
++                    onToggled: {
++                        framegenWrite.action = checked ? "on" : "off";
++                        framegenWrite.running = true;
++                    }
++                }
++            }
++
++            MenuText {
+                 Layout.fillWidth: true
+-                implicitHeight: newWinLabel.implicitHeight
+-
+-                radius: Tokens.rounding.full
+-                color: "transparent"
+-
+-                StateLayer {
+-                    anchors.margins: -Tokens.padding.medium / 2 * root.scaleOffset
+-                    anchors.leftMargin: -Tokens.padding.medium * root.scaleOffset
+-                    anchors.rightMargin: -Tokens.padding.medium * root.scaleOffset
+-
+-                    radius: newWinItem.radius
+-
+-                    onClicked: {
+-                        if (model.entry)
+-                            Launch.launchEntry(model.entry);
+-
+-                        root.popouts.hasCurrent = false;
+-                    }
+-                }
+-
+-                StyledText {
+-                    id: newWinLabel
+-
+-                    anchors.left: parent.left
+-                    text: qsTr("Open new window")
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                }
+-            }
+-
+-            ColumnLayout {
+-                Layout.fillWidth: true
+-                visible: root.isBattlenet
+-                spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                RowLayout {
+-                    Layout.fillWidth: true
+-                    enabled: root.framegenReady && !root.framegenRunning && !framegenWrite.running
+-
+-                    StyledText {
+-                        Layout.fillWidth: true
+-                        text: qsTr("Framegen")
+-                        color: parent.enabled ? Colours.palette.m3onSurface : Colours.disabledContent
+-                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                    }
+-
+-                    StyledSwitch {
+-                        id: framegenSwitch
+-                        Binding {
+-                            target: framegenSwitch
+-                            property: "checked"
+-                            value: root.framegenEnabled
+-                        }
+-                        onToggled: {
+-                            framegenWrite.action = checked ? "on" : "off";
+-                            framegenWrite.running = true;
+-                        }
+-                    }
+-                }
+-
+-                StyledText {
+-                    Layout.fillWidth: true
+-                    visible: root.framegenRunning || root.framegenError !== ""
+-                    text: root.framegenError || qsTr("Close Battle.net or WoW first")
+-                    color: Colours.disabledContent
+-                    wrapMode: Text.WordWrap
+-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-                }
+-            }
+-        }
+-    }
+-
+-    IconTextButton {
+-        Layout.fillWidth: true
+-        inactiveColour: Colours.palette.m3primaryContainer
+-        inactiveOnColour: Colours.palette.m3onPrimaryContainer
+-        verticalPadding: Tokens.padding.small * root.scaleOffset
+-        text: qsTr("Quit app")
+-        icon: "close"
+-        visible: {
+-            if (!model || !model.toplevels || model.toplevels.length === 0) return false;
+-            return !model.toplevels.some(t => t.title && String(t.title).startsWith("Nexus"));
+-        }
+-
+-        onClicked: {
+-            for (const toplevel of model.toplevels) {
+-                if (toplevel.pid) {
+-                    Quickshell.execDetached({ command: ["kill", "-15", String(toplevel.pid)] });
+-                } else if (Kwin.windowList.length > 0) {
+-                    Kwin.closeWindow(toplevel.address);
+-                } else {
+-                    Kwin.dispatch(Kwin.usingLua ? `hl.dsp.window.close({ window = "address:0x${toplevel.address}" })` : `closewindow address:0x${toplevel.address}`);
+-                }
+-            }
+-            root.popouts.hasCurrent = false;
++                visible: root.framegenRunning || root.framegenError !== ""
++                text: root.framegenError || qsTr("Close Battle.net or WoW first")
++                color: Colours.disabledContent
++                wrapMode: Text.WordWrap
++                font.pointSize: MenuStyle.bodyPointSize(root.fontScale) * MenuStyle.secondaryPixels / MenuStyle.bodyPixels
++            }
++        }
++        Rectangle {
++            Layout.fillWidth: true
++            Layout.leftMargin: 8 * root.scaleOffset
++            Layout.rightMargin: 8 * root.scaleOffset
++            Layout.topMargin: 8 * root.scaleOffset
++            Layout.bottomMargin: 8 * root.scaleOffset
++            implicitHeight: 1
++            color: MenuStyle.rule
++            visible: root.canQuit && (pinItem.visible || root.isBattlenet)
++        }
++        ActionRow {
++            id: quitItem
++            visible: root.canQuit
++            text: qsTr("Quit app")
++            icon: "power_settings_new"
++            iconColour: Colours.palette.m3error
++            onTriggered: {
++                for (const toplevel of model.toplevels) {
++                    if (toplevel.pid) {
++                        Quickshell.execDetached({ command: ["kill", "-15", String(toplevel.pid)] });
++                    } else if (Kwin.windowList.length > 0) {
++                        Kwin.closeWindow(toplevel.address);
++                    } else {
++                        Kwin.dispatch(Kwin.usingLua ? `hl.dsp.window.close({ window = "address:0x${toplevel.address}" })` : `closewindow address:0x${toplevel.address}`);
++                    }
++                }
++                root.popouts.hasCurrent = false;
++            }
+         }
+     }
+ }
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -26,7 +26,7 @@
+         return acc;
+     }, {})
+ 
+-    readonly property real contentMargin: Tokens.padding.large * (currentPopout?.item?.scaleOffset ?? 1.0)
++    readonly property real contentMargin: (popouts.currentName === "dockcontext" ? 8 : Tokens.padding.large) * (currentPopout?.item?.scaleOffset ?? 1.0)
+     readonly property real availableWidth: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.width ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+     readonly property real availableHeight: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.height ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+ 
+@@ -47,8 +47,8 @@
+                 popout[name] = context[name];
+     }
+ 
+-    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
+-    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
++    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + (popouts.currentName === "dockcontext" ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
++    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + (popouts.currentName === "dockcontext" ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
+ 
+     Flickable {
+         id: viewport
+@@ -318,7 +318,8 @@
+ 
+         Popout {
+             name: "dockcontext"
+-            previewKey: "dock"
++            previewKey: "network"
++            minScale: 1.15
+             sourceComponent: DockContext {
+                 popouts: root.popouts
+             }
+@@ -496,7 +497,7 @@
+ 
+         readonly property real masterScale: !isNaN(GlobalConfig.bar.previewScale) ? GlobalConfig.bar.previewScale : 1.0
+         readonly property real elementOffset: GlobalConfig.bar.perElementPreviewScale ? (!isNaN(GlobalConfig.bar.previewScales[previewKey]) ? GlobalConfig.bar.previewScales[previewKey] : 0.0) : 0.0
+-        readonly property real surfaceScale: name.startsWith("dock") ? BarSettings.SplitBarSettings.dockScale : GlobalConfig.bar.scale
++        readonly property real surfaceScale: (name.startsWith("dock") && name !== "dockcontext") ? BarSettings.SplitBarSettings.dockScale : GlobalConfig.bar.scale
+         readonly property real barScaleOffset: GlobalConfig.bar.previewScaleWithBar ? (!isNaN(surfaceScale) ? surfaceScale : 1.0) : 1.0
+         readonly property real scaleOffset: Math.max(minScale, (masterScale + elementOffset) * barScaleOffset)
+         readonly property real elementFontOffset: GlobalConfig.bar.perElementFontScale ? (!isNaN(GlobalConfig.bar.previewFontScales[previewKey]) ? GlobalConfig.bar.previewFontScales[previewKey] : 0.0) : 0.0

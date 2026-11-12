@@ -1,0 +1,126 @@
+--- modules/bar/popouts/DockContext.qml
++++ modules/bar/popouts/DockContext.qml
+@@ -3,6 +3,7 @@
+ import QtQuick
+ import QtQuick.Layouts
+ import Quickshell
++import Quickshell.Io
+ import Caelestia
+ import Caelestia.Config
+ import qs.components
+@@ -15,6 +16,68 @@
+ 
+     required property PopoutState popouts
+     property var model: popouts.dockModel
++
++    readonly property bool isBattlenet: {
++        const ids = [model?.id, model?.entry?.id];
++        return ids.some(id => id && String(id).replace(/\.desktop$/, "") === "lab-battlenet");
++    }
++    property bool framegenEnabled: false
++    property bool framegenRunning: false
++    property bool framegenReady: false
++    property string framegenError: ""
++    readonly property string framegenHelper: Quickshell.env("HOME") + "/Projekte/linux-gaming-lab/bin/battlenet-framegen"
++
++    function refreshFramegen(): void {
++        if (isBattlenet && !framegenRead.running && !framegenWrite.running)
++            framegenRead.running = true;
++    }
++
++    function acceptFramegen(text: string): void {
++        try {
++            const state = JSON.parse(text);
++            if (typeof state.enabled !== "boolean" || typeof state.running !== "boolean")
++                throw new Error(state.error || "Framegen nicht verfügbar");
++            framegenEnabled = state.enabled;
++            framegenRunning = state.running;
++            framegenError = "";
++            framegenReady = true;
++        } catch (error) {
++            framegenReady = false;
++            framegenError = String(error.message);
++        }
++    }
++
++    Timer {
++        interval: 750
++        repeat: true
++        triggeredOnStart: true
++        running: root.isBattlenet && root.popouts.hasCurrent && root.popouts.currentName === "dockcontext"
++        onTriggered: root.refreshFramegen()
++    }
++
++    Process {
++        id: framegenRead
++        command: [root.framegenHelper, "status"]
++        stdout: StdioCollector {
++            onStreamFinished: root.acceptFramegen(text)
++        }
++        onExited: code => {
++            if (code !== 0) {
++                root.framegenReady = false;
++                root.framegenError = qsTr("Framegen nicht verfügbar");
++            }
++        }
++    }
++
++    Process {
++        id: framegenWrite
++        property string action: "off"
++        command: [root.framegenHelper, action]
++        stdout: StdioCollector {
++            onStreamFinished: root.acceptFramegen(text)
++        }
++        onExited: root.refreshFramegen()
++    }
+ 
+     property bool isPinned: {
+         if (!model)
+@@ -132,6 +195,46 @@
+                     font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+                 }
+             }
++
++            ColumnLayout {
++                Layout.fillWidth: true
++                visible: root.isBattlenet
++                spacing: Tokens.spacing.small * root.scaleOffset
++
++                RowLayout {
++                    Layout.fillWidth: true
++                    enabled: root.framegenReady && !root.framegenRunning && !framegenWrite.running
++
++                    StyledText {
++                        Layout.fillWidth: true
++                        text: qsTr("Framegen")
++                        color: parent.enabled ? Colours.palette.m3onSurface : Colours.disabledContent
++                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
++                    }
++
++                    StyledSwitch {
++                        id: framegenSwitch
++                        Binding {
++                            target: framegenSwitch
++                            property: "checked"
++                            value: root.framegenEnabled
++                        }
++                        onToggled: {
++                            framegenWrite.action = checked ? "on" : "off";
++                            framegenWrite.running = true;
++                        }
++                    }
++                }
++
++                StyledText {
++                    Layout.fillWidth: true
++                    visible: root.framegenRunning || root.framegenError !== ""
++                    text: root.framegenError || qsTr("Battle.net oder WoW zuerst schließen")
++                    color: Colours.disabledContent
++                    wrapMode: Text.WordWrap
++                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++                }
++            }
+         }
+     }
+ 

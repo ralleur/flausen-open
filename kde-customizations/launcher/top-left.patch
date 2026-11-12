@@ -1,0 +1,77 @@
+--- modules/drawers/Panels.qml
++++ modules/drawers/Panels.qml
+@@ -250,14 +250,14 @@
+     Launcher.Wrapper {
+         id: launcher
+ 
+-        property string vAnchor: "bottom"
+-        property string hAnchor: "center"
++        property string vAnchor: "top"
++        property string hAnchor: "left"
+ 
+         screen: root.screen
+         visibilities: root.visibilities
+         panels: root
+-        anchors.horizontalCenter: parent.horizontalCenter
+-        anchors.bottom: parent.bottom
++        anchors.left: parent.left
++        anchors.top: parent.top
+     }
+     Dashboard.Wrapper {
+         id: dashboard
+--- modules/launcher/Wrapper.qml
++++ modules/launcher/Wrapper.qml
+@@ -36,10 +36,9 @@
+         } else
+             implicitHeight = implicitHeight;
+     }
+-    clip: Config.bar.position === "bottom"
++    clip: true
+     visible: offsetScale < 1
+-    anchors.bottomMargin: (Config.bar.position === "bottom" ? 0 : -implicitHeight - 5) * offsetScale
+-    height: Config.bar.position === "bottom" ? implicitHeight * (1 - offsetScale) : implicitHeight
++    height: implicitHeight * (1 - offsetScale)
+     implicitHeight: content.implicitHeight
+     implicitWidth: content.implicitWidth || 630
+     opacity: 1 - offsetScale
+--- modules/drawers/Regions.qml
++++ modules/drawers/Regions.qml
+@@ -45,8 +45,8 @@
+     }
+     R {
+         panel: root.panels.launcher
+-        y: root.win.height - height
+-        height: panel.height * (1 - root.panels.launcher.offsetScale) + root.edgeExtent(root.Config.launcher.hoverThickness)
++        y: 0
++        height: panel.height + root.panels.topMargin + root.edgeExtent(root.Config.launcher.hoverThickness)
+     }
+     R {
+         id: sessionRegion
+--- modules/drawers/Interactions.qml
++++ modules/drawers/Interactions.qml
+@@ -134,7 +134,7 @@
+             let inside = false;
+ 
+             if (inBarArea(event.x, event.y) || inBottomDock(event.x, event.y)) inside = true;
+-            else if (visibilities.launcher && inBottomPanel(panels.launcher, event.x, event.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) inside = true;
++            else if (visibilities.launcher && inTopPanel(panels.launcher, event.x, event.y, panels.topMargin + Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) inside = true;
+             else if (visibilities.session && inRightPanel(panels.sessionWrapper, event.x, event.y)) inside = true;
+             else if (visibilities.sidebar && inRightPanel(panels.sidebar, event.x, event.y)) inside = true;
+             else if (visibilities.dashboard && inTopPanel(panels.dashboard, event.x, event.y, Config.dashboard.hoverThickness, Config.dashboard.hoverWidth) && withinPanelWidth(panels.dashboard, event.x, event.y)) inside = true;
+@@ -270,12 +270,12 @@
+         }
+ 
+         if (Config.launcher.showOnHover) {
+-            if (!visibilities.launcher && inBottomPanel(panels.launcher, x, y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth))
++            if (!visibilities.launcher && inTopPanel(panels.launcher, x, y, panels.topMargin + Config.launcher.hoverThickness, Config.launcher.hoverWidth))
+                 visibilities.launcher = true;
+-        } else if (pressed && inBottomPanel(panels.launcher, dragStart.x, dragStart.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, x, y)) {
+-            if (dragY < -Config.launcher.dragThreshold)
++        } else if (pressed && inTopPanel(panels.launcher, dragStart.x, dragStart.y, panels.topMargin + Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, x, y)) {
++            if (dragY > Config.launcher.dragThreshold)
+                 visibilities.launcher = true;
+-            else if (dragY > Config.launcher.dragThreshold)
++            else if (dragY < -Config.launcher.dragThreshold)
+                 visibilities.launcher = false;
+         }
+ 

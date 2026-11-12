@@ -1,0 +1,1 @@
+{"KPlugin":{"Id":"flausen-four-desktops","Name":"flausen. — maximal acht Desktops","Description":"Begrenzt virtuelle Desktops auf acht und erhält Fenster beim Zusammenführen.","Version":"1.1","License":"MIT"},"KPackageStructure":"KWin/Script","X-Plasma-API":"javascript","X-Plasma-MainScript":"code/main.js"}

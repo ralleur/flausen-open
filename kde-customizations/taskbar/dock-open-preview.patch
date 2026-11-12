@@ -1,0 +1,48 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -782,6 +782,10 @@
+                         onEntered: {
+                             if (root.isDragging || root.isResizing) return;
+                             if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
++                            if (!root.canPreviewEntry(modelData)) {
++                                bar.popouts.hasCurrent = false;
++                                return;
++                            }
+                             bar.popouts.currentName = "dockhover";
+                             bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
+                             bar.popouts.dockModel = modelData;
+@@ -1040,6 +1044,10 @@
+         }
+     }
+ 
++    function canPreviewEntry(entry: var): bool {
++        return !bar.dockOnly || (entry?.toplevels?.length ?? 0) > 0;
++    }
++
+     function handleHover(relPos: real, isHorizontal: bool): void {
+         if (root.isDragging || root.isResizing) return;
+         if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
+@@ -1058,7 +1066,8 @@
+         const index = modelDataArray.findIndex((app, i) =>
+             position >= root.itemOffset(i) && position < root.itemOffset(i) + itemSize);
+ 
+-        if (index >= 0 && index < modelDataArray.length) {
++        if (index >= 0 && index < modelDataArray.length
++                && root.canPreviewEntry(modelDataArray[index])) {
+             bar.popouts.currentName = "dockhover";
+             const centerOffset = root.itemOffset(index) + itemSize / 2 - scrolled;
+             if (centerOffset < 0 || centerOffset > visibleSpan) {
+@@ -1307,6 +1316,13 @@
+         }
+         root.modelDataMap = map;
+         root.modelDataArray = apps;
++        if (bar.dockOnly && bar.popouts.hasCurrent && bar.popouts.currentName === "dockhover") {
++            const hovered = apps.find(app => app.id === bar.popouts.dockModel?.id);
++            if (!root.canPreviewEntry(hovered))
++                bar.popouts.hasCurrent = false;
++            else
++                bar.popouts.dockModel = hovered;
++        }
+         root.modelUpdateTrigger += 1;
+     }
+ 

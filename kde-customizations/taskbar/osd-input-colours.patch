@@ -1,0 +1,54 @@
+--- components/controls/FilledSlider.qml
++++ components/controls/FilledSlider.qml
+@@ -10,6 +10,7 @@
+     id: root
+ 
+     required property string icon
++    property color fillColor: Colours.palette.m3secondary
+     property real oldValue
+     property bool initialized
+ 
+@@ -26,7 +27,7 @@
+             y: root.handle.y
+             implicitHeight: parent.height - y
+ 
+-            color: Colours.palette.m3secondary
++            color: root.fillColor
+             radius: parent.radius
+         }
+     }
+--- modules/osd/Content.qml
++++ modules/osd/Content.qml
+@@ -50,6 +50,7 @@
+                 FilledSlider {
+                     anchors.fill: parent
+ 
++                    fillColor: "#53c67b"
+                     icon: Icons.getVolumeIcon(value, root.muted)
+                     value: root.volume
+                     to: GlobalConfig.services.maxVolume
+@@ -60,7 +61,7 @@
+ 
+         WrappedLoader {
+             Layout.alignment: Qt.AlignHCenter
+-            shouldBeActive: Config.osd.enableMicrophone && (!Config.osd.enableBrightness || !root.visibilities.session)
++            shouldBeActive: Config.osd.enableMicrophone
+             targetWidth: Tokens.sizes.osd.sliderWidth
+             targetHeight: Tokens.sizes.osd.sliderHeight
+ 
+@@ -78,6 +79,7 @@
+                 FilledSlider {
+                     anchors.fill: parent
+ 
++                    fillColor: "#f16f5c"
+                     icon: Icons.getMicVolumeIcon(value, root.sourceMuted)
+                     value: root.sourceVolume
+                     to: GlobalConfig.services.maxVolume
+@@ -109,6 +111,7 @@
+                 FilledSlider {
+                     anchors.fill: parent
+ 
++                    fillColor: "#efb34f"
+                     icon: `brightness_${(Math.round(value * 6) + 1)}`
+                     value: root.brightness
+                     onMoved: root.monitor?.setBrightness(value)

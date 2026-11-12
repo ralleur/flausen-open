@@ -1,0 +1,28 @@
+name: Repository structure
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate component catalogue
+        run: python3 bin/flausen check
+      - name: Test repository tools
+        run: python3 -m unittest discover -s tests -v
+      - name: Assemble pinned desktop sources
+        run: |
+          revision=$(python3 -c 'import json; print(json.load(open("installation/shell-lock.json"))["upstream"]["commit"])')
+          git init "$RUNNER_TEMP/caelestia-base"
+          git -C "$RUNNER_TEMP/caelestia-base" fetch --depth=1 https://github.com/ladybug-me/caelestia-kde.git "$revision"
+          git -C "$RUNNER_TEMP/caelestia-base" checkout --detach FETCH_HEAD
+          python3 installation/prepare-shell.py --upstream "$RUNNER_TEMP/caelestia-base" --output "$RUNNER_TEMP/flausen-shell"

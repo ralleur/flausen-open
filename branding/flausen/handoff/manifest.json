@@ -1,0 +1,67 @@
+{
+  "name": "flausen-codex-handoff",
+  "version": "1.0",
+  "generated": "2026-11-02",
+  "brand": "flausen.",
+  "parent_brand": "ralleur",
+  "tagline": "Your computer. Your playground.",
+  "design_reference_images": [
+    {
+      "mode": "light",
+      "path": "reference/desktop-light.png",
+      "width": 1586,
+      "height": 992,
+      "sha256": "794b3ee28f5465ffd9ccfe0db6b8489fb5b228041c07304288566155698c5b1a"
+    },
+    {
+      "mode": "dark",
+      "path": "reference/desktop-dark.png",
+      "width": 1586,
+      "height": 992,
+      "sha256": "d60e351c985c87359e554540e8aa86960f74285774704bf89ab93f7ffc506d2f"
+    }
+  ],
+  "logo_assets": [
+    {
+      "file": "assets/logos/flausen-horizontal-on-dark.svg",
+      "sha256": "16abf187177b93c292f197d89f4a8588141c14e9449ce197949a10086fd2962d"
+    },
+    {
+      "file": "assets/logos/flausen-horizontal-on-light.svg",
+      "sha256": "3ea5ec28364cfeb347e617b9b5d37bcf20ed64337433128ab5eda3fdd1222383"
+    },
+    {
+      "file": "assets/logos/flausen-lockup-mono-black.svg",
+      "sha256": "fcfafa2ee89b9efd04189f003a0a3ffa31e9a5876ec8ab48ad648ecd11a1c509"
+    },
+    {
+      "file": "assets/logos/flausen-lockup-mono-white.svg",
+      "sha256": "470c4b8a49ce47c807e41c6896d2f556377a27df3b7d00c051e267814662223a"
+    },
+    {
+      "file": "assets/logos/flausen-lockup-on-dark.svg",
+      "sha256": "e890cdc84a614503e0e8789c7977c8fd3ae8b734342e2dde432d82d9a9cdccbf"
+    },
+    {
+      "file": "assets/logos/flausen-lockup-on-light.svg",
+      "sha256": "7212de0cebd7c10b9f4fd988571643c353a522e2d70eef554e2685b3762811d3"
+    },
+    {
+      "file": "assets/logos/flausen-lockup-source-editable.svg",
+      "sha256": "05d58c3811a417298e783800b8a7cfde16305558967c678a70b9f9285584a33b"
+    },
+    {
+      "file": "assets/logos/flausen-symbol-dark-tile.svg",
+      "sha256": "da41572e3463aca95c766809e014fd94a70d1f57169dbb710032944ae10c0906"
+    },
+    {
+      "file": "assets/logos/flausen-symbol-light-tile.svg",
+      "sha256": "745edb5bd4b10e4094b8fc2bbfbd9dbd0e0a6a93304c7f5b2124da2cca60b517"
+    },
+    {
+      "file": "assets/logos/flausen-symbol-transparent.svg",
+      "sha256": "4c19e6a485f41e30c032056979eb9165efb63ec12ffc8e0ad77f5c779bd548aa"
+    }
+  ],
+  "documentation_entry": "CODEX_TASK.md"
+}

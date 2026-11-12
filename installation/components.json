@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "components": [
+    {
+      "id": "branding",
+      "name": "Produktidentität flausen.",
+      "layer": "branding",
+      "source": "branding/flausen",
+      "documentation": "branding/flausen/README.md"
+    },
+    {
+      "id": "desktop-context-menu",
+      "name": "Desktop-Kontextmenü",
+      "layer": "shell",
+      "source": "kde-customizations/desktop-context-menu",
+      "documentation": "kde-customizations/desktop-context-menu/README.md"
+    },
+    {
+      "id": "desktop-scroll",
+      "name": "Desktopwechsel per Mausrad",
+      "layer": "wm",
+      "source": "kde-customizations/desktop-scroll",
+      "documentation": "kde-customizations/desktop-scroll/README.md"
+    },
+    {
+      "id": "dialogs",
+      "name": "Qt-Dialogstil",
+      "layer": "apps",
+      "source": "kde-customizations/dialogs",
+      "documentation": "kde-customizations/dialogs/README.md"
+    },
+    {
+      "id": "dolphin-header",
+      "name": "Files-Kopfzeile und Vorschau",
+      "layer": "apps",
+      "source": "kde-customizations/dolphin-header",
+      "documentation": "kde-customizations/dolphin-header/README.md"
+    },
+    {
+      "id": "files",
+      "name": "Dateimanager- und Portalintegration",
+      "layer": "apps",
+      "source": "kde-customizations/files",
+      "documentation": "kde-customizations/files/README.md"
+    },
+    {
+      "id": "flausen-screensaver",
+      "name": "flausen.-Bildschirmschoner",
+      "layer": "session",
+      "source": "kde-customizations/flausen-screensaver",
+      "documentation": "kde-customizations/flausen-screensaver/README.md"
+    },
+    {
+      "id": "fullscreen-desktops",
+      "name": "Vollbilddesktops",
+      "layer": "wm",
+      "source": "kde-customizations/fullscreen-desktops",
+      "documentation": "kde-customizations/fullscreen-desktops/README.md"
+    },
+    {
+      "id": "inactive-window-fade",
+      "name": "Weicher Fokuswechsel",
+      "layer": "wm",
+      "source": "kde-customizations/inactive-window-fade",
+      "documentation": "kde-customizations/inactive-window-fade/README.md"
+    },
+    {
+      "id": "launcher",
+      "name": "Startmenü und Hermes-Integration",
+      "layer": "shell",
+      "source": "kde-customizations/launcher",
+      "documentation": "kde-customizations/launcher/README.md"
+    },
+    {
+      "id": "localization",
+      "name": "Lokalisierung",
+      "layer": "appearance",
+      "source": "kde-customizations/localization",
+      "documentation": "kde-customizations/localization/README.md"
+    },
+    {
+      "id": "screensaver-boot",
+      "name": "ralleur-Sperrbildschirm und Bootanimation",
+      "layer": "session",
+      "source": "kde-customizations/screensaver-boot",
+      "documentation": "kde-customizations/screensaver-boot/README.md"
+    },
+    {
+      "id": "session-mascot",
+      "name": "Session-Maskottchen",
+      "layer": "session",
+      "source": "kde-customizations/session-mascot",
+      "documentation": "kde-customizations/session-mascot/README.md"
+    },
+    {
+      "id": "session-style",
+      "name": "Anmeldung und Sperrbildschirm",
+      "layer": "session",
+      "source": "kde-customizations/session-style",
+      "documentation": "kde-customizations/session-style/README.md"
+    },
+    {
+      "id": "settings",
+      "name": "Einstellungen",
+      "layer": "shell",
+      "source": "kde-customizations/settings",
+      "documentation": "kde-customizations/settings/README.md"
+    },
+    {
+      "id": "sliders",
+      "name": "Gemeinsame Regler",
+      "layer": "appearance",
+      "source": "kde-customizations/sliders",
+      "documentation": "kde-customizations/sliders/README.md"
+    },
+    {
+      "id": "task-manager",
+      "name": "Task-Manager und Prozessinspektor",
+      "layer": "apps",
+      "source": "kde-customizations/task-manager",
+      "documentation": "kde-customizations/task-manager/README.md"
+    },
+    {
+      "id": "taskbar",
+      "name": "Statusleiste, Dock und Popovers",
+      "layer": "shell",
+      "source": "kde-customizations/taskbar",
+      "documentation": "kde-customizations/taskbar/README.md"
+    },
+    {
+      "id": "terminal",
+      "name": "Terminal-Startscreen und Symbol",
+      "layer": "apps",
+      "source": "kde-customizations/terminal",
+      "documentation": "kde-customizations/terminal/README.md"
+    },
+    {
+      "id": "themes",
+      "name": "Farbthemes",
+      "layer": "appearance",
+      "source": "kde-customizations/themes",
+      "documentation": "kde-customizations/themes/README.md"
+    },
+    {
+      "id": "tiling",
+      "name": "Freiwilliges Tiling",
+      "layer": "wm",
+      "source": "kde-customizations/tiling",
+      "documentation": "kde-customizations/tiling/README.md"
+    },
+    {
+      "id": "wallpapers",
+      "name": "Wallpapers und Auswahl",
+      "layer": "appearance",
+      "source": "kde-customizations/wallpapers",
+      "documentation": "kde-customizations/wallpapers/README.md"
+    },
+    {
+      "id": "webapps",
+      "name": "Chromium-Webapps",
+      "layer": "apps",
+      "source": "kde-customizations/webapps",
+      "documentation": "kde-customizations/webapps/README.md"
+    },
+    {
+      "id": "window-controls",
+      "name": "Fenstersteuerung",
+      "layer": "appearance",
+      "source": "kde-customizations/window-controls",
+      "documentation": "kde-customizations/window-controls/README.md"
+    },
+    {
+      "id": "window-rules",
+      "name": "App-spezifische Fensterregeln",
+      "layer": "wm",
+      "source": "kde-customizations/window-rules",
+      "documentation": "kde-customizations/window-rules/README.md"
+    }
+  ]
+}

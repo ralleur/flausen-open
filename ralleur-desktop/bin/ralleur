@@ -1,0 +1,446 @@
+#!/usr/bin/env python3
+"""Ralleur session manager. Changes only its own namespace and explicit entrypoint."""
+import argparse
+import datetime
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT/'bin'))
+from generate import generate
+
+CFG = Path(os.environ.get('RALLEUR_CONFIG', str(Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config')))/'ralleur-desktop')))
+STATE = Path(os.environ.get('RALLEUR_STATE', str(Path(os.environ.get('XDG_STATE_HOME', str(Path.home()/'.local/state')))/'ralleur-desktop')))
+DATA = Path(os.environ.get('RALLEUR_DATA', str(Path(os.environ.get('XDG_DATA_HOME', str(Path.home()/'.local/share')))/'ralleur-desktop')))
+
+
+def atomic(path, content):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix='.ralleur-', dir=path.parent)
+    try:
+        with os.fdopen(fd, 'w') as f:
+            f.write(content)
+        os.replace(name, path)
+    finally:
+        if os.path.exists(name): os.unlink(name)
+
+
+def link(target, path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name+'.ralleur-new')
+    tmp.unlink(missing_ok=True)
+    tmp.symlink_to(target)
+    os.replace(tmp, path)
+
+
+def remove(path):
+    if path.is_symlink() or path.is_file(): path.unlink()
+    elif path.is_dir(): shutil.rmtree(path)
+
+
+def copy(source, dest):
+    if source.is_symlink(): dest.symlink_to(os.readlink(source))
+    elif source.is_dir(): shutil.copytree(source, dest, symlinks=True)
+    else: shutil.copy2(source, dest)
+
+
+def digest(path):
+    h = hashlib.sha256()
+    if not path.exists() and not path.is_symlink(): return None
+    if path.is_symlink(): return hashlib.sha256(('link:'+os.readlink(path)).encode()).hexdigest()
+    files = sorted(path.rglob('*')) if path.is_dir() else [path]
+    for p in files:
+        if '__pycache__' in p.parts or p.suffix == '.pyc': continue
+        h.update(str(p.relative_to(path) if p != path else p.name).encode())
+        if p.is_symlink(): h.update(('link:'+os.readlink(p)).encode())
+        elif p.is_file(): h.update(p.read_bytes())
+    return h.hexdigest()
+
+
+def installed():
+    path = STATE/'installation.json'
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def environment():
+    env = os.environ.copy()
+    env.update(RALLEUR_ROOT=str(ROOT), RALLEUR_CONFIG=str(CFG), RALLEUR_STATE=str(STATE), RALLEUR_DATA=str(DATA))
+    return env
+
+
+def session_environment():
+    env = environment()
+    env.update(XDG_CONFIG_HOME=str(CFG/'session'), XDG_STATE_HOME=str(STATE), QT_QPA_PLATFORMTHEME='qt6ct')
+    env['XDG_DATA_HOME'] = str(STATE/'app-data')
+    env['XDG_CACHE_HOME'] = str(STATE/'cache')
+    env['KDE_COLOR_SCHEME_PATH'] = str(STATE/'current/Ralleur.colors')
+    env['QT_STYLE_OVERRIDE'] = 'Fusion'
+    env['XDG_DATA_DIRS'] = str(STATE/'app-data')+':'+env.get('XDG_DATA_DIRS','/usr/local/share:/usr/share')
+    info = installed()
+    runtime = info.get('pluginPrefix')
+    if runtime:
+        # KDE forks often export QML2_IMPORT_PATH globally. Never mix two
+        # Caelestia ABIs in the same process.
+        env['QML_IMPORT_PATH'] = runtime+'/lib/qt6/qml'
+        env['QML2_IMPORT_PATH'] = env['QML_IMPORT_PATH']
+        env['LD_LIBRARY_PATH'] = runtime+'/lib/qt6/qml/Caelestia/lib:'+runtime+'/lib'+(':'+env['LD_LIBRARY_PATH'] if env.get('LD_LIBRARY_PATH') else '')
+        env['CAELESTIA_LIB_DIR'] = runtime+'/lib/caelestia'
+        env['PATH'] = runtime+'/cli/bin:'+env['PATH']
+    return env
+
+
+def make_runtime(upstream):
+    shell = STATE/'runtime'
+    shell.mkdir(parents=True, exist_ok=True)
+    for name in ['assets','components','daemons','modules','services','utils']:
+        link(upstream/name, shell/name)
+    link(ROOT/'qml', shell/'ralleur')
+    if (shell/'shell.qml').is_symlink(): (shell/'shell.qml').unlink()
+    atomic(shell/'shell.qml', (ROOT/'shell.qml').read_text())
+    link(shell, CFG/'session/quickshell/caelestia')
+    return shell/'shell.qml'
+
+
+def theme(mode, reload=True, root=ROOT):
+    if root == ROOT: generate()
+    STATE.mkdir(parents=True, exist_ok=True)
+    icons_file = STATE/'icons.json'
+    if not icons_file.exists():
+        icons = {}
+        names = ['firefox','chromium','visual-studio-code','kate','utilities-terminal','system-file-manager','multimedia-player','mpv','application-x-executable']
+        for name in names:
+            for directory in ('breeze','Papirus','hicolor','AdwaitaLegacy'):
+                iconroot = Path('/usr/share/icons')/directory
+                matches = sorted(iconroot.glob('apps/*/'+name+'.svg')) + sorted(iconroot.glob('*/apps/'+name+'.svg')) + sorted(iconroot.glob('*/apps/'+name+'.png'))
+                if matches:
+                    icons[name] = str(matches[0]); break
+        atomic(icons_file,json.dumps(icons)+'\n')
+    if mode == 'toggle':
+        old = json.loads((STATE/'theme.json').read_text()).get('mode','dark') if (STATE/'theme.json').exists() else 'dark'
+        mode = 'light' if old == 'dark' else 'dark'
+    link(root/'build/modes'/mode, STATE/'current')
+    # Upstream Colours watches scheme.json. Keep its state isolated too.
+    atomic(STATE/'caelestia/scheme.json', (STATE/'current/scheme.json').read_text())
+    atomic(STATE/'theme.json', json.dumps({'mode':mode})+'\n')
+    link(STATE/'current/Ralleur.colors', STATE/'app-data/color-schemes/Ralleur.colors')
+    profile = STATE/'firefox'
+    profile.mkdir(parents=True, exist_ok=True)
+    atomic(profile/'user.js', (STATE/'current/firefox-user.js').read_text())
+    atomic(profile/'chrome/userChrome.css', (STATE/'current/userChrome.css').read_text())
+    if reload and os.environ.get('HYPRLAND_INSTANCE_SIGNATURE'):
+        subprocess.run(['hyprctl','reload'], check=False, stdout=subprocess.DEVNULL)
+        socket = Path(os.environ.get('XDG_RUNTIME_DIR', '/tmp'))/'ralleur-kitty.sock'
+        if shutil.which('kitty') and socket.exists():
+            subprocess.run(['kitty','@','--to','unix:'+str(socket),'set-colors','--all','--configured',str(STATE/'current/kitty.conf')], check=False)
+    print('Theme:', mode)
+
+
+def hypr_config(path, lua=True):
+    cli = str(DATA/'bin/ralleur')
+    q = shlex.quote(cli)
+    if lua:
+        return f'''-- Generated Ralleur session; user additions: local.lua
+dofile({json.dumps(str(STATE/'current/hypr-theme.lua'))})
+hl.monitor({{ output = "", mode = "preferred", position = "auto", scale = os.getenv("RALLEUR_NESTED") == "1" and 1 or "auto" }})
+hl.env("XCURSOR_SIZE", "24")
+hl.config({{ misc = {{ disable_hyprland_logo = true, disable_splash_rendering = true }}, input = {{ kb_layout = "de", follow_mouse = 1 }} }})
+hl.on("hyprland.start", function () hl.exec_cmd({json.dumps(q+' start')}) end)
+hl.bind("SUPER + SPACE", hl.dsp.exec_cmd({json.dumps(q+' ipc launcher')}))
+hl.bind("SUPER + W", hl.dsp.exec_cmd({json.dumps(q+' ipc widgets')}))
+hl.bind("SUPER + SHIFT + T", hl.dsp.exec_cmd({json.dumps(q+' theme toggle')}))
+hl.bind("SUPER + RETURN", hl.dsp.exec_cmd({json.dumps(q+' app terminal')}))
+hl.bind("SUPER + E", hl.dsp.exec_cmd({json.dumps(q+' app files')}))
+hl.bind("SUPER + B", hl.dsp.exec_cmd({json.dumps(q+' app browser')}))
+hl.bind("SUPER + Q", hl.dsp.window.close())
+hl.bind("SUPER + F", hl.dsp.window.fullscreen({{ mode = "fullscreen" }}))
+hl.bind("SUPER + V", hl.dsp.window.float({{ action = "toggle" }}))
+hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), {{ mouse = true }})
+hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), {{ mouse = true }})
+for i = 1, 9 do
+ hl.bind("SUPER + " .. i, hl.dsp.focus({{ workspace = i }}))
+ hl.bind("SUPER + SHIFT + " .. i, hl.dsp.window.move({{ workspace = i }}))
+end
+for _, d in ipairs({{"left", "right", "up", "down"}}) do
+ hl.bind("SUPER + " .. d, hl.dsp.focus({{ direction = d }}))
+end
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), {{ repeating = true }})
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), {{ repeating = true }})
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
+local user = {json.dumps(str(path/'local.lua'))}
+local f = io.open(user, "r"); if f then f:close(); dofile(user) end
+'''
+    return f'''# Legacy Hyprlang, for Hyprland <=0.54 only
+source = {STATE}/current/hypr-theme.conf
+monitor = ,preferred,auto,auto
+exec-once = {q} start
+bind = SUPER, SPACE, exec, {q} ipc launcher
+bind = SUPER, W, exec, {q} ipc widgets
+bind = SUPER SHIFT, T, exec, {q} theme toggle
+bind = SUPER, RETURN, exec, {q} app terminal
+bind = SUPER, E, exec, {q} app files
+bind = SUPER, B, exec, {q} app browser
+bind = SUPER, Q, killactive,
+bind = SUPER, F, fullscreen, 0
+bind = SUPER, V, togglefloating,
+bindm = SUPER, mouse:272, movewindow
+bindm = SUPER, mouse:273, resizewindow
+'''+''.join(f'bind = SUPER, {i}, workspace, {i}\nbind = SUPER SHIFT, {i}, movetoworkspace, {i}\n' for i in range(1,10))
+
+
+def install(args):
+    generate()
+    upstream = Path(args.upstream).expanduser().resolve()
+    lock = json.loads((ROOT/'config/upstream.lock.json').read_text())
+    rev = subprocess.check_output(['git','-C',str(upstream),'rev-parse','HEAD'],text=True).strip()
+    if rev != lock['commit']: raise SystemExit('Upstream version mismatch: use bin/build-upstream first, or supply the pinned checkout.')
+    if subprocess.check_output(['git','-C',str(upstream),'diff','--name-only'], text=True).strip() not in ('', 'plugin/src/Caelestia/Services/cavaprovider.cpp'):
+        raise SystemExit('Unreviewed upstream modifications detected.')
+    prefix = Path(args.plugin_prefix).expanduser().resolve() if args.plugin_prefix else None
+    if prefix and not (prefix/'lib/qt6/qml/Caelestia/Config/qmldir').exists(): raise SystemExit('Caelestia plugin not found in prefix.')
+    original_cfg = Path(os.environ.get('XDG_CONFIG_HOME', str(Path.home()/'.config'))).resolve()
+    entry = Path(args.bin_dir).expanduser().resolve()/'ralleur-desktop'
+    targets = [DATA, CFG, entry]
+    if not all(p.is_absolute() for p in targets): raise SystemExit('Use absolute installation paths.')
+    if any(p == q or p.is_relative_to(q) or q.is_relative_to(p) for i,p in enumerate(targets) for q in targets[i+1:]):
+        raise SystemExit('Installation destinations must not overlap.')
+    for p in targets:
+        if p == Path.home() or p == Path('/') or p == ROOT or ROOT.is_relative_to(p): raise SystemExit('Unsafe installation destination: '+str(p))
+    source_digest = digest(ROOT)
+    previous = installed()
+    if previous.get('sourceDigest') == source_digest and previous.get('upstream') == str(upstream) and previous.get('pluginPrefix') == (str(prefix) if prefix else None) and all(digest(Path(p)) == d for p,d in previous.get('digests',{}).items()):
+        print('Already installed; no changes.'); return
+    print('Managed destinations:'); print('\n'.join(map(str, targets)))
+    if args.dry_run: return
+    if DATA == ROOT: raise SystemExit('Use a separate installation directory.')
+    backup = STATE.parent/'ralleur-desktop-backups'/datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f')
+    backup.mkdir(parents=True, mode=0o700)
+    previous_theme = json.loads((STATE/'theme.json').read_text()).get('mode','dark') if (STATE/'theme.json').exists() else 'dark'
+    record = {'namespace':'ralleur-desktop-v1', 'targets':[], 'previousInstallation': previous, 'previousTheme': previous_theme}
+    for i,p in enumerate(targets):
+        exists = p.exists() or p.is_symlink()
+        record['targets'].append({'path':str(p),'backup':str(i) if exists else None})
+        if exists: copy(p, backup/str(i))
+    atomic(backup/'manifest.json', json.dumps(record, indent=2))
+    try:
+        for p in targets: remove(p)
+        shutil.copytree(ROOT, DATA, ignore=shutil.ignore_patterns('__pycache__','evidence'), symlinks=True)
+        session = CFG/'session'; session.mkdir(parents=True)
+        # Copy small app preferences once. No writable links into production:
+        # app state, cache and preferences stay within this session namespace.
+        for name in ('dolphinrc','konsolerc','katerc','mimeapps.list'):
+            previous_app = backup/'1/session'/name
+            existing = previous_app if previous_app.is_file() else original_cfg/name
+            if existing.is_file() and existing.stat().st_size < 2_000_000:
+                shutil.copy2(existing,session/name)
+        shell = json.loads((DATA/'build/shell.json').read_text())
+        previous_shell = backup/'1/session/caelestia/shell.json'
+        if previous_shell.is_file():
+            old_shell = json.loads(previous_shell.read_text())
+            # Keep native preferences, while regenerating the design-owned
+            # surfaces. The exact upstream revision/schema remains pinned.
+            def merge(base, saved):
+                for key,value in saved.items():
+                    if isinstance(value,dict) and isinstance(base.get(key),dict): merge(base[key],value)
+                    else: base[key]=value
+            for section,value in old_shell.items():
+                if section not in ('bar','border','background','appearance'):
+                    if isinstance(value,dict) and isinstance(shell.get(section),dict): merge(shell[section],value)
+                    else: shell[section]=value
+            shell.setdefault('services',{})['smartScheme']=False
+            shell.setdefault('general',{})['showOverFullscreen']=False
+        shell['general']['apps'] = {k:[str(DATA/'bin/ralleur'),'app',v] for k,v in [('terminal','terminal'),('explorer','files')]}
+        atomic(session/'caelestia/shell.json',json.dumps(shell,indent=2)+'\n')
+        for version in ('3.0','4.0'):
+            link(STATE/'current/gtk.css',session/f'gtk-{version}/gtk.css')
+            link(STATE/'current/gtk-settings.ini',session/f'gtk-{version}/settings.ini')
+        link(STATE/'current/kdeglobals',session/'kdeglobals')
+        atomic(session/'qt6ct/qt6ct.conf', '[Appearance]\nstyle=Fusion\nicon_theme=breeze\ncustom_palette=true\ncolor_scheme_path='+str(STATE/'current/qt6ct-colors.conf')+'\n[Fonts]\nfixed="monospace,10,-1,5,50,0,0,0,0,0"\ngeneral="Inter,10,-1,5,50,0,0,0,0,0"\n')
+        atomic(session/'kitty/kitty.conf', 'font_family monospace\nfont_size 11\nwindow_padding_width 16\nhide_window_decorations yes\nconfirm_os_window_close 0\nallow_remote_control socket-only\ninclude '+str(STATE/'current/kitty.conf')+'\n')
+        mpris_plugin = prefix.parent/'hyprland/usr/lib/mpv-mpris/mpris.so' if prefix else None
+        if mpris_plugin and mpris_plugin.is_file(): link(mpris_plugin,session/'mpv/scripts/mpris.so')
+        atomic(CFG/'hyprland.lua',hypr_config(CFG))
+        atomic(CFG/'hyprland.conf',hypr_config(CFG,lua=False))
+        link(STATE/'runtime',session/'quickshell/caelestia')
+        for name in ('local.lua','apps.json'):
+            if (backup/'1'/name).is_file(): shutil.copy2(backup/'1'/name,CFG/name)
+        entry.parent.mkdir(parents=True, exist_ok=True)
+        entry.symlink_to(DATA/'bin/ralleur')
+        info = {'sourceDigest':source_digest, 'upstream':str(upstream), 'pluginPrefix':str(prefix) if prefix else None, 'backup':str(backup), 'config':str(CFG),'data':str(DATA),'originalConfig':str(original_cfg)}
+        # Theme state points at the installed copy, not the source tree.
+        (STATE/'icons.json').unlink(missing_ok=True)
+        theme(args.theme, reload=False, root=DATA)
+        info['digests'] = {str(p):digest(p) for p in targets}
+        atomic(STATE/'installation.json',json.dumps(info,indent=2)+'\n')
+    except BaseException:
+        for item in record['targets']:
+            p=Path(item['path']); remove(p)
+            if item['backup']: copy(backup/item['backup'],p)
+        raise
+    print('Installed. Backup:',backup)
+    print('Start a separate session with: Hyprland --config',CFG/'hyprland.lua')
+
+
+def rollback(args):
+    info = installed()
+    backup = Path(args.backup or info.get('backup',''))
+    if not (backup/'manifest.json').is_file(): raise SystemExit('No valid backup manifest.')
+    record = json.loads((backup/'manifest.json').read_text())
+    paths = [Path(item['path']) for item in record.get('targets',[])]
+    if record.get('namespace') != 'ralleur-desktop-v1' or len(paths) != 3 or paths[:2] != [DATA,CFG]:
+        raise SystemExit('Backup does not belong to these Ralleur installation roots; restore with its original RALLEUR_* / XDG context.')
+    drift = [p for p,d in info.get('digests',{}).items() if digest(Path(p)) != d]
+    if drift and not args.force: raise SystemExit('Managed files changed; use --force to preserve them in a rescue snapshot before rollback: '+', '.join(drift))
+    if args.force:
+        rescue=backup/'before-rollback'; rescue.mkdir(exist_ok=True)
+        for i,item in enumerate(record['targets']):
+            p=Path(item['path'])
+            if p.exists() or p.is_symlink(): copy(p,rescue/str(i))
+    for item in record['targets']:
+        p=Path(item['path']); remove(p)
+        if item['backup']: copy(backup/item['backup'],p)
+    if record['previousInstallation']:
+        atomic(STATE/'installation.json',json.dumps(record['previousInstallation'],indent=2))
+        old=record['previousInstallation']
+        theme(record.get('previousTheme','dark'), reload=False, root=Path(old['data']))
+    else:
+        (STATE/'installation.json').unlink(missing_ok=True)
+        (STATE/'current').unlink(missing_ok=True)
+    print('Restored managed destinations from',backup)
+    print('Theme state and backup retained in',STATE.parent)
+
+
+def start():
+    if not os.environ.get('HYPRLAND_INSTANCE_SIGNATURE'): raise SystemExit('Hyprland session required. KDE remains untouched; use preview for component rendering.')
+    info=installed()
+    if not info: raise SystemExit('Install first.')
+    path=make_runtime(Path(info['upstream']))
+    os.execvpe('qs',['qs','-n','-c','caelestia'],session_environment())
+
+
+def desktop():
+    """Start the installed desktop, nested when another display is running."""
+    info = installed()
+    if not info: raise SystemExit('Install first.')
+    env = environment()
+    prefix = Path(info['pluginPrefix']) if info.get('pluginPrefix') else None
+    portable = prefix.parent/'hyprland/usr' if prefix else None
+    binary = shutil.which('Hyprland')
+    if portable and (portable/'bin/Hyprland').is_file():
+        binary = str(portable/'bin/Hyprland')
+        env['PATH'] = str(portable/'bin')+':'+env['PATH']
+        env['LD_LIBRARY_PATH'] = str(portable/'lib')+(':'+env['LD_LIBRARY_PATH'] if env.get('LD_LIBRARY_PATH') else '')
+        env['QT_PLUGIN_PATH'] = str(portable/'lib/qt6/plugins')+(':'+env['QT_PLUGIN_PATH'] if env.get('QT_PLUGIN_PATH') else '')
+        from xml.sax.saxutils import escape
+        atomic(STATE/'fontconfig.conf','<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd"><fontconfig><include>/etc/fonts/fonts.conf</include><dir>'+escape(str(portable/'share/fonts'))+'</dir></fontconfig>\n')
+        env['FONTCONFIG_FILE'] = str(STATE/'fontconfig.conf')
+    if not binary: raise SystemExit('Hyprland not found. Install Hyprland or provide the private runtime next to the plugin prefix.')
+    if not shutil.which('dbus-run-session'): raise SystemExit('dbus-run-session is required for the isolated desktop session.')
+    pidfile = STATE/'desktop.pid'
+    if pidfile.exists():
+        try:
+            pid = int(pidfile.read_text())
+            command = Path(f'/proc/{pid}/cmdline').read_bytes()
+            if b'dbus-run-session' in command and b'Hyprland' in command:
+                raise SystemExit('Ralleur desktop is already running (PID '+str(pid)+').')
+        except (OSError, ValueError): pass
+    nested = bool(env.get('WAYLAND_DISPLAY') or env.get('DISPLAY'))
+    if nested:
+        # Do not acquire DRM devices or replace the host compositor.
+        env['AQ_DRM_DEVICES'] = '/dev/null'
+        env['RALLEUR_NESTED'] = '1'
+    env.update(XDG_CURRENT_DESKTOP='Hyprland',XDG_SESSION_DESKTOP='Hyprland',XDG_SESSION_TYPE='wayland')
+    atomic(pidfile,str(os.getpid())+'\n')
+    print('Starting Ralleur '+('inside the current desktop' if nested else 'as a native session'),flush=True)
+    os.execvpe('dbus-run-session',['dbus-run-session','--',binary,'--config',str(CFG/'hyprland.lua')],env)
+
+
+def app(name,extra=None):
+    choices = {
+        'browser': [('firefox',['--no-remote','--profile',str(STATE/'firefox'),'https://ralleur.com']),('chromium',['--user-data-dir='+str(STATE/'chromium'),'--no-first-run','--no-default-browser-check','--new-window','https://ralleur.com'])],
+        'terminal': [('kitty',['--listen-on','unix:'+str(Path(os.environ.get('XDG_RUNTIME_DIR','/tmp'))/'ralleur-kitty.sock')]),('konsole',['--separate','--profile','Ralleur'])],
+        'files': [('thunar',[]),('dolphin',['--new-window']),('nemo',[])],
+        'home': [('thunar',[str(Path.home())]),('dolphin',['--new-window',str(Path.home())]),('nemo',[str(Path.home())])],
+        'code': [('codium',[]),('code',[]),('kate',[])],
+        'music': [('spotify',[]),('elisa',[]),('rhythmbox',[]),('mpv',['--player-operation-mode=pseudo-gui'])]}
+    if name not in choices: raise SystemExit('Unknown app role.')
+    overrides = CFG/'apps.json'
+    if overrides.exists() and name in json.loads(overrides.read_text()):
+        argv=json.loads(overrides.read_text())[name]
+        if not isinstance(argv,list) or not argv or not all(isinstance(s,str) for s in argv): raise SystemExit('apps.json requires argv arrays.')
+    else:
+        argv=next(([binary]+args for binary,args in choices[name] if shutil.which(binary)),None)
+    if not argv:
+        message='No application installed for '+name+'. Configure '+str(overrides)
+        if shutil.which('notify-send'): subprocess.run(['notify-send','Ralleur',message])
+        raise SystemExit(message)
+    env=session_environment() if installed() else environment()
+    if argv[0] == 'dolphin': env['QT_QPA_PLATFORMTHEME'] = 'kde'
+    if extra:
+        if extra[0] == '--': extra = extra[1:]
+        argv += (['-e'] if argv[0]=='konsole' else []) + extra
+    if argv[0]=='konsole':
+        share=STATE/'app-data'; link(STATE/'current/Ralleur.colorscheme',share/'konsole/Ralleur.colorscheme')
+        atomic(share/'konsole/Ralleur.profile','[General]\nName=Ralleur\nParent=FALLBACK/\n[Appearance]\nColorScheme=Ralleur\nFont=monospace,11,-1,5,50,0,0,0,0,0\n')
+        env['XDG_DATA_DIRS']=str(share)+':'+env.get('XDG_DATA_DIRS','/usr/local/share:/usr/share')
+    if argv[0] == 'kitty':
+        child = subprocess.Popen(argv, env=env)
+        time.sleep(1)
+        socket = Path(os.environ.get('XDG_RUNTIME_DIR','/tmp'))/'ralleur-kitty.sock'
+        if socket.exists(): subprocess.run(['kitty','@','--to','unix:'+str(socket),'set-colors','--all','--configured',str(STATE/'current/kitty.conf')],env=env,check=False)
+        raise SystemExit(child.wait())
+    os.execvpe(argv[0],argv,env)
+
+
+def doctor():
+    for binary in ['Hyprland','hyprctl','qs','python3','caelestia','kitty','firefox','thunar','dolphin','qt6ct','wpctl','grim']:
+        print(f'{binary:14} {shutil.which(binary) or "not found"}')
+    print('Desktop:',os.environ.get('XDG_CURRENT_DESKTOP','unknown'))
+    print('Hyprland session:',bool(os.environ.get('HYPRLAND_INSTANCE_SIGNATURE')))
+    print('Pinned upstream:',json.loads((ROOT/'config/upstream.lock.json').read_text())['commit'])
+    print('Isolated configuration:',CFG)
+    print('State:',STATE)
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    sub=parser.add_subparsers(dest='cmd',required=True)
+    p=sub.add_parser('install'); p.add_argument('--upstream',required=True); p.add_argument('--plugin-prefix'); p.add_argument('--bin-dir',default=str(Path.home()/'.local/bin')); p.add_argument('--dry-run',action='store_true'); p.add_argument('--theme',choices=['light','dark'],default='dark')
+    p=sub.add_parser('rollback'); p.add_argument('--backup'); p.add_argument('--force',action='store_true')
+    p=sub.add_parser('theme'); p.add_argument('mode',choices=['light','dark','toggle'])
+    sub.add_parser('generate'); sub.add_parser('doctor'); sub.add_parser('start'); sub.add_parser('desktop'); sub.add_parser('demo')
+    p=sub.add_parser('preview'); p.add_argument('--width',type=int,default=1586); p.add_argument('--height',type=int,default=992)
+    p=sub.add_parser('app'); p.add_argument('name'); p.add_argument('args',nargs=argparse.REMAINDER)
+    p=sub.add_parser('ipc'); p.add_argument('action',choices=['launcher','widgets','settings','theme','session','reload'])
+    args=parser.parse_args()
+    if args.cmd in ('install','rollback','theme'):
+        STATE.mkdir(parents=True, exist_ok=True)
+        with (STATE/'transaction.lock').open('w') as lockfile:
+            fcntl.flock(lockfile,fcntl.LOCK_EX)
+            if args.cmd=='install': install(args)
+            elif args.cmd=='rollback': rollback(args)
+            else: theme(args.mode)
+    elif args.cmd=='generate': generate()
+    elif args.cmd=='doctor': doctor()
+    elif args.cmd=='start': start()
+    elif args.cmd=='desktop': desktop()
+    elif args.cmd=='demo': os.execvpe('python3',['python3',str(ROOT/'bin/demo.py')],session_environment())
+    elif args.cmd=='app': app(args.name,args.args)
+    elif args.cmd=='ipc':
+        subprocess.run(['qs','-p',str(CFG/'session/quickshell/caelestia/shell.qml'),'ipc','call','ralleur',args.action],check=True)
+    elif args.cmd=='preview':
+        env=environment(); env.update(RALLEUR_WIDTH=str(args.width),RALLEUR_HEIGHT=str(args.height))
+        os.execvpe('qs',['qs','-p',str(ROOT/'preview.qml')],env)
+
+
+if __name__=='__main__':
+    try: main()
+    except (OSError,subprocess.CalledProcessError) as e: raise SystemExit(str(e))

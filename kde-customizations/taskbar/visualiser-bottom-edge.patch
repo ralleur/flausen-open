@@ -1,0 +1,20 @@
+--- modules/background/Visualiser.qml
++++ modules/background/Visualiser.qml
+@@ -22,8 +22,6 @@
+     readonly property var dock: Visibilities.docks.get(root.screen.name)
+     // Use the actual lower dock, independently of the main taskbar's edge/scale.
+     readonly property real dockHeight: dock?.bar?.height ?? Math.round(Tokens.sizes.bar.innerWidth * SplitBarSettings.dockScale)
+-    readonly property real dockBottomMargin: dock?.bar
+-        ? Math.max(0, screen.height - dock.bar.y - dockHeight) : SplitBarSettings.edgeGap
+     readonly property real maxBarHeight: Math.max(0, dockHeight)
+ 
+     opacity: shouldBeActive ? 1 : 0
+@@ -75,7 +73,7 @@
+                     anchors.leftMargin: 0
+                     anchors.rightMargin: 0
+                     anchors.topMargin: Config.border.thickness
+-                    anchors.bottomMargin: root.dockBottomMargin
++                    anchors.bottomMargin: 0
+                     Repeater {
+                         model: AppVisualiser.split ? Math.min(5, AppVisualiser.apps.length) : 2
+                         delegate: Item {

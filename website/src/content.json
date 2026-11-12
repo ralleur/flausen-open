@@ -1,0 +1,63 @@
+{
+  "locale": "en",
+  "brand": "flausen.",
+  "scene": {
+    "byline": "An operating system by ralleur",
+    "status": "CachyOS / In development",
+    "hint": "Go on. Touch it.",
+    "tagline": "Runs. Off script.",
+    "close": "Back to the mobile",
+    "accessibleHeading": "flausen. — an everyday OS for work, creativity and play"
+  },
+  "sections": [
+    {
+      "id": "play",
+      "label": "Play",
+      "shape": "blue-object",
+      "heading": "Make room for play.",
+      "body": "Games are part of a full PC experience. flausen. brings play into an everyday desktop built for work, creativity and everything in between.",
+      "note": "In development. Availability and compatibility details will follow when verified."
+    },
+    {
+      "id": "everyday",
+      "label": "Everyday",
+      "shape": "orange-wedge",
+      "heading": "A desktop for your whole day.",
+      "body": "Work, create, browse, listen and keep things organized. flausen. aims to bring familiar desktop ideas together in one consistent experience, with the technical machinery kept out of your way.",
+      "note": "This describes the direction of the project, not a released feature list."
+    },
+    {
+      "id": "idea",
+      "label": "The idea",
+      "shape": "petrol-strip",
+      "heading": "A little out of line.",
+      "body": "flausen. is a personal project by ralleur: an everyday OS built on CachyOS, combining familiar ideas from Windows and macOS with the flexibility of KDE and Caelestia.",
+      "note": "The name stays flausen. The rest is still taking shape."
+    }
+  ],
+  "counterweight": {
+    "id": "brown-weight",
+    "accessibleLabel": "Nudge the mobile",
+    "essential": false
+  },
+  "verifiedFamilyLinks": [
+    {
+      "label": "ralleur",
+      "url": "https://ralleur.com/"
+    },
+    {
+      "label": "kurtz",
+      "url": "https://kurtz.app/"
+    },
+    {
+      "label": "hauser",
+      "url": "https://hauserhome.app/de/"
+    }
+  ],
+  "projectLinks": {
+    "download": null,
+    "github": null,
+    "releaseDate": null
+  },
+  "copyStatus": "Proposed English copy for implementation; do not invent release claims."
+}

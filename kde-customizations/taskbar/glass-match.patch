@@ -1,0 +1,18 @@
+--- modules/bar/GlassSurface.qml
++++ modules/bar/GlassSurface.qml
+@@ -1,10 +1,12 @@
+ import QtQuick
++import qs.services
+ 
+-// Uniform, slightly translucent anthracite over native backdrop blur.
++// The same uniform tint as the lock-screen glass. KWin supplies live
++// backdrop blur through ContentWindow's two rounded blur regions.
+ Rectangle {
+     property bool rounded: true
+     radius: rounded ? height / 2 : 0
+-    color: "#cc191d20"
++    color: Colours.light ? "#c7f8f6f3" : "#b81c2024"
+     border.width: 1
+-    border.color: "#1cffffff"
++    border.color: Colours.light ? "#99ffffff" : "#45484b"
+ }

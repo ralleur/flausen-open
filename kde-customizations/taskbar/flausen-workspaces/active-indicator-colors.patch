@@ -1,0 +1,17 @@
+--- modules/bar/components/workspaces/ActiveIndicator.qml
++++ modules/bar/components/workspaces/ActiveIndicator.qml
+@@ -103,10 +103,10 @@
+         repeat: false
+         onTriggered: root.isSwiping = false
+     }
+-    Colouriser {
+-        source: root.mask
+-        sourceColor: Colours.barForeground
+-        colorizationColor: Colours.barForeground
++    ShaderEffectSource {
++        sourceItem: root.mask
++        live: true
++        hideSource: false
+ 
+         x: isHorizontal ? -parent.offset + offsetAmt : 0
+         y: isHorizontal ? 0 : -parent.offset + offsetAmt

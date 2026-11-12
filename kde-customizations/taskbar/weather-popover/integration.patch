@@ -1,0 +1,10 @@
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -219,6 +219,7 @@
+ 
+         Popout {
+             name: "weather"
++            minScale: 1.15
+             sourceComponent: Weather {
+                 popouts: root.popouts
+             }

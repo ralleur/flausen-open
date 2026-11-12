@@ -1,0 +1,19 @@
+{
+  "name": "ralleur-caelestia-codex-handoff",
+  "reference_images": [
+    {
+      "mode": "light",
+      "file": "reference/desktop-light.png",
+      "width": 1586,
+      "height": 992,
+      "sha256": "794b3ee28f5465ffd9ccfe0db6b8489fb5b228041c07304288566155698c5b1a"
+    },
+    {
+      "mode": "dark",
+      "file": "reference/desktop-dark.png",
+      "width": 1586,
+      "height": 992,
+      "sha256": "d60e351c985c87359e554540e8aa86960f74285774704bf89ab93f7ffc506d2f"
+    }
+  ]
+}

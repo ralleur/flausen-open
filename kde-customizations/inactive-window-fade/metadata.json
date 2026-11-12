@@ -1,0 +1,14 @@
+{
+  "KPackageStructure": "KWin/Effect",
+  "KPlugin": {
+    "Id": "flausen-inactive-window-fade",
+    "Name": "flausen. weicher Fokuswechsel",
+    "Description": "Smooth the existing 95 percent inactive-window opacity rule",
+    "License": "GPL-2.0-or-later",
+    "Version": "1.0",
+    "EnabledByDefault": false
+  },
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js",
+  "X-KDE-Ordering": 60
+}

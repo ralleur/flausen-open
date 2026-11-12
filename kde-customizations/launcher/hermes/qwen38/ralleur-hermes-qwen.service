@@ -1,0 +1,13 @@
+[Unit]
+Description=Hermes Qwen 3.8 27B local CUDA server
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.local/share/ralleur-hermes/qwen38/serve.py
+TimeoutStopSec=15
+Nice=5
+Restart=no
+Environment=CUDA_VISIBLE_DEVICES=0
+
+# Started on demand by Hermes; deliberately no boot-time model allocation.

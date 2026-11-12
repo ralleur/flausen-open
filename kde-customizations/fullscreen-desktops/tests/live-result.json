@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "Active fullscreen skips occupied desktop(s), follows nearest free target and restores source",
+    "Transient dialog follows its parent and both restore previous desktop assignments",
+    "All four occupied: next desktop to the right, including 4\u21921; other windows stay put",
+    "Manual move while fullscreen is preserved on exit",
+    "Initial fullscreen start and closing retain exactly the same four desktops"
+  ],
+  "desktopCount": 4,
+  "originalDesktopRestored": true
+}

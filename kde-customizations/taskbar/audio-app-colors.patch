@@ -1,0 +1,40 @@
+--- services/Audio.qml
++++ services/Audio.qml
+@@ -262,7 +262,7 @@
+                 newStreams.push(node);
+ 
+                 const name = getStreamName(node);
+-                if (name === root.selfAppName)
++                if (name === root.selfAppName || name === "flausen-app-visualiser")
+                     continue;
+                 if (!seenApps.has(name)) {
+                     seenApps.add(name);
+--- components/controls/SliderRow.qml
++++ components/controls/SliderRow.qml
+@@ -12,6 +12,7 @@
+     id: root
+ 
+     property alias icon: icon.text
++    property alias sliderColour: slider.fgColour
+     property alias label: label.text
+     property alias valueLabel: valueLabel.text
+     property string subtext
+@@ -121,6 +122,7 @@
+                 implicitHeight: spacious ? Tokens.padding.medium * 2 : Tokens.padding.large
+ 
+                 StyledSlider {
++                    id: slider
+                     anchors.left: parent.left
+                     anchors.right: parent.right
+                     anchors.verticalCenter: parent.verticalCenter
+--- components/controls/AppStreamRow.qml
++++ components/controls/AppStreamRow.qml
+@@ -13,6 +13,8 @@
+ 
+     property bool muteOnIconClick: false
+ 
++    sliderColour: root.enabled ? AppVisualiser.colorForApp(Audio.getStreamName(root.node)) : Colours.disabledContent
++
+     iconClickable: root.muteOnIconClick
+     icon: Icons.getVolumeIcon(Audio.getAppVolume(root.node), Audio.getAppMuted(root.node))
+     label: Audio.getStreamName(root.node)

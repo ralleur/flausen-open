@@ -1,0 +1,67 @@
+{
+  "saved": true,
+  "width": 520,
+  "height": 422.20000000000005,
+  "rows": [
+    {
+      "text": "attach_file",
+      "font": "Material Symbols Rounded",
+      "size": 20
+    },
+    {
+      "text": "Clipboard",
+      "font": "Noto Sans",
+      "size": 28.04869565217392
+    },
+    {
+      "text": "3 entries · Click to copy",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "content_paste",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Ein kurzer Beispieltext",
+      "font": "Noto Sans",
+      "size": 16.695652173913047
+    },
+    {
+      "text": "keep_off",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "content_paste",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Angehefteter Eintrag mit längerer Beschriftung und einer zweiten Zeile für die Vorschau.",
+      "font": "Noto Sans",
+      "size": 16.695652173913047
+    },
+    {
+      "text": "keep",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "image",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Image",
+      "font": "Noto Sans",
+      "size": 16.695652173913047
+    },
+    {
+      "text": "keep_off",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    }
+  ]
+}

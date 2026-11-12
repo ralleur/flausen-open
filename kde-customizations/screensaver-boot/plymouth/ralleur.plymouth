@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=ralleur
+Description=Native lightweight ralleur logo with existing unlock dialogue
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/ralleur
+ScriptFile=/usr/share/plymouth/themes/ralleur/ralleur.script

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Spotify
+Comment=Musik und Podcasts im Spotify Web Player
+Exec=/usr/bin/chromium --app=https://open.spotify.com/ --class=spotify --user-data-dir="@PROFILE@" --load-extension="@HEADER@"
+Icon=@ICON@
+Terminal=false
+Categories=AudioVideo;Audio;Music;
+StartupNotify=true
+StartupWMClass=chrome-open.spotify.com__-Default

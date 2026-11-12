@@ -1,0 +1,11 @@
+--- services/MenuStyle.qml
++++ services/MenuStyle.qml
+@@ -13,7 +13,7 @@
+     readonly property real listPixels: 15
+     readonly property color surface: Colours.light ? "#e6f4f5f7" : "#d911161d"
+     // Calendar-only smoke prototype; other surfaces keep the established material.
+-    readonly property color calendarSurface: Colours.light ? "#e6e9ecef" : "#d92b3034"
++    readonly property color calendarSurface: Colours.light ? "#e6e9ecef" : "#b823292e"
+     readonly property color border: Colours.light ? "#70969ca5" : "#38ffffff"
+     readonly property color ink: Colours.light ? "#20252d" : "#f3f4f6"
+     readonly property color muted: Colours.light ? "#5b626d" : "#aeb6c2"

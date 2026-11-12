@@ -1,0 +1,14 @@
+[Unit]
+Description=Animated background for the Ralleur start menu
+PartOf=caelestia-shell.service
+Before=caelestia-shell.service
+
+[Service]
+Type=exec
+Environment=QS_DISABLE_CRASH_HANDLER=1
+ExecStartPre=/usr/bin/rm -f %t/ralleur-start-backdrop.sock
+ExecStart=/usr/bin/quickshell --path %h/.config/quickshell/ralleur-start-backdrop/shell.qml --no-duplicate
+ExecStartPost=/usr/bin/python3 %h/.config/quickshell/ralleur-start-backdrop/register-effect.py
+ExecStopPost=%h/.local/libexec/ralleur/blur-settings off dolphin-context-backdrop
+Restart=on-failure
+RestartSec=1

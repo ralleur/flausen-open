@@ -1,0 +1,46 @@
+--- modules/bar/popouts/Media.qml
++++ modules/bar/popouts/Media.qml
+@@ -27,6 +27,34 @@
+     readonly property real currentVolume: (root.playerStream && root.playerStream.audio) ? root.playerStream.audio.volume : (root.playerStream ? Audio.getAppVolume(root.playerStream) : Audio.volume)
+     readonly property var desktopEntry: root.player ? DesktopEntries.byId(root.player.desktopEntry) : null
+ 
++    // Chromium and Plasma can expose the same tab twice. Chromium may supply
++    // only "title • artist" and its application logo, while Plasma has the art.
++    // Borrow artwork only from a richer entry for the same app and exact track;
++    // keep transport, position and source selection on the chosen player.
++    readonly property string artworkUrl: {
++        const selected = root.player;
++        if (!selected) return "";
++        const normalise = value => String(value || "").toLowerCase().replace(/[\s•·|–—:,&-]/g, "");
++        const title = normalise(selected.trackTitle);
++        if (title && !selected.trackArtist && !selected.trackAlbum) {
++            for (const candidate of Players.list) {
++                if (candidate === selected || !candidate.trackArtist || !candidate.trackTitle)
++                    continue;
++                const sameApp = selected.desktopEntry && candidate.desktopEntry
++                    ? selected.desktopEntry === candidate.desktopEntry
++                    : Players.getIdentity(selected) === Players.getIdentity(candidate);
++                if (!sameApp) continue;
++                const candidateTitle = normalise(candidate.trackTitle);
++                const candidateArtist = normalise(candidate.trackArtist);
++                if (title === candidateTitle || title === candidateTitle + candidateArtist) {
++                    const art = Players.getArtUrl(candidate);
++                    if (art) return art;
++                }
++            }
++        }
++        return Players.getArtUrl(selected);
++    }
++
+     function timestamp(seconds: real): string {
+         if (!isFinite(seconds) || seconds < 0) return "–:––";
+         const total = Math.floor(seconds);
+@@ -126,7 +154,7 @@
+             id: artwork
+             anchors.fill: parent
+             anchors.margins: 1
+-            source: Players.getArtUrl(root.player)
++            source: root.artworkUrl
+             asynchronous: true
+             fillMode: Image.PreserveAspectFit
+             layer.enabled: true

@@ -1,0 +1,1892 @@
+{
+  "schema_version": 1,
+  "snapshot": "2026-11-04-manual-preview",
+  "upstream": {
+    "url": "https://github.com/ladybug-me/caelestia-kde.git",
+    "commit": "c0cfd04d5b9da3fbf7b5f47016822888468e9829"
+  },
+  "patch_sha256": "dd1787521f7102b26b09b22e5860e9fc1c53b3a838bda0214e33c30cfc522478",
+  "files": [
+    {
+      "target": "components/AgentSafetyNotice.qml",
+      "sha256": "a7d1a21848345d431475b963e1954e72549cd87d8b2dde6f689f43b61949d1bc",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/components/AgentSafetyNotice.qml",
+      "source_sha256": "a7d1a21848345d431475b963e1954e72549cd87d8b2dde6f689f43b61949d1bc"
+    },
+    {
+      "target": "components/ExperimentalTag.qml",
+      "sha256": "e838abac3522876b8b3304058aeff770ab543198eaa5411a6a1efab8e6e5c7f2",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/components/ExperimentalTag.qml",
+      "source_sha256": "e838abac3522876b8b3304058aeff770ab543198eaa5411a6a1efab8e6e5c7f2"
+    },
+    {
+      "target": "components/MenuPrimarySurface.qml",
+      "sha256": "5cffcf3a867313f2e68d9dcfdceebaf56ad1f497ac481a6a61c72a1cd7d5278b",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/menu-style/MenuPrimarySurface.qml",
+      "source_sha256": "5cffcf3a867313f2e68d9dcfdceebaf56ad1f497ac481a6a61c72a1cd7d5278b"
+    },
+    {
+      "target": "components/MenuText.qml",
+      "sha256": "cf7227b867e21fa92dd421f4f5a9dd79dcc07c080467de26e1eec4eddc8900e2",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/menu-style/MenuText.qml",
+      "source_sha256": "cf7227b867e21fa92dd421f4f5a9dd79dcc07c080467de26e1eec4eddc8900e2"
+    },
+    {
+      "target": "components/PrimaryControlFill.qml",
+      "sha256": "c3a7e1fa10dcab15b91ac30fc1aca47fc3ad4877e3cd82a3c19231f47ad7650a",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/menu-style/PrimaryControlFill.qml",
+      "source_sha256": "c3a7e1fa10dcab15b91ac30fc1aca47fc3ad4877e3cd82a3c19231f47ad7650a"
+    },
+    {
+      "target": "components/TaskbarDropdownGlass.qml",
+      "sha256": "b441d28d832cc2dab5f2793538acdadef8b1dc933b6f620f849dc0475952ac10",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/menu-style/TaskbarDropdownGlass.qml",
+      "source_sha256": "b441d28d832cc2dab5f2793538acdadef8b1dc933b6f620f849dc0475952ac10"
+    },
+    {
+      "target": "components/TaskbarGlass.qml",
+      "sha256": "488aa6ea73403015ad0a389feeab34875e992cdcc97e2716c3c45d780da42821",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/menu-style/TaskbarGlass.qml",
+      "source_sha256": "488aa6ea73403015ad0a389feeab34875e992cdcc97e2716c3c45d780da42821"
+    },
+    {
+      "target": "components/controls/AppStreamRow.qml",
+      "sha256": "ff680223955cec7eac5fd9533cbec579a78b465c2a08f69460d50a9cc932e595",
+      "mode": 420
+    },
+    {
+      "target": "components/controls/ButtonBase.qml",
+      "sha256": "dd428597df2060762e4ef1940199a6866620e9b16431ea57fbf5596f19c42f08",
+      "mode": 420
+    },
+    {
+      "target": "components/controls/FilledSlider.qml",
+      "sha256": "de74e32390f47a6527fbd4f58cf1cdc0f62d24dd1a29c6006388f2b4c8cb554e",
+      "mode": 420,
+      "source": "kde-customizations/sliders/overlay/components/controls/FilledSlider.qml",
+      "source_sha256": "de74e32390f47a6527fbd4f58cf1cdc0f62d24dd1a29c6006388f2b4c8cb554e"
+    },
+    {
+      "target": "components/controls/Menu.qml",
+      "sha256": "f90688d2aab513a3e44dc8e1d04b4102c3131fd32f5384c2948d82fc17f6399d",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/capture-clipboard-style/Menu.qml",
+      "source_sha256": "f90688d2aab513a3e44dc8e1d04b4102c3131fd32f5384c2948d82fc17f6399d"
+    },
+    {
+      "target": "components/controls/MenuItem.qml",
+      "sha256": "a760f5a46709ab24563979ef8564306d66511d7e5ee62f913e5e07a516d56db5",
+      "mode": 420,
+      "source": "kde-customizations/desktop-context-menu/components/controls/MenuItem.qml",
+      "source_sha256": "a760f5a46709ab24563979ef8564306d66511d7e5ee62f913e5e07a516d56db5"
+    },
+    {
+      "target": "components/controls/SegmentedHandle.qml",
+      "sha256": "dbcd78934d4ac499803fab6ac4aad63379a75cbe81de260a4bf8400a4881c581",
+      "mode": 420,
+      "source": "kde-customizations/sliders/overlay/components/controls/SegmentedHandle.qml",
+      "source_sha256": "dbcd78934d4ac499803fab6ac4aad63379a75cbe81de260a4bf8400a4881c581"
+    },
+    {
+      "target": "components/controls/SegmentedTrack.qml",
+      "sha256": "bb3e95b35bce0afce1f27eea45774199b091bae1336517aec9e75f390620e6e1",
+      "mode": 420,
+      "source": "kde-customizations/sliders/overlay/components/controls/SegmentedTrack.qml",
+      "source_sha256": "bb3e95b35bce0afce1f27eea45774199b091bae1336517aec9e75f390620e6e1"
+    },
+    {
+      "target": "components/controls/SliderRow.qml",
+      "sha256": "6a64095bad580968d0e76da8149d8b7116cf2aad0c0efb929fd2e9a76a189285",
+      "mode": 420
+    },
+    {
+      "target": "components/controls/SplitButton.qml",
+      "sha256": "1b6930684b7ba8b679763d5d2bee9cc69515e8e99497e86ed8cf20278387d57b",
+      "mode": 420
+    },
+    {
+      "target": "components/controls/StyledRadioButton.qml",
+      "sha256": "2fdef43c52eed09d96b223e89105e8a2a258a272ce36eb2a5313087950e61e26",
+      "mode": 420
+    },
+    {
+      "target": "components/controls/StyledSlider.qml",
+      "sha256": "5ebaff31b026db18e867ad2181d8e3340cd45eea68ac3b3c96204f8bae156c43",
+      "mode": 420,
+      "source": "kde-customizations/sliders/overlay/components/controls/StyledSlider.qml",
+      "source_sha256": "5ebaff31b026db18e867ad2181d8e3340cd45eea68ac3b3c96204f8bae156c43"
+    },
+    {
+      "target": "components/controls/StyledSwitch.qml",
+      "sha256": "bd8f6b8f4627d7d1dc1f2f99776fd4f5ffbe28e398f548bf9181aa419bcacb69",
+      "mode": 420
+    },
+    {
+      "target": "components/controls/ToggleButton.qml",
+      "sha256": "9e986b624f13623e4955893adc11ecb273d5754cc5f2ff994de024f5b559bd19",
+      "mode": 420
+    },
+    {
+      "target": "components/images/DockIcon.qml",
+      "sha256": "5cc8d2aa6d4c5ccccbe3caa1b23a1fb485da151bc55e354a1cbe89237f75ffbe",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/icon-normalization/DockIcon.qml",
+      "source_sha256": "5cc8d2aa6d4c5ccccbe3caa1b23a1fb485da151bc55e354a1cbe89237f75ffbe"
+    },
+    {
+      "target": "components/widgets/WeatherCards.qml",
+      "sha256": "265173ec3bd04544068b0f8c36d15562ba1e73a6c3de3b1f3166b0e3bed2e83b",
+      "mode": 420
+    },
+    {
+      "target": "modules/Shortcuts.qml",
+      "sha256": "869c9809c2fae2417455933417e93c4a23740a588bec793338fd7dd7629fe001",
+      "mode": 420
+    },
+    {
+      "target": "modules/background/Background.qml",
+      "sha256": "1c692630727fcaa249e151c810d6a16b83bef2f499db0e4fb4cb022934977996",
+      "mode": 420
+    },
+    {
+      "target": "modules/background/DesktopContextMenu.qml",
+      "sha256": "949f71de84c9ebd64784d8fdd64d7369faaad56a653408a60582882565d589a2",
+      "mode": 420,
+      "source": "kde-customizations/desktop-context-menu/modules/background/DesktopContextMenu.qml",
+      "source_sha256": "949f71de84c9ebd64784d8fdd64d7369faaad56a653408a60582882565d589a2"
+    },
+    {
+      "target": "modules/background/Visualiser.qml",
+      "sha256": "04d3ce82c255eae118eebf82c7ec09e8608253e7be61a79863d3837ea0770950",
+      "mode": 420
+    },
+    {
+      "target": "modules/background/desktopicons/FileEntry.qml",
+      "sha256": "9931df5b8a4c8176774b0c632a9b05bea2bfaf1750120de497db9b95d8b7bc96",
+      "mode": 420
+    },
+    {
+      "target": "modules/background/desktopicons/widgets/CalendarWidget.qml",
+      "sha256": "6151806e2db45866e459ef3c4238346fd4e49eac7075c87003982bee298d2f5c",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/Bar.qml",
+      "sha256": "d908053845d4476eebe6a93c1e2d3f0a42869ed59d969ea4ad58b4f94f5c1330",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/BarWidgets.qml",
+      "sha256": "bf563180727d66704542a2cfd28611149ce3e38b3091d2d5ec94f3925afe02c1",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/BarWrapper.qml",
+      "sha256": "8466d079484ecebfa66c4e5ded7e959fcd040802fd167cbb0f6a46b83a7c11dc",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/GlassSurface.qml",
+      "sha256": "de9a40aac96ad2c180582bed4691c6b736dddbb6fb516928002a52e20e53f89d",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/overlay/modules/bar/GlassSurface.qml",
+      "source_sha256": "de9a40aac96ad2c180582bed4691c6b736dddbb6fb516928002a52e20e53f89d"
+    },
+    {
+      "target": "modules/bar/SplitBarSettings.qml",
+      "sha256": "c6d19556a84a457918ee1546033052f5e1edc5cbbeddee33be92b9d7e6924627",
+      "mode": 384,
+      "source": "kde-customizations/taskbar/overlay/modules/bar/SplitBarSettings.qml",
+      "source_sha256": "c6d19556a84a457918ee1546033052f5e1edc5cbbeddee33be92b9d7e6924627"
+    },
+    {
+      "target": "modules/bar/SplitDock.qml",
+      "sha256": "90415b1c8b7409a260ed3070d081d8c9b25b6e2ce636d1720647faf744b1d073",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/overlay/modules/bar/SplitDock.qml",
+      "source_sha256": "90415b1c8b7409a260ed3070d081d8c9b25b6e2ce636d1720647faf744b1d073"
+    },
+    {
+      "target": "modules/bar/components/ClipboardWidget.qml",
+      "sha256": "5a2e922a8be5059c46cabd458cd99f2c1b11cae64b1b68da2ad9dcd5694f0a50",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/Clock.qml",
+      "sha256": "f4f72cd7b5b44fe711f9050136e279b2077330f1c614e54a3d2585217cb97e03",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/Clock.qml",
+      "source_sha256": "f4f72cd7b5b44fe711f9050136e279b2077330f1c614e54a3d2585217cb97e03"
+    },
+    {
+      "target": "modules/bar/components/Dock.qml",
+      "sha256": "889bef64db3a87966330b8b12d2c9380c716ebc0f4c780a8b68f759dfbffd939",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/OsIcon.qml",
+      "sha256": "5cd0c452f0234bf971ee07507c880ebd5d994d5f68ae0fb60392aa65ee244c14",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/Power.qml",
+      "sha256": "ee4a330a0f4df82c6c205f24e84af53c2b487938583097a39d38f77e32d8f136",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/ScreenCaptureWidget.qml",
+      "sha256": "d12455b5dca1fa768895743ba3d37f914262de50f5277724ab3331f55d562e25",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/ShowDesktop.qml",
+      "sha256": "f123345285abad5a3b182449679dd1996c4bd63b1d6b664d03ab3a0eadc4e025",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/StatusIcons.qml",
+      "sha256": "5dfb161146f19d04e253655a01d20f2ea8db2ef5f7ef6f7940f93aaca9fba86e",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/TrayItem.qml",
+      "sha256": "56b460b01c8e3ee9e8f63abae25ced22286089a9defeef2878362a8e849da150",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/UpdateIndicator.qml",
+      "sha256": "748d23f26ec7b9e79a5d6c35ab904fdb796b623b8633c3cf7a90a10e0104517c",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/WeatherWidget.qml",
+      "sha256": "09c2cebac9c55f955414e9efb8cda62f5b87188d8b8c64b3617195378456b5b9",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/workspaces/ActiveIndicator.qml",
+      "sha256": "50468bdf06fa87accf74ace37371cae97fd54eaee8d35b9586406e4578e9bf09",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/workspaces/FlausenWorkspaceIcon.qml",
+      "sha256": "87915be8338b68d66d9a1c7014e1f4d096ad1f1710168a007058f934e363a0e3",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/flausen-workspaces/FlausenWorkspaceIcon.qml",
+      "source_sha256": "87915be8338b68d66d9a1c7014e1f4d096ad1f1710168a007058f934e363a0e3"
+    },
+    {
+      "target": "modules/bar/components/workspaces/SpecialWorkspaces.qml",
+      "sha256": "f4ab6bb074fce433f267ae634bca2fe4a27c709409945f8096030a5d20872f86",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/workspaces/Workspace.qml",
+      "sha256": "4ffbccb5ecb2707779bc2fb47fa750d757fdbf05303caa521e5d6346dfffb3ab",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/workspaces/Workspaces.qml",
+      "sha256": "30bf975ec4ce9845f192b3be1ecf2e61c97b6896bff7e2db4e2e45c9ede88630",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/components/workspaces/flausen-shapes/everyday.svg",
+      "sha256": "567642553d09f695740580a391487e18a3730005de27daed00d75e0b7d510d20",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/flausen-workspaces/shapes/everyday.svg",
+      "source_sha256": "567642553d09f695740580a391487e18a3730005de27daed00d75e0b7d510d20"
+    },
+    {
+      "target": "modules/bar/components/workspaces/flausen-shapes/idea.svg",
+      "sha256": "15b83137d7792ad5ea7795546f4e422d32a71cbc3be1dfbf3c5be28809509300",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/flausen-workspaces/shapes/idea.svg",
+      "source_sha256": "15b83137d7792ad5ea7795546f4e422d32a71cbc3be1dfbf3c5be28809509300"
+    },
+    {
+      "target": "modules/bar/components/workspaces/flausen-shapes/play.svg",
+      "sha256": "9b9c02b92ad6a32c075e23d4badfd39df1606207f300c988efb1df60047d6aaf",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/flausen-workspaces/shapes/play.svg",
+      "source_sha256": "9b9c02b92ad6a32c075e23d4badfd39df1606207f300c988efb1df60047d6aaf"
+    },
+    {
+      "target": "modules/bar/components/workspaces/flausen-shapes/weight.svg",
+      "sha256": "f7fd94de35a8ee6c95f20194b382c1dcf7ae9c2f5dd21314f05e5731f3370ab5",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/flausen-workspaces/shapes/weight.svg",
+      "source_sha256": "f7fd94de35a8ee6c95f20194b382c1dcf7ae9c2f5dd21314f05e5731f3370ab5"
+    },
+    {
+      "target": "modules/bar/popouts/Audio.qml",
+      "sha256": "45ee2c3d802e129391894e0e5a5dfd2bb24ae54383ad864902c928b642563ab4",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/Audio.qml",
+      "source_sha256": "45ee2c3d802e129391894e0e5a5dfd2bb24ae54383ad864902c928b642563ab4"
+    },
+    {
+      "target": "modules/bar/popouts/BarComponentContext.qml",
+      "sha256": "9ed39374cbfac2757143f44e518c2e08a0f740d0e2ebbba972fcbd4b1629d8d1",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/Battery.qml",
+      "sha256": "dce64e4da9d16a73739eff5735da7db61db983f0e335dd2e85303a9b82195a05",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/Battery.qml",
+      "source_sha256": "dce64e4da9d16a73739eff5735da7db61db983f0e335dd2e85303a9b82195a05"
+    },
+    {
+      "target": "modules/bar/popouts/Bluetooth.qml",
+      "sha256": "d4a64902fecf88604bf010d1c89c61323bab43674601acb0cca2dce86ffc6b84",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/bluetooth-popover/Bluetooth.qml",
+      "source_sha256": "d4a64902fecf88604bf010d1c89c61323bab43674601acb0cca2dce86ffc6b84"
+    },
+    {
+      "target": "modules/bar/popouts/CalendarGlass.qml",
+      "sha256": "ba1c1bd1e3d3afdc7731838d58e44540c5746e86c1e77fb12e70ddf24f1650c7",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/CalendarGlass.qml",
+      "source_sha256": "ba1c1bd1e3d3afdc7731838d58e44540c5746e86c1e77fb12e70ddf24f1650c7"
+    },
+    {
+      "target": "modules/bar/popouts/CalendarPopout.qml",
+      "sha256": "4179207c6232851a638c93c02b9f4a7f4e9e20e14b4cd134be4a2a4d619a4005",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/CalendarPopout.qml",
+      "source_sha256": "4179207c6232851a638c93c02b9f4a7f4e9e20e14b4cd134be4a2a4d619a4005"
+    },
+    {
+      "target": "modules/bar/popouts/ClipWrapper.qml",
+      "sha256": "458b3f8ce2eb41b9c936d850a5b56b2de71842bdf01c7ee8c1172cfb2cbd7216",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/ClipboardHistory.qml",
+      "sha256": "164918c2a398a57153ac24c8fb4e1f41f98ae7e4ab894f809a4dc2011b42cf5a",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/capture-clipboard-style/ClipboardHistory.qml",
+      "source_sha256": "164918c2a398a57153ac24c8fb4e1f41f98ae7e4ab894f809a4dc2011b42cf5a"
+    },
+    {
+      "target": "modules/bar/popouts/Content.qml",
+      "sha256": "174346b7e31c647861da1995110af35e2443f5dee843ab351fc80e88c4146f91",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/DockContext.qml",
+      "sha256": "84167095abcb0acb0d34923368d85d3ffd30d08513ff2c8913260f4120ec8eaa",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/overlay/modules/bar/popouts/DockContext.qml",
+      "source_sha256": "84167095abcb0acb0d34923368d85d3ffd30d08513ff2c8913260f4120ec8eaa"
+    },
+    {
+      "target": "modules/bar/popouts/DockHover.qml",
+      "sha256": "660d10df236e4c56964804ce97d4b0ec15ebf8c95109f4c34cad5010f8de20c1",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/window-previews/DockHover.qml",
+      "source_sha256": "660d10df236e4c56964804ce97d4b0ec15ebf8c95109f4c34cad5010f8de20c1"
+    },
+    {
+      "target": "modules/bar/popouts/Github.qml",
+      "sha256": "b1db98faefe90a2766d596bac64a1e1b37508febf2cefb538cb3679312fe9480",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/LockStatus.qml",
+      "sha256": "2e145e9d08a49bca60e543ef4a440cf7a858675631c5ded888f1d3c4192243ff",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/Media.qml",
+      "sha256": "253e05a9e8fb18aff53aca7472ac3dc36aa0f67dfe5fbea0705f10451966bf43",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/Media.qml",
+      "source_sha256": "253e05a9e8fb18aff53aca7472ac3dc36aa0f67dfe5fbea0705f10451966bf43"
+    },
+    {
+      "target": "modules/bar/popouts/MenuAppStreamRow.qml",
+      "sha256": "8afb114c2591fad9ba34711a17a496fe94a6c9a1623990085f115ccf41059a42",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/MenuAppStreamRow.qml",
+      "source_sha256": "8afb114c2591fad9ba34711a17a496fe94a6c9a1623990085f115ccf41059a42"
+    },
+    {
+      "target": "modules/bar/popouts/MenuAudioSection.qml",
+      "sha256": "1346e84e95be51fcefa7bab585b17da13e6809ff632af70b91e529fed173fbb2",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/MenuAudioSection.qml",
+      "source_sha256": "1346e84e95be51fcefa7bab585b17da13e6809ff632af70b91e529fed173fbb2"
+    },
+    {
+      "target": "modules/bar/popouts/MenuAudioSlider.qml",
+      "sha256": "1060f3b6b9240029499fe30d44bc1c3413ce5e58c5e11045ac4a2877c112dcc8",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/remaining-overlays/MenuAudioSlider.qml",
+      "source_sha256": "1060f3b6b9240029499fe30d44bc1c3413ce5e58c5e11045ac4a2877c112dcc8"
+    },
+    {
+      "target": "modules/bar/popouts/MenuCaptureCard.qml",
+      "sha256": "4d8507693bf35f9862032f169ce51920a62a89b8859c1ed6a3b3ff590285a52a",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/capture-clipboard-style/MenuCaptureCard.qml",
+      "source_sha256": "4d8507693bf35f9862032f169ce51920a62a89b8859c1ed6a3b3ff590285a52a"
+    },
+    {
+      "target": "modules/bar/popouts/MenuCaptureSplitButton.qml",
+      "sha256": "57fa98fd75bb8986ea41262499647f8f38742fb875469fc4b3d6552c6e358a33",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/capture-clipboard-style/MenuCaptureSplitButton.qml",
+      "source_sha256": "57fa98fd75bb8986ea41262499647f8f38742fb875469fc4b3d6552c6e358a33"
+    },
+    {
+      "target": "modules/bar/popouts/MenuRecordingList.qml",
+      "sha256": "642446bd8812605203ad7412b357b0b5387c556b5bedf208711c5faae44b9593",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/capture-clipboard-style/MenuRecordingList.qml",
+      "source_sha256": "642446bd8812605203ad7412b357b0b5387c556b5bedf208711c5faae44b9593"
+    },
+    {
+      "target": "modules/bar/popouts/MenuScreenshotList.qml",
+      "sha256": "bc13e3adffc055e0f1f019c409687a2633a101305acd689fc588385f76f63360",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/capture-clipboard-style/MenuScreenshotList.qml",
+      "source_sha256": "bc13e3adffc055e0f1f019c409687a2633a101305acd689fc588385f76f63360"
+    },
+    {
+      "target": "modules/bar/popouts/Network.qml",
+      "sha256": "9ef1aee26830e742103c30884fb551d54eb5fcd847fe25f913161cf50e4ce38c",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/network-popover/Network.qml",
+      "source_sha256": "9ef1aee26830e742103c30884fb551d54eb5fcd847fe25f913161cf50e4ce38c"
+    },
+    {
+      "target": "modules/bar/popouts/Notes.qml",
+      "sha256": "6df0af665795f19c689eeb192980687470165226f20f232f9e2aa444d00f61a3",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/Notifications.qml",
+      "sha256": "de7d6eaaf72127d49a23af904c645a0ae196127bd8776ef27662ad8a224b5ac6",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/PopoutState.qml",
+      "sha256": "05f91446f8d844e9eed1837abdef364432ef49a998830716ff9920c16b43cfd8",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/ScreenCapture.qml",
+      "sha256": "785578b73e7747ddb7851bf61dbb37140f499701beddf1525f215020cc94914f",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/capture-clipboard-style/ScreenCapture.qml",
+      "source_sha256": "785578b73e7747ddb7851bf61dbb37140f499701beddf1525f215020cc94914f"
+    },
+    {
+      "target": "modules/bar/popouts/TaskbarContext.qml",
+      "sha256": "1c06cb1fa46bf945b417cb002f0948ddc3c4eb92e1ea0ac1236a152e9660225a",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/overlay/modules/bar/popouts/TaskbarContext.qml",
+      "source_sha256": "1c06cb1fa46bf945b417cb002f0948ddc3c4eb92e1ea0ac1236a152e9660225a"
+    },
+    {
+      "target": "modules/bar/popouts/TrayMenu.qml",
+      "sha256": "01c37e8f92a11a99a383af6dd2d36820c4e7d2e1f5867175964ae3f36f64a863",
+      "mode": 420
+    },
+    {
+      "target": "modules/bar/popouts/Updates.qml",
+      "sha256": "0af367c007bcd162e17ea7dd55e75f6afed40d0ad8f1b21bbc653ba774a5ef9f",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/update-hub/Updates.qml",
+      "source_sha256": "5acab67859954d94bb4f709853945c55ebfe3a05543698cf9d43fdec1dd6b53c"
+    },
+    {
+      "target": "modules/bar/popouts/Weather.qml",
+      "sha256": "8f6247ade5e82dc170f4d4e780cd362525051cc55092fcfa4af88047bf554dca",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/weather-popover/Weather.qml",
+      "source_sha256": "8f6247ade5e82dc170f4d4e780cd362525051cc55092fcfa4af88047bf554dca"
+    },
+    {
+      "target": "modules/bar/popouts/WeatherHourly.qml",
+      "sha256": "3fdde498b616caceade46a8f04b88f1a47b61a9bdc0011fac22a7615ab0fde19",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/weather-popover/WeatherHourly.qml",
+      "source_sha256": "3fdde498b616caceade46a8f04b88f1a47b61a9bdc0011fac22a7615ab0fde19"
+    },
+    {
+      "target": "modules/bar/popouts/WeatherSymbol.qml",
+      "sha256": "dc985f9c4cd838a0a66246834686e20527ef18621bd063c48ecdc35091b7762a",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/weather-popover/WeatherSymbol.qml",
+      "source_sha256": "dc985f9c4cd838a0a66246834686e20527ef18621bd063c48ecdc35091b7762a"
+    },
+    {
+      "target": "modules/bar/popouts/WirelessPassword.qml",
+      "sha256": "e33e28984d28c612ebdd47b8aa1c90cd128a9dd2883beee16245229c7eb1d672",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/network-popover/WirelessPassword.qml",
+      "source_sha256": "e33e28984d28c612ebdd47b8aa1c90cd128a9dd2883beee16245229c7eb1d672"
+    },
+    {
+      "target": "modules/bar/popouts/Wrapper.qml",
+      "sha256": "17148c68b6cf16c75d59187e93bcf17be8f3ee9b0ada118f8b9a15514908dcc3",
+      "mode": 420
+    },
+    {
+      "target": "modules/dashboard/Dash.qml",
+      "sha256": "678cfa54d7eefdfec437ce0949dfc6ba7113a2efbb9695f73885032ff708f10e",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/Dash.qml",
+      "source_sha256": "678cfa54d7eefdfec437ce0949dfc6ba7113a2efbb9695f73885032ff708f10e"
+    },
+    {
+      "target": "modules/dashboard/Media.qml",
+      "sha256": "b16014cb8a9cf8432a5280f7b542144fe1b3da6fe61d719da4ee4c2c87ad029d",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/Media.qml",
+      "source_sha256": "b16014cb8a9cf8432a5280f7b542144fe1b3da6fe61d719da4ee4c2c87ad029d"
+    },
+    {
+      "target": "modules/dashboard/NotesTab.qml",
+      "sha256": "429c2e887641d27d88ff2a826cf1f5eb7c0fcb0ad1105970108568759a0a1796",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/NotesTab.qml",
+      "source_sha256": "429c2e887641d27d88ff2a826cf1f5eb7c0fcb0ad1105970108568759a0a1796"
+    },
+    {
+      "target": "modules/dashboard/Performance.qml",
+      "sha256": "4b6bdee9eac3d5b3d951bd572dee066c0032d4efdea49a175477721dfdcd96ac",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/Performance.qml",
+      "source_sha256": "4b6bdee9eac3d5b3d951bd572dee066c0032d4efdea49a175477721dfdcd96ac"
+    },
+    {
+      "target": "modules/dashboard/Tabs.qml",
+      "sha256": "0cb15691e080bf608770590b037541e1fb6323948ebe8bd318b5deff4306780b",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/Tabs.qml",
+      "source_sha256": "0cb15691e080bf608770590b037541e1fb6323948ebe8bd318b5deff4306780b"
+    },
+    {
+      "target": "modules/dashboard/TerminalTab.qml",
+      "sha256": "3710bf222a89002eccbd6ec6d0762260a1ef100b211fc4a91cba8e2bac2b49e5",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/TerminalTab.qml",
+      "source_sha256": "3710bf222a89002eccbd6ec6d0762260a1ef100b211fc4a91cba8e2bac2b49e5"
+    },
+    {
+      "target": "modules/dashboard/WallhavenTab.qml",
+      "sha256": "2014a5e0dcbe088d8a9bfca76cd6799bf3b96f996b50446015d172d86eb095a4",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/WallhavenTab.qml",
+      "source_sha256": "2014a5e0dcbe088d8a9bfca76cd6799bf3b96f996b50446015d172d86eb095a4"
+    },
+    {
+      "target": "modules/dashboard/WeatherTab.qml",
+      "sha256": "e627dc020ae3b1e5344321ce2b7dd47e13c987c03013d3b2493b6ceffaf2ed98",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/WeatherTab.qml",
+      "source_sha256": "e627dc020ae3b1e5344321ce2b7dd47e13c987c03013d3b2493b6ceffaf2ed98"
+    },
+    {
+      "target": "modules/dashboard/Wrapper.qml",
+      "sha256": "35dbfdfdf2a63395d85412c3dfb43cffe8043503d3a276df5ca8742e621d77ec",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/Wrapper.qml",
+      "source_sha256": "35dbfdfdf2a63395d85412c3dfb43cffe8043503d3a276df5ca8742e621d77ec"
+    },
+    {
+      "target": "modules/dashboard/dash/Calendar.qml",
+      "sha256": "60f7bd553e17898e5c013010ef7de12dc5b97b6eec58acc4821f742133929dba",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/dash/Calendar.qml",
+      "source_sha256": "60f7bd553e17898e5c013010ef7de12dc5b97b6eec58acc4821f742133929dba"
+    },
+    {
+      "target": "modules/dashboard/dash/DateTime.qml",
+      "sha256": "2ac4261866e0b4a82bfaf05ab17f2483ab19a38c559f041e733ca0480dd0d5e1",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/dash/DateTime.qml",
+      "source_sha256": "2ac4261866e0b4a82bfaf05ab17f2483ab19a38c559f041e733ca0480dd0d5e1"
+    },
+    {
+      "target": "modules/dashboard/dash/Media.qml",
+      "sha256": "887ebed9bd85b8e1329c1cb0e43f7eda509ef6ce64fd029212100084798bbdd5",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/dash/Media.qml",
+      "source_sha256": "887ebed9bd85b8e1329c1cb0e43f7eda509ef6ce64fd029212100084798bbdd5"
+    },
+    {
+      "target": "modules/dashboard/dash/SmallWeather.qml",
+      "sha256": "d568ec886da5bf3761453d5dc1e1aa570e0ff2165283b8fbab5bcb34f0d77bdc",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/dash/SmallWeather.qml",
+      "source_sha256": "d568ec886da5bf3761453d5dc1e1aa570e0ff2165283b8fbab5bcb34f0d77bdc"
+    },
+    {
+      "target": "modules/dashboard/dash/User.qml",
+      "sha256": "f3bca6cf965adb13021b368ad9fb49285ab076b8246f5754de283ca680052a42",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/dash/User.qml",
+      "source_sha256": "f3bca6cf965adb13021b368ad9fb49285ab076b8246f5754de283ca680052a42"
+    },
+    {
+      "target": "modules/dashboard/media/BackgroundShapes.qml",
+      "sha256": "e6ba261cd5a68eaa681e4cee7feb2ab03a41b83c14e21b2ed861bd29dde47635",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/media/BackgroundShapes.qml",
+      "source_sha256": "e6ba261cd5a68eaa681e4cee7feb2ab03a41b83c14e21b2ed861bd29dde47635"
+    },
+    {
+      "target": "modules/dashboard/media/Details.qml",
+      "sha256": "75e8cb8206cdcb56574265958e85567b727929237b7ccb8880a7529efebb01ec",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/media/Details.qml",
+      "source_sha256": "75e8cb8206cdcb56574265958e85567b727929237b7ccb8880a7529efebb01ec"
+    },
+    {
+      "target": "modules/dashboard/media/LyricList.qml",
+      "sha256": "9d8ae255068ad25f9293a42948157e13ca3d90104be3a9c5759bd9e756c07622",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/media/LyricList.qml",
+      "source_sha256": "9d8ae255068ad25f9293a42948157e13ca3d90104be3a9c5759bd9e756c07622"
+    },
+    {
+      "target": "modules/dashboard/media/LyricsAndSelector.qml",
+      "sha256": "439ca406b49fd5fc1aa3344fe5fd357b6728bfb317d6e9a2afa566f3a93c4808",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/media/LyricsAndSelector.qml",
+      "source_sha256": "439ca406b49fd5fc1aa3344fe5fd357b6728bfb317d6e9a2afa566f3a93c4808"
+    },
+    {
+      "target": "modules/dashboard/media/LyricsInfo.qml",
+      "sha256": "5937668720f04dbc4e1694883ec8ac8235ac6110edd2d7e3a6f6f56f43246de2",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/media/LyricsInfo.qml",
+      "source_sha256": "5937668720f04dbc4e1694883ec8ac8235ac6110edd2d7e3a6f6f56f43246de2"
+    },
+    {
+      "target": "modules/dashboard/performance/BatteryTank.qml",
+      "sha256": "6d0eacffccb0c75104fddfb504746f58c41751dc42c41032e91a360a669b2f03",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/performance/BatteryTank.qml",
+      "source_sha256": "6d0eacffccb0c75104fddfb504746f58c41751dc42c41032e91a360a669b2f03"
+    },
+    {
+      "target": "modules/dashboard/performance/HeroCard.qml",
+      "sha256": "b1dd2ae13ccf57501119eeeedf461d4a2a38111d02030979c1d322929b5e1372",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/performance/HeroCard.qml",
+      "source_sha256": "b1dd2ae13ccf57501119eeeedf461d4a2a38111d02030979c1d322929b5e1372"
+    },
+    {
+      "target": "modules/dashboard/performance/MemoryCard.qml",
+      "sha256": "081dd277bc8b2039511518947652964742ae365bca33ac17b899d5bbb424e672",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/performance/MemoryCard.qml",
+      "source_sha256": "081dd277bc8b2039511518947652964742ae365bca33ac17b899d5bbb424e672"
+    },
+    {
+      "target": "modules/dashboard/performance/NetworkCard.qml",
+      "sha256": "99cda724311df193e0e5125c9b06a67e36e3df7b95200f1904d290614e2dd9ac",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/performance/NetworkCard.qml",
+      "source_sha256": "99cda724311df193e0e5125c9b06a67e36e3df7b95200f1904d290614e2dd9ac"
+    },
+    {
+      "target": "modules/dashboard/performance/StorageCard.qml",
+      "sha256": "7f3e03068fa2a2d94700bb0bf8e5984daad806b1e8e8c3decf2570fb0363f532",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/dashboard-style/overlay/modules/dashboard/performance/StorageCard.qml",
+      "source_sha256": "7f3e03068fa2a2d94700bb0bf8e5984daad806b1e8e8c3decf2570fb0363f532"
+    },
+    {
+      "target": "modules/drawers/ContentWindow.qml",
+      "sha256": "a3781738fbfb9ab19809404e3b9964823e5388327747061c81d7b4dd8f58a6a0",
+      "mode": 420,
+      "source": "kde-customizations/desktop-context-menu/modules/drawers/ContentWindow.qml",
+      "source_sha256": "6cd1c85cc9cc424ce1b19f40da13e838997fd327760d6f00bd3cef803cd5f09d"
+    },
+    {
+      "target": "modules/drawers/Drawers.qml",
+      "sha256": "6d8a8a83db6e3b719234a7ecbef26bb13196e67794a4ad1dfe873c6fa9d66ea2",
+      "mode": 420
+    },
+    {
+      "target": "modules/drawers/Exclusions.qml",
+      "sha256": "8ff5ae7813abda4debc8a95914169cde55ce7cd70fb1bb81ecaed0d35e1a357e",
+      "mode": 420
+    },
+    {
+      "target": "modules/drawers/Interactions.qml",
+      "sha256": "5b3403a03505ed80c311f919b308d7e2c7916f8c368b6381e0ca8ddb9ca760d1",
+      "mode": 420
+    },
+    {
+      "target": "modules/drawers/Panels.qml",
+      "sha256": "7f056382352bbc69ef63cd9fe254688dbd60cd74f01763a8febaea5a89e5fe62",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/drawers/Panels.qml",
+      "source_sha256": "7f056382352bbc69ef63cd9fe254688dbd60cd74f01763a8febaea5a89e5fe62"
+    },
+    {
+      "target": "modules/drawers/Regions.qml",
+      "sha256": "8e52eb30e286d4b8740b820605791566545588054a1dd43edd129ac66907e7a3",
+      "mode": 420
+    },
+    {
+      "target": "modules/launcher/Content.qml",
+      "sha256": "ae2fcfd37320095e68427c6820e76a2a379b61e633eef41b780aa286fa0837e4",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/Content.qml",
+      "source_sha256": "ae2fcfd37320095e68427c6820e76a2a379b61e633eef41b780aa286fa0837e4"
+    },
+    {
+      "target": "modules/launcher/ContentList.qml",
+      "sha256": "2f18a133387f0f9cd851cfcb0e99c4d17437c3a4e0bc6ae8f04c918086117597",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/ContentList.qml",
+      "source_sha256": "2f18a133387f0f9cd851cfcb0e99c4d17437c3a4e0bc6ae8f04c918086117597"
+    },
+    {
+      "target": "modules/launcher/HermesChat.qml",
+      "sha256": "08641ab80fc908005efecd532aeaccba2f42e1cf4f864b8e157db269785224aa",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/HermesChat.qml",
+      "source_sha256": "c7517f51ff869efa0b99ff1e653c2b8281194abe54cde2bae31223eabb7dce70"
+    },
+    {
+      "target": "modules/launcher/StartHome.qml",
+      "sha256": "aa4cc56198ed80db313b40d55162a9d2a5f97fd782795b430761d5fdf17b74eb",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/StartHome.qml",
+      "source_sha256": "aa4cc56198ed80db313b40d55162a9d2a5f97fd782795b430761d5fdf17b74eb"
+    },
+    {
+      "target": "modules/launcher/Wrapper.qml",
+      "sha256": "439113aad6818e7bd98c24888d8674f5742ec77f17fd7098e49c525f9c7669e1",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/Wrapper.qml",
+      "source_sha256": "439113aad6818e7bd98c24888d8674f5742ec77f17fd7098e49c525f9c7669e1"
+    },
+    {
+      "target": "modules/launcher/services/Apps.qml",
+      "sha256": "c98683e8d5462af45197b028b84e5c83b64537b3b76fd240ec40f457ee6974eb",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/services/Apps.qml",
+      "source_sha256": "c98683e8d5462af45197b028b84e5c83b64537b3b76fd240ec40f457ee6974eb"
+    },
+    {
+      "target": "modules/launcher/services/HermesDesktop.qml",
+      "sha256": "604b7543ae4b833ab7eabad0db1b62c09ece3cf69e4ce913941e4453b9a7196e",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/services/HermesDesktop.qml",
+      "source_sha256": "20a5ad03e5465852033c089c0d8fce76977cde44c9f311d3805d5d29cfa64fde"
+    },
+    {
+      "target": "modules/launcher/start-data.py",
+      "sha256": "fd789eabf3cb0fcb823deb2d5ee6a31dd7cb8992a53dfc0175b93dee1711771a",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/start-data.py",
+      "source_sha256": "fd789eabf3cb0fcb823deb2d5ee6a31dd7cb8992a53dfc0175b93dee1711771a"
+    },
+    {
+      "target": "modules/launcher/windows-boot.py",
+      "sha256": "4ff1a62c25c2fc2f194f218bb83f485f6580f78b760ee211feb77d2497934e56",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/windows-boot.py",
+      "source_sha256": "4ff1a62c25c2fc2f194f218bb83f485f6580f78b760ee211feb77d2497934e56"
+    },
+    {
+      "target": "modules/launcher/windows.svg",
+      "sha256": "9f5c360493f0612c69275b3578b1feccf5cee75f57afc28f1df6dfdce402de58",
+      "mode": 420,
+      "source": "kde-customizations/launcher/overlay/modules/launcher/windows.svg",
+      "source_sha256": "9f5c360493f0612c69275b3578b1feccf5cee75f57afc28f1df6dfdce402de58"
+    },
+    {
+      "target": "modules/nexus/NavPane.qml",
+      "sha256": "323888ffc53e1988e58e50af3ce2a1ae78b08cda87f1fab230f436feef795693",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/NavPane.qml",
+      "source_sha256": "323888ffc53e1988e58e50af3ce2a1ae78b08cda87f1fab230f436feef795693"
+    },
+    {
+      "target": "modules/nexus/Nexus.qml",
+      "sha256": "2f478edb839ff37ae887d02331461c8d3600512701de8d722a90b91c476485d5",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/Nexus.qml",
+      "source_sha256": "2f478edb839ff37ae887d02331461c8d3600512701de8d722a90b91c476485d5"
+    },
+    {
+      "target": "modules/nexus/NexusState.qml",
+      "sha256": "15bc9b19cce2b62c50863492f5a0be46cd06fabc0464fffb956859daea06d6d0",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/NexusState.qml",
+      "source_sha256": "15bc9b19cce2b62c50863492f5a0be46cd06fabc0464fffb956859daea06d6d0"
+    },
+    {
+      "target": "modules/nexus/PageCompRegistry.qml",
+      "sha256": "702721dc1b3c4f7499f7f4abfabaec71cd3e83009930dc68ba004f1191bea611",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/PageCompRegistry.qml",
+      "source_sha256": "702721dc1b3c4f7499f7f4abfabaec71cd3e83009930dc68ba004f1191bea611"
+    },
+    {
+      "target": "modules/nexus/PageDictionary.qml",
+      "sha256": "164b41569e81a87cf8937bba885c6a0792b14a767c30a954fb67fa118879d1d2",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/PageDictionary.qml",
+      "source_sha256": "164b41569e81a87cf8937bba885c6a0792b14a767c30a954fb67fa118879d1d2"
+    },
+    {
+      "target": "modules/nexus/PageRegistry.qml",
+      "sha256": "ae8f2be7e9750a2fb65804ba9016b41e75659491e7591e7e8cb06e765f7f9aad",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/PageRegistry.qml",
+      "source_sha256": "ae8f2be7e9750a2fb65804ba9016b41e75659491e7591e7e8cb06e765f7f9aad"
+    },
+    {
+      "target": "modules/nexus/WindowFactory.qml",
+      "sha256": "b0b5c51e2ab3b01a60b2ed87fdaf7647d75a2ec20946bcfd5bd0a094f20dc14a",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/WindowFactory.qml",
+      "source_sha256": "b0b5c51e2ab3b01a60b2ed87fdaf7647d75a2ec20946bcfd5bd0a094f20dc14a"
+    },
+    {
+      "target": "modules/nexus/common/AnimatedLogo.qml",
+      "sha256": "7ff4f0fdc934099ba924f3451fac9c77092d5f77a33db66ea87c06254630e1e9",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/AnimatedLogo.qml",
+      "source_sha256": "7ff4f0fdc934099ba924f3451fac9c77092d5f77a33db66ea87c06254630e1e9"
+    },
+    {
+      "target": "modules/nexus/common/AudioDeviceList.qml",
+      "sha256": "0a2dbde9dd9ace1749975bf3035bb6c5d1a927d2813e0e4104ee46edfc44a359",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/AudioDeviceList.qml",
+      "source_sha256": "0a2dbde9dd9ace1749975bf3035bb6c5d1a927d2813e0e4104ee46edfc44a359"
+    },
+    {
+      "target": "modules/nexus/common/BlobPopup.qml",
+      "sha256": "d912e11a7dd41d394ec853c83b6e68d7ffd54c386db1e3d005e2c10046e06920",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/BlobPopup.qml",
+      "source_sha256": "d912e11a7dd41d394ec853c83b6e68d7ffd54c386db1e3d005e2c10046e06920"
+    },
+    {
+      "target": "modules/nexus/common/ConnectedRect.qml",
+      "sha256": "6c041e533c5eeddae4545a4b7b3e5ea7639d0f751fffce4b1ee0eac32b43055c",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/ConnectedRect.qml",
+      "source_sha256": "6c041e533c5eeddae4545a4b7b3e5ea7639d0f751fffce4b1ee0eac32b43055c"
+    },
+    {
+      "target": "modules/nexus/common/DialogRowButton.qml",
+      "sha256": "44346484a9eeee782b12cb40bdd81b62761bc879d415083cb43132156e19b627",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/DialogRowButton.qml",
+      "source_sha256": "44346484a9eeee782b12cb40bdd81b62761bc879d415083cb43132156e19b627"
+    },
+    {
+      "target": "modules/nexus/common/DialogSelectButton.qml",
+      "sha256": "914ceb6ab9685c48f69f73f47aa39ea3ccdcfa598fc2ed536521f9d04209a73f",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/DialogSelectButton.qml",
+      "source_sha256": "914ceb6ab9685c48f69f73f47aa39ea3ccdcfa598fc2ed536521f9d04209a73f"
+    },
+    {
+      "target": "modules/nexus/common/DoubleStepperRow.qml",
+      "sha256": "85f8c65549d3d62fe85859221c2055b85b8deb9529b085a46abe0419ae8e8297",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/DoubleStepperRow.qml",
+      "source_sha256": "85f8c65549d3d62fe85859221c2055b85b8deb9529b085a46abe0419ae8e8297"
+    },
+    {
+      "target": "modules/nexus/common/EthernetSection.qml",
+      "sha256": "8bd5476b31c92065147486beafa2859e90d6ac774b55fb9756c4a159189480ea",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/EthernetSection.qml",
+      "source_sha256": "8bd5476b31c92065147486beafa2859e90d6ac774b55fb9756c4a159189480ea"
+    },
+    {
+      "target": "modules/nexus/common/ExpandablePluginRow.qml",
+      "sha256": "4c6e425830428c2840515260471a1f03f110581998a51e5def699d76d70d1d8e",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/ExpandablePluginRow.qml",
+      "source_sha256": "4c6e425830428c2840515260471a1f03f110581998a51e5def699d76d70d1d8e"
+    },
+    {
+      "target": "modules/nexus/common/InfoRow.qml",
+      "sha256": "990338c733077559aef7e5689300458fbe443b56bba830ff6bc047840a6bdfc3",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/InfoRow.qml",
+      "source_sha256": "990338c733077559aef7e5689300458fbe443b56bba830ff6bc047840a6bdfc3"
+    },
+    {
+      "target": "modules/nexus/common/Ipv4ConfigSection.qml",
+      "sha256": "faf1e4da61c4d99f099468c2bb94bd047e3a573c74c7778f0ee5c1d05ed81368",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/Ipv4ConfigSection.qml",
+      "source_sha256": "faf1e4da61c4d99f099468c2bb94bd047e3a573c74c7778f0ee5c1d05ed81368"
+    },
+    {
+      "target": "modules/nexus/common/ItemList.qml",
+      "sha256": "23938599c28333bd72b278b550a796992da51309e7fd552b72e3baf1dd2e9b4e",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/ItemList.qml",
+      "source_sha256": "23938599c28333bd72b278b550a796992da51309e7fd552b72e3baf1dd2e9b4e"
+    },
+    {
+      "target": "modules/nexus/common/KeyCaptureDialog.qml",
+      "sha256": "377d8f1c1032e36dc33542f50fb79e05815f12e07edc40d5ed203f2268220c18",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/KeyCaptureDialog.qml",
+      "source_sha256": "377d8f1c1032e36dc33542f50fb79e05815f12e07edc40d5ed203f2268220c18"
+    },
+    {
+      "target": "modules/nexus/common/ListEditor.qml",
+      "sha256": "61ad0757474e073049ddbf198d41a2595eb7d0755affdcd69643c8957e0e1235",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/ListEditor.qml",
+      "source_sha256": "61ad0757474e073049ddbf198d41a2595eb7d0755affdcd69643c8957e0e1235"
+    },
+    {
+      "target": "modules/nexus/common/NavRow.qml",
+      "sha256": "d71e5113128b39b7f9f2e98b56a87bfb4e05e186ffa57b8c7aed54ec9cc0b802",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/NavRow.qml",
+      "source_sha256": "d71e5113128b39b7f9f2e98b56a87bfb4e05e186ffa57b8c7aed54ec9cc0b802"
+    },
+    {
+      "target": "modules/nexus/common/NetworkList.qml",
+      "sha256": "94f4eeaf24b264f9cfd411225d93dfb1f391f694aad099209a69583b6846f804",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/NetworkList.qml",
+      "source_sha256": "94f4eeaf24b264f9cfd411225d93dfb1f391f694aad099209a69583b6846f804"
+    },
+    {
+      "target": "modules/nexus/common/NexusStyle.qml",
+      "sha256": "3f1357eb7f1fd8c4533cd0c36b6f03576021ea612ba3790feb91243331d97c6c",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/NexusStyle.qml",
+      "source_sha256": "3f1357eb7f1fd8c4533cd0c36b6f03576021ea612ba3790feb91243331d97c6c"
+    },
+    {
+      "target": "modules/nexus/common/PageBase.qml",
+      "sha256": "1337a09404ccf0556135bf26dacbfd86e6ae11fd7a6c7c194793c832af85fc2a",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/PageBase.qml",
+      "source_sha256": "1337a09404ccf0556135bf26dacbfd86e6ae11fd7a6c7c194793c832af85fc2a"
+    },
+    {
+      "target": "modules/nexus/common/PopupRow.qml",
+      "sha256": "3bf4091eefbe21ba778df26b870715992321aafc310fd8fbd8864416a435ae5c",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/PopupRow.qml",
+      "source_sha256": "3bf4091eefbe21ba778df26b870715992321aafc310fd8fbd8864416a435ae5c"
+    },
+    {
+      "target": "modules/nexus/common/RowButton.qml",
+      "sha256": "de72d70b796667dc35f67af75286f0eec75819003d503426bba580f7294408c2",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/RowButton.qml",
+      "source_sha256": "de72d70b796667dc35f67af75286f0eec75819003d503426bba580f7294408c2"
+    },
+    {
+      "target": "modules/nexus/common/SectionHeader.qml",
+      "sha256": "1fbaac2225e621a525c19667ab7cdda6bb3e557907b2df9eb3fa313b97656b12",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/SectionHeader.qml",
+      "source_sha256": "1fbaac2225e621a525c19667ab7cdda6bb3e557907b2df9eb3fa313b97656b12"
+    },
+    {
+      "target": "modules/nexus/common/SelectRow.qml",
+      "sha256": "d289cd0c4d9f1a25634c801d2bb0a747c84cfc7aacd00248e57f74e09d65d9f3",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/SelectRow.qml",
+      "source_sha256": "d289cd0c4d9f1a25634c801d2bb0a747c84cfc7aacd00248e57f74e09d65d9f3"
+    },
+    {
+      "target": "modules/nexus/common/ShortcutRow.qml",
+      "sha256": "2ef91be07fe4e760407ef33d73ff247137fead06a410e1780c8bc11452775ce3",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/ShortcutRow.qml",
+      "source_sha256": "2ef91be07fe4e760407ef33d73ff247137fead06a410e1780c8bc11452775ce3"
+    },
+    {
+      "target": "modules/nexus/common/SliderRow.qml",
+      "sha256": "eba3d236358153e2eac14093e1a72765ed8d9fac1e70d65cb99dce52da54d3e2",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/SliderRow.qml",
+      "source_sha256": "eba3d236358153e2eac14093e1a72765ed8d9fac1e70d65cb99dce52da54d3e2"
+    },
+    {
+      "target": "modules/nexus/common/StepperRow.qml",
+      "sha256": "7f4999b5766964a3a6028c80c3c1d092a0eba5f5a989054631a358995445f82c",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/StepperRow.qml",
+      "source_sha256": "7f4999b5766964a3a6028c80c3c1d092a0eba5f5a989054631a358995445f82c"
+    },
+    {
+      "target": "modules/nexus/common/TextFieldRow.qml",
+      "sha256": "c748a2977974bcac122d3f0c9769f9dce81ebfa1f42025b8afa528d650dcaaf0",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/TextFieldRow.qml",
+      "source_sha256": "c748a2977974bcac122d3f0c9769f9dce81ebfa1f42025b8afa528d650dcaaf0"
+    },
+    {
+      "target": "modules/nexus/common/ToggleRow.qml",
+      "sha256": "a766813a294541a8e029c08aa552a39940b09f5c41a6f1cd50ba3dee3f9a86bd",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/ToggleRow.qml",
+      "source_sha256": "a766813a294541a8e029c08aa552a39940b09f5c41a6f1cd50ba3dee3f9a86bd"
+    },
+    {
+      "target": "modules/nexus/common/UninstallDialog.qml",
+      "sha256": "1916128c833731fba800ecdd22c53191061a2a9463fa2577edc752c21ceb1a8a",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/UninstallDialog.qml",
+      "source_sha256": "1916128c833731fba800ecdd22c53191061a2a9463fa2577edc752c21ceb1a8a"
+    },
+    {
+      "target": "modules/nexus/common/UpdateTimeline.qml",
+      "sha256": "94dd16e042cf3a18612fdbfe50a3cda103103a2c1286b11058b218a1a848fb69",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/UpdateTimeline.qml",
+      "source_sha256": "94dd16e042cf3a18612fdbfe50a3cda103103a2c1286b11058b218a1a848fb69"
+    },
+    {
+      "target": "modules/nexus/common/WallItem.qml",
+      "sha256": "b397e41e05503025690e94dc0e75171a344fbc01f2b26b656a15999782659df9",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/WallItem.qml",
+      "source_sha256": "b397e41e05503025690e94dc0e75171a344fbc01f2b26b656a15999782659df9"
+    },
+    {
+      "target": "modules/nexus/common/WindowPickerRow.qml",
+      "sha256": "9bddf55a1d32f16963039caa41d4aa22f15cedf15638bd033133f80998c95a93",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/common/WindowPickerRow.qml",
+      "source_sha256": "9bddf55a1d32f16963039caa41d4aa22f15cedf15638bd033133f80998c95a93"
+    },
+    {
+      "target": "modules/nexus/flausen/AccountProfile.qml",
+      "sha256": "9b05f56170c77bc5f304d5e6359cec8991d3e8a544cd7f96b31c5f4deb6501fc",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/AccountProfile.qml",
+      "source_sha256": "9b05f56170c77bc5f304d5e6359cec8991d3e8a544cd7f96b31c5f4deb6501fc"
+    },
+    {
+      "target": "modules/nexus/flausen/FlausenButton.qml",
+      "sha256": "ed53fc942c6ad4c587d71fac045066c8a738a0f92758dd5138f443e88e367afa",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/FlausenButton.qml",
+      "source_sha256": "ed53fc942c6ad4c587d71fac045066c8a738a0f92758dd5138f443e88e367afa"
+    },
+    {
+      "target": "modules/nexus/flausen/FlausenKcmPage.qml",
+      "sha256": "791d960ff9d6526215c4934d9642f103e3dbc209be368e6ddc4bc23a2238a5e0",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/FlausenKcmPage.qml",
+      "source_sha256": "791d960ff9d6526215c4934d9642f103e3dbc209be368e6ddc4bc23a2238a5e0"
+    },
+    {
+      "target": "modules/nexus/flausen/FlausenSlider.qml",
+      "sha256": "d3946fdcf06945dac04dd7233bac93001dd44a453fcebe35ce210266a91a5865",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/FlausenSlider.qml",
+      "source_sha256": "d3946fdcf06945dac04dd7233bac93001dd44a453fcebe35ce210266a91a5865"
+    },
+    {
+      "target": "modules/nexus/flausen/FlausenStyle.qml",
+      "sha256": "6c70ce5d8bbcdfd0639e338651438a386870720dacf228cc37e04f7339b18329",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/FlausenStyle.qml",
+      "source_sha256": "6c70ce5d8bbcdfd0639e338651438a386870720dacf228cc37e04f7339b18329"
+    },
+    {
+      "target": "modules/nexus/flausen/FlausenSwitch.qml",
+      "sha256": "02ba738497c8c01304e627721d6899def62358bae824484dd73a0bcdfe58e356",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/FlausenSwitch.qml",
+      "source_sha256": "02ba738497c8c01304e627721d6899def62358bae824484dd73a0bcdfe58e356"
+    },
+    {
+      "target": "modules/nexus/flausen/HermesSettingsPage.qml",
+      "sha256": "c606b38cddc9a176745c652dc28a0694c1b5dd6b878eea9885761682a6e07c6b",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/HermesSettingsPage.qml",
+      "source_sha256": "c606b38cddc9a176745c652dc28a0694c1b5dd6b878eea9885761682a6e07c6b"
+    },
+    {
+      "target": "modules/nexus/flausen/HermesVramCard.qml",
+      "sha256": "a9982a40c36f6dcdaa4d34af560da03b1365419fb4b1ce5b60e7e90e7cb5c354",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/HermesVramCard.qml",
+      "source_sha256": "a9982a40c36f6dcdaa4d34af560da03b1365419fb4b1ce5b60e7e90e7cb5c354"
+    },
+    {
+      "target": "modules/nexus/flausen/KcmCatalogue.qml",
+      "sha256": "3760fe30f1ecc35d4be790706e6be99e78734b96cc51f3ba5b14eaedf9c88e61",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/KcmCatalogue.qml",
+      "source_sha256": "3760fe30f1ecc35d4be790706e6be99e78734b96cc51f3ba5b14eaedf9c88e61"
+    },
+    {
+      "target": "modules/nexus/flausen/KcmSkin.qml",
+      "sha256": "25b618dac0877f0d00aab65499af7a4e46f3bbd3cffc5b280ee45f4542c74830",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/KcmSkin.qml",
+      "source_sha256": "25b618dac0877f0d00aab65499af7a4e46f3bbd3cffc5b280ee45f4542c74830"
+    },
+    {
+      "target": "modules/nexus/flausen/SettingsIcon.qml",
+      "sha256": "9781a5209c79f8a20e8d0abd79685b01fa9590f0d73fed6a3a7ca2d02b99de76",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/SettingsIcon.qml",
+      "source_sha256": "9781a5209c79f8a20e8d0abd79685b01fa9590f0d73fed6a3a7ca2d02b99de76"
+    },
+    {
+      "target": "modules/nexus/flausen/ThemePreview.qml",
+      "sha256": "4640524ce48b8ea67f9dc4910d9bbc0bbba8833fabcc3dd99ba405c1bcb8b9ff",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/ThemePreview.qml",
+      "source_sha256": "4640524ce48b8ea67f9dc4910d9bbc0bbba8833fabcc3dd99ba405c1bcb8b9ff"
+    },
+    {
+      "target": "modules/nexus/flausen/TimeDatePage.qml",
+      "sha256": "374ce411bf21882592da00c1c90a1040bbfd28249513bdce24dfc1096168049d",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/TimeDatePage.qml",
+      "source_sha256": "374ce411bf21882592da00c1c90a1040bbfd28249513bdce24dfc1096168049d"
+    },
+    {
+      "target": "modules/nexus/flausen/WindowControl.qml",
+      "sha256": "01c673e7076af185b432260da122253345567f0e306b9e56ae4eb129e3a39739",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/flausen/WindowControl.qml",
+      "source_sha256": "01c673e7076af185b432260da122253345567f0e306b9e56ae4eb129e3a39739"
+    },
+    {
+      "target": "modules/nexus/navpane/NavLocations.qml",
+      "sha256": "1833aa02dbde330e204f7f0a465fcc290b2dd55afcc4ce19b292e99fe30c44d5",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/navpane/NavLocations.qml",
+      "source_sha256": "1833aa02dbde330e204f7f0a465fcc290b2dd55afcc4ce19b292e99fe30c44d5"
+    },
+    {
+      "target": "modules/nexus/navpane/SearchResults.qml",
+      "sha256": "2b1d31400a502b4d4775f5a117ba547f1648d03d659d819e8897a597315a1c86",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/navpane/SearchResults.qml",
+      "source_sha256": "2b1d31400a502b4d4775f5a117ba547f1648d03d659d819e8897a597315a1c86"
+    },
+    {
+      "target": "modules/nexus/pages/AboutPage.qml",
+      "sha256": "81dcea8369e2ebcf29600f56029f10ce1d0bd96c23d4900a5f318b19eca669a6",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/AboutPage.qml",
+      "source_sha256": "81dcea8369e2ebcf29600f56029f10ce1d0bd96c23d4900a5f318b19eca669a6"
+    },
+    {
+      "target": "modules/nexus/pages/AiSettingsPage.qml",
+      "sha256": "db536f8567daee5477f64f6d89dd449e4bf58b1e9f606972bd9200ecc2f37ac8",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/AiSettingsPage.qml",
+      "source_sha256": "db536f8567daee5477f64f6d89dd449e4bf58b1e9f606972bd9200ecc2f37ac8"
+    },
+    {
+      "target": "modules/nexus/pages/AppsPage.qml",
+      "sha256": "4f537a5bc711871e5a4ab2e7f58668b2ba55c14139c76f9247cb3baa432f5173",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/AppsPage.qml",
+      "source_sha256": "4f537a5bc711871e5a4ab2e7f58668b2ba55c14139c76f9247cb3baa432f5173"
+    },
+    {
+      "target": "modules/nexus/pages/AudioPage.qml",
+      "sha256": "4c85f39167f18a595aca8223d3dd38865a2f6e293d3a93d3f80aed796ff55de4",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/AudioPage.qml",
+      "source_sha256": "4c85f39167f18a595aca8223d3dd38865a2f6e293d3a93d3f80aed796ff55de4"
+    },
+    {
+      "target": "modules/nexus/pages/BluetoothPage.qml",
+      "sha256": "4d8b17cea3cd925bd00bd23e9f542b3119ed41b23e320733ffaf0a6f377f2708",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/BluetoothPage.qml",
+      "source_sha256": "4d8b17cea3cd925bd00bd23e9f542b3119ed41b23e320733ffaf0a6f377f2708"
+    },
+    {
+      "target": "modules/nexus/pages/DesktopPage.qml",
+      "sha256": "e00ace0077ae9ecf964fa61f12929578b73c5e642a4b3e829c88b228e6943bac",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/DesktopPage.qml",
+      "source_sha256": "e00ace0077ae9ecf964fa61f12929578b73c5e642a4b3e829c88b228e6943bac"
+    },
+    {
+      "target": "modules/nexus/pages/FlausenSystemPage.qml",
+      "sha256": "5cc1901a230b12dcb0a792ed03fb21e782d7e09064d7d6bcd2e9820c4add551d",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/FlausenSystemPage.qml",
+      "source_sha256": "5cc1901a230b12dcb0a792ed03fb21e782d7e09064d7d6bcd2e9820c4add551d"
+    },
+    {
+      "target": "modules/nexus/pages/LanguageAndRegion.qml",
+      "sha256": "3695b61b8360b9591daeef3a75e1297a19d718073cea6e32a6c223c6bff7fd1f",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/LanguageAndRegion.qml",
+      "source_sha256": "3695b61b8360b9591daeef3a75e1297a19d718073cea6e32a6c223c6bff7fd1f"
+    },
+    {
+      "target": "modules/nexus/pages/NetworkPage.qml",
+      "sha256": "5c82a84cc254a754d9bb85be3894cd1ab786e069fb428561a695a1fee54fc39a",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/NetworkPage.qml",
+      "source_sha256": "5c82a84cc254a754d9bb85be3894cd1ab786e069fb428561a695a1fee54fc39a"
+    },
+    {
+      "target": "modules/nexus/pages/PanelsPage.qml",
+      "sha256": "30cc30dd880ea49c2331535362fb2bfcb6f2256d9d1faf926e65d69da776fe6b",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/PanelsPage.qml",
+      "source_sha256": "30cc30dd880ea49c2331535362fb2bfcb6f2256d9d1faf926e65d69da776fe6b"
+    },
+    {
+      "target": "modules/nexus/pages/PluginSettingsPopup.qml",
+      "sha256": "ead54d53cf4b43fd9fc4c5b96735c59933adacd4a69a23e9377deb04fa1e637c",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/PluginSettingsPopup.qml",
+      "source_sha256": "ead54d53cf4b43fd9fc4c5b96735c59933adacd4a69a23e9377deb04fa1e637c"
+    },
+    {
+      "target": "modules/nexus/pages/PluginsPage.qml",
+      "sha256": "c2b9da15d48e4dd7228de63a1e6878737fa426e4a357fa29553f8844d5eb1ced",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/PluginsPage.qml",
+      "source_sha256": "c2b9da15d48e4dd7228de63a1e6878737fa426e4a357fa29553f8844d5eb1ced"
+    },
+    {
+      "target": "modules/nexus/pages/ServicesPage.qml",
+      "sha256": "6fa360294f372c129e52e28938413b0ec60bcaf71e112b7a4822354fe27063e9",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/ServicesPage.qml",
+      "source_sha256": "6fa360294f372c129e52e28938413b0ec60bcaf71e112b7a4822354fe27063e9"
+    },
+    {
+      "target": "modules/nexus/pages/SessionPage.qml",
+      "sha256": "f63ec5035dae125a254e1dfdc464b20d0194f64c07e1794ec8c8942cfb6123ac",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/SessionPage.qml",
+      "source_sha256": "f63ec5035dae125a254e1dfdc464b20d0194f64c07e1794ec8c8942cfb6123ac"
+    },
+    {
+      "target": "modules/nexus/pages/ShortcutManagerPage.qml",
+      "sha256": "3b57b7009feed1a48be46067d18224ae7a7978f288c5e5a4da058f13fffdeb0a",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/ShortcutManagerPage.qml",
+      "source_sha256": "3b57b7009feed1a48be46067d18224ae7a7978f288c5e5a4da058f13fffdeb0a"
+    },
+    {
+      "target": "modules/nexus/pages/UpdatesPage.qml",
+      "sha256": "5c4d46eddb345234f63ac559f0acabcba1ac8b54c1cb592cb4be16205d9b2395",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/UpdatesPage.qml",
+      "source_sha256": "5c4d46eddb345234f63ac559f0acabcba1ac8b54c1cb592cb4be16205d9b2395"
+    },
+    {
+      "target": "modules/nexus/pages/UtilitiesPage.qml",
+      "sha256": "2756932408d2f227c2a3549a40ad56da09f4b6657216f19ca75a931b69b5ce23",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/UtilitiesPage.qml",
+      "source_sha256": "2756932408d2f227c2a3549a40ad56da09f4b6657216f19ca75a931b69b5ce23"
+    },
+    {
+      "target": "modules/nexus/pages/WallpaperAndStyle.qml",
+      "sha256": "a7c4c6c6e35ae9cd658123da8ee0c35eb6231ceb993d93b9d9c6e14f9bc194ef",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/WallpaperAndStyle.qml",
+      "source_sha256": "a7c4c6c6e35ae9cd658123da8ee0c35eb6231ceb993d93b9d9c6e14f9bc194ef"
+    },
+    {
+      "target": "modules/nexus/pages/apps/AllApps.qml",
+      "sha256": "1c761a7a8a6b9d72ce009146cfcaec4eee4c136fd2e6a0816c34c049aaabef09",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/apps/AllApps.qml",
+      "source_sha256": "1c761a7a8a6b9d72ce009146cfcaec4eee4c136fd2e6a0816c34c049aaabef09"
+    },
+    {
+      "target": "modules/nexus/pages/apps/AppInfo.qml",
+      "sha256": "856cfd7237451b49332d0db342a706393e811ac255fb96073e8503511e6c9c6d",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/apps/AppInfo.qml",
+      "source_sha256": "856cfd7237451b49332d0db342a706393e811ac255fb96073e8503511e6c9c6d"
+    },
+    {
+      "target": "modules/nexus/pages/audio/AppVolumes.qml",
+      "sha256": "1e3b884e55ed227e49e153262a06b974b24484605bf21694124808d9f7275b3a",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/audio/AppVolumes.qml",
+      "source_sha256": "1e3b884e55ed227e49e153262a06b974b24484605bf21694124808d9f7275b3a"
+    },
+    {
+      "target": "modules/nexus/pages/audio/NotificationSilencingPage.qml",
+      "sha256": "eb20e7909221a9e1b8ba73a236672a4a77b15a74dece043335a0c9f69ab75182",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/audio/NotificationSilencingPage.qml",
+      "source_sha256": "eb20e7909221a9e1b8ba73a236672a4a77b15a74dece043335a0c9f69ab75182"
+    },
+    {
+      "target": "modules/nexus/pages/audio/SoundEffectsPage.qml",
+      "sha256": "cbbb8f4df21a02feb3d94e159ff3efc4ad15ab0ca36c7067b08cd778a78eabf1",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/audio/SoundEffectsPage.qml",
+      "source_sha256": "cbbb8f4df21a02feb3d94e159ff3efc4ad15ab0ca36c7067b08cd778a78eabf1"
+    },
+    {
+      "target": "modules/nexus/pages/bluetooth/BluetoothPairing.qml",
+      "sha256": "2b90f9eead6801ca4b34dd262ab7add9bfb1e98692bfb3061b70899d2480d8f0",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/bluetooth/BluetoothPairing.qml",
+      "source_sha256": "2b90f9eead6801ca4b34dd262ab7add9bfb1e98692bfb3061b70899d2480d8f0"
+    },
+    {
+      "target": "modules/nexus/pages/bluetooth/BtDeviceInfo.qml",
+      "sha256": "d0ccdfa99a938a157ac9b3def63ced64da0c9535421d8da79e99f9efa9718dbd",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/bluetooth/BtDeviceInfo.qml",
+      "source_sha256": "d0ccdfa99a938a157ac9b3def63ced64da0c9535421d8da79e99f9efa9718dbd"
+    },
+    {
+      "target": "modules/nexus/pages/desktop/KrohnkitePage.qml",
+      "sha256": "906ee4d74b67d76797b3991da5a660e111af107e5d60305e280ada0e64be29de",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/desktop/KrohnkitePage.qml",
+      "source_sha256": "906ee4d74b67d76797b3991da5a660e111af107e5d60305e280ada0e64be29de"
+    },
+    {
+      "target": "modules/nexus/pages/desktop/KrohnkitePreview.qml",
+      "sha256": "2d996a8ce1b1fe719a838c4fa51b9e74f37ca561c6b90e5c91d1c0a2d52c45fe",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/desktop/KrohnkitePreview.qml",
+      "source_sha256": "2d996a8ce1b1fe719a838c4fa51b9e74f37ca561c6b90e5c91d1c0a2d52c45fe"
+    },
+    {
+      "target": "modules/nexus/pages/network/AddNetworkPage.qml",
+      "sha256": "d322ebaf4a7e3f40b76281447dd0f5330bb0caa1b0b3020e40c0bac5e8550d53",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/network/AddNetworkPage.qml",
+      "source_sha256": "d322ebaf4a7e3f40b76281447dd0f5330bb0caa1b0b3020e40c0bac5e8550d53"
+    },
+    {
+      "target": "modules/nexus/pages/network/AddVpnPage.qml",
+      "sha256": "cc98ef1482b3c3a87b327ae850a7184af2d0beaffd451cc78190fbce0dfd3a8d",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/network/AddVpnPage.qml",
+      "source_sha256": "cc98ef1482b3c3a87b327ae850a7184af2d0beaffd451cc78190fbce0dfd3a8d"
+    },
+    {
+      "target": "modules/nexus/pages/network/AllNetworksPage.qml",
+      "sha256": "3b0184a40bea1f67847ed49459879f5252c542cb36bbdd0e3dec7915900b0428",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/network/AllNetworksPage.qml",
+      "source_sha256": "3b0184a40bea1f67847ed49459879f5252c542cb36bbdd0e3dec7915900b0428"
+    },
+    {
+      "target": "modules/nexus/pages/network/EthernetDetailPage.qml",
+      "sha256": "7f98b94d06af7db2c5b33d21e6fd9ad72d5a36cf5c10624b358586a8c94e2666",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/network/EthernetDetailPage.qml",
+      "source_sha256": "7f98b94d06af7db2c5b33d21e6fd9ad72d5a36cf5c10624b358586a8c94e2666"
+    },
+    {
+      "target": "modules/nexus/pages/network/HotspotPage.qml",
+      "sha256": "b6ce0ab33c7a08fe211253757820d1123bd45db13d5aa39102e50bc6c18c0568",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/network/HotspotPage.qml",
+      "source_sha256": "b6ce0ab33c7a08fe211253757820d1123bd45db13d5aa39102e50bc6c18c0568"
+    },
+    {
+      "target": "modules/nexus/pages/network/NetworkDetailPage.qml",
+      "sha256": "abd3851de2cbdef5b40ac4cf75c78153559c58a71bbb44100d588a7cdfd1565d",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/network/NetworkDetailPage.qml",
+      "source_sha256": "abd3851de2cbdef5b40ac4cf75c78153559c58a71bbb44100d588a7cdfd1565d"
+    },
+    {
+      "target": "modules/nexus/pages/network/SavedNetworksPage.qml",
+      "sha256": "bdf79ede2ea59b9bdc3a3929cfa2b431b1f7648fa0355646e1319b51ee1f275d",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/network/SavedNetworksPage.qml",
+      "source_sha256": "bdf79ede2ea59b9bdc3a3929cfa2b431b1f7648fa0355646e1319b51ee1f275d"
+    },
+    {
+      "target": "modules/nexus/pages/panels/DashboardPanel.qml",
+      "sha256": "f15ca99407698128f960432d217abec03862473870cfce2fbf1b9cf4d2d511a2",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/DashboardPanel.qml",
+      "source_sha256": "f15ca99407698128f960432d217abec03862473870cfce2fbf1b9cf4d2d511a2"
+    },
+    {
+      "target": "modules/nexus/pages/panels/LauncherPanel.qml",
+      "sha256": "bb7ec94737c1926bcacf11d17879e6ccf358658b8e7b517665b0dc93b9665142",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/LauncherPanel.qml",
+      "source_sha256": "bb7ec94737c1926bcacf11d17879e6ccf358658b8e7b517665b0dc93b9665142"
+    },
+    {
+      "target": "modules/nexus/pages/panels/OverviewPanel.qml",
+      "sha256": "9a7426e5202ba2cc9b5c0654754a27d0331e32307f12da3d56e8e8c45e4a72aa",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/OverviewPanel.qml",
+      "source_sha256": "9a7426e5202ba2cc9b5c0654754a27d0331e32307f12da3d56e8e8c45e4a72aa"
+    },
+    {
+      "target": "modules/nexus/pages/panels/TabSwitcherPanel.qml",
+      "sha256": "37c56c3c214297186b804a8f82e010ddde4aa0a625ecec53874e7e831e91ca0d",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/TabSwitcherPanel.qml",
+      "source_sha256": "37c56c3c214297186b804a8f82e010ddde4aa0a625ecec53874e7e831e91ca0d"
+    },
+    {
+      "target": "modules/nexus/pages/panels/TaskbarPanel.qml",
+      "sha256": "d71e907ebbef7fb3f899a73dc1f6cf128575cb1f4eef8535e22f54fc7cdfb514",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/TaskbarPanel.qml",
+      "source_sha256": "d71e907ebbef7fb3f899a73dc1f6cf128575cb1f4eef8535e22f54fc7cdfb514"
+    },
+    {
+      "target": "modules/nexus/pages/panels/UtilitiesPanel.qml",
+      "sha256": "4712d5be14e2ce24a895e1a7470b902226d000acb7806da34f3f2e3517123d11",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/UtilitiesPanel.qml",
+      "source_sha256": "4712d5be14e2ce24a895e1a7470b902226d000acb7806da34f3f2e3517123d11"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarClock.qml",
+      "sha256": "9e90d3ecffec3679959855d0ac847501bcbdb6ff25e1e1cc8b74a664966cffc8",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarClock.qml",
+      "source_sha256": "9e90d3ecffec3679959855d0ac847501bcbdb6ff25e1e1cc8b74a664966cffc8"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarComponents.qml",
+      "sha256": "ab3e113f5a2129dfc8aa1e700b832ba4cb49e8d889205beda339bc69a9a66ab6",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarComponents.qml",
+      "source_sha256": "ab3e113f5a2129dfc8aa1e700b832ba4cb49e8d889205beda339bc69a9a66ab6"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarDock.qml",
+      "sha256": "84e84c7d3ca4cb133fe42190046a0fb3c259b18d1f242708e0e6724cc5b522c8",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarDock.qml",
+      "source_sha256": "84e84c7d3ca4cb133fe42190046a0fb3c259b18d1f242708e0e6724cc5b522c8"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarGithub.qml",
+      "sha256": "e2f0ef1dfabfc4e407b552f6ff356074755cb0aae9f016283ab6754502750239",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarGithub.qml",
+      "source_sha256": "e2f0ef1dfabfc4e407b552f6ff356074755cb0aae9f016283ab6754502750239"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarGreeter.qml",
+      "sha256": "6f210b6443ae9fd7af744b4d7a59dab57d9fa0ad62e1ccc4a2a4b8aae27fdc4d",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarGreeter.qml",
+      "source_sha256": "6f210b6443ae9fd7af744b4d7a59dab57d9fa0ad62e1ccc4a2a4b8aae27fdc4d"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarKeepAwake.qml",
+      "sha256": "005a3f9854649731c681e76cb6f1b680e8b416f47f063786e9df4d24d3399bbc",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarKeepAwake.qml",
+      "source_sha256": "005a3f9854649731c681e76cb6f1b680e8b416f47f063786e9df4d24d3399bbc"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarMedia.qml",
+      "sha256": "806ca0c19bc2110e4f0ee80b29036e9cb91a0bb5da9b6f032c866e5afd79afde",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarMedia.qml",
+      "source_sha256": "806ca0c19bc2110e4f0ee80b29036e9cb91a0bb5da9b6f032c866e5afd79afde"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarPerformance.qml",
+      "sha256": "97218b6bf0e47f21406b7ef3c60385d1d570014d584d0ec765e86e74459aef79",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarPerformance.qml",
+      "source_sha256": "97218b6bf0e47f21406b7ef3c60385d1d570014d584d0ec765e86e74459aef79"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarPreviewScales.qml",
+      "sha256": "6bb6d8e3dde975d6b2bb71ea37299c2338267d6d63afaa8a5c72a237159a3ce4",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarPreviewScales.qml",
+      "source_sha256": "6bb6d8e3dde975d6b2bb71ea37299c2338267d6d63afaa8a5c72a237159a3ce4"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarScreenCapture.qml",
+      "sha256": "2dd53b671bd89a76a991b9337f248a75cf234c55a8d17e2e8a34a3ca69e7bace",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarScreenCapture.qml",
+      "source_sha256": "2dd53b671bd89a76a991b9337f248a75cf234c55a8d17e2e8a34a3ca69e7bace"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarStatusIcons.qml",
+      "sha256": "1bc0086ca21397f434dc827ab55b4d220e2f5bb2098440847c65499939b5d1c0",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarStatusIcons.qml",
+      "source_sha256": "1bc0086ca21397f434dc827ab55b4d220e2f5bb2098440847c65499939b5d1c0"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarTray.qml",
+      "sha256": "8374a4d3bb468cec294f84e02202246c8695ad428799ca0598612c5dff424665",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarTray.qml",
+      "source_sha256": "8374a4d3bb468cec294f84e02202246c8695ad428799ca0598612c5dff424665"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarUpdates.qml",
+      "sha256": "fd27dd4db23eb6d01a5a9aec313b6d527d1d703186b477475f877499ae131248",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarUpdates.qml",
+      "source_sha256": "fd27dd4db23eb6d01a5a9aec313b6d527d1d703186b477475f877499ae131248"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarWeather.qml",
+      "sha256": "6120b6ee62f3573e84a8949f3958da4560e12a4bf1fc1dcef892f1d0b3c65364",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarWeather.qml",
+      "source_sha256": "6120b6ee62f3573e84a8949f3958da4560e12a4bf1fc1dcef892f1d0b3c65364"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/BarWorkspaces.qml",
+      "sha256": "4d024f0508b5ee4dc75a2aba5ec8c02cac064772ade53103f625e84d58dd33e1",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/BarWorkspaces.qml",
+      "source_sha256": "4d024f0508b5ee4dc75a2aba5ec8c02cac064772ade53103f625e84d58dd33e1"
+    },
+    {
+      "target": "modules/nexus/pages/panels/taskbar/TaskbarElements.qml",
+      "sha256": "2a54515ede89bbf9eb11cd647e2afa7239236b4c7dd1740c12cb8109b8242eb3",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/panels/taskbar/TaskbarElements.qml",
+      "source_sha256": "2a54515ede89bbf9eb11cd647e2afa7239236b4c7dd1740c12cb8109b8242eb3"
+    },
+    {
+      "target": "modules/nexus/pages/services/ArpcPage.qml",
+      "sha256": "1ce306bcf390413c26cf7c799fa339f3b8ddd83226956af03c4537f3ca376d72",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/services/ArpcPage.qml",
+      "source_sha256": "1ce306bcf390413c26cf7c799fa339f3b8ddd83226956af03c4537f3ca376d72"
+    },
+    {
+      "target": "modules/nexus/pages/services/GameModePage.qml",
+      "sha256": "7ace98ccd25399c7b17b20fe267a13ab966de5d3378530fa45c11f4fc9020c50",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/services/GameModePage.qml",
+      "source_sha256": "7ace98ccd25399c7b17b20fe267a13ab966de5d3378530fa45c11f4fc9020c50"
+    },
+    {
+      "target": "modules/nexus/pages/services/GameModeTargetsPage.qml",
+      "sha256": "b5a7b64a6c4c230be01b494499871d135ada15e2a8df65d5a0558cb62cf280b2",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/services/GameModeTargetsPage.qml",
+      "source_sha256": "b5a7b64a6c4c230be01b494499871d135ada15e2a8df65d5a0558cb62cf280b2"
+    },
+    {
+      "target": "modules/nexus/pages/services/NotificationPreferencesPage.qml",
+      "sha256": "3ff6a617d8b9275d1c8f0eba82352728b80a12da47066205d7727c3ea0ce60bc",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/services/NotificationPreferencesPage.qml",
+      "source_sha256": "3ff6a617d8b9275d1c8f0eba82352728b80a12da47066205d7727c3ea0ce60bc"
+    },
+    {
+      "target": "modules/nexus/pages/services/NotificationsPage.qml",
+      "sha256": "c60a5692b9144346646556050fea1dd4f03fda19bf164999cff5fe530de06a7b",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/services/NotificationsPage.qml",
+      "source_sha256": "c60a5692b9144346646556050fea1dd4f03fda19bf164999cff5fe530de06a7b"
+    },
+    {
+      "target": "modules/nexus/pages/services/QuickSharePage.qml",
+      "sha256": "b7ac480cb12cb2307df4b41a7f3f47222ac72ec4d7131f6624ce5f1cbc34af39",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/services/QuickSharePage.qml",
+      "source_sha256": "b7ac480cb12cb2307df4b41a7f3f47222ac72ec4d7131f6624ce5f1cbc34af39"
+    },
+    {
+      "target": "modules/nexus/pages/services/ToastEventsPage.qml",
+      "sha256": "8f252f2757c7f3c7795959e10c21c9b2d369a6985bc9dbbad6e112b34586dd9c",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/services/ToastEventsPage.qml",
+      "source_sha256": "8f252f2757c7f3c7795959e10c21c9b2d369a6985bc9dbbad6e112b34586dd9c"
+    },
+    {
+      "target": "modules/nexus/pages/services/ToastPreferencesPage.qml",
+      "sha256": "33099a3b8ed33f566352a0648eb70017c34155832a3ffe685b05ee813db62efc",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/services/ToastPreferencesPage.qml",
+      "source_sha256": "33099a3b8ed33f566352a0648eb70017c34155832a3ffe685b05ee813db62efc"
+    },
+    {
+      "target": "modules/nexus/pages/utilities/OsdPage.qml",
+      "sha256": "531c65b4493824cfa6dabbe655248b79779807c34e2815396228cbff6b0f36c9",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/utilities/OsdPage.qml",
+      "source_sha256": "531c65b4493824cfa6dabbe655248b79779807c34e2815396228cbff6b0f36c9"
+    },
+    {
+      "target": "modules/nexus/pages/utilities/QuickTogglesPage.qml",
+      "sha256": "ab76a0dedf819c62b0ebeb2350015adf7b3b04be53e84527db6ebea325237412",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/utilities/QuickTogglesPage.qml",
+      "source_sha256": "ab76a0dedf819c62b0ebeb2350015adf7b3b04be53e84527db6ebea325237412"
+    },
+    {
+      "target": "modules/nexus/pages/utilities/UtilitiesPanelPage.qml",
+      "sha256": "dccc008cd40af134251cc2a4996c3bfaf984c9b424aad8df19009dd57936d0f8",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/utilities/UtilitiesPanelPage.qml",
+      "source_sha256": "dccc008cd40af134251cc2a4996c3bfaf984c9b424aad8df19009dd57936d0f8"
+    },
+    {
+      "target": "modules/nexus/pages/wallandstyle/AddShortcutDialog.qml",
+      "sha256": "3ddfa456806efd069b30f1b9534b6480126d6eaae176973ad837f2685f0e8155",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/wallandstyle/AddShortcutDialog.qml",
+      "source_sha256": "3ddfa456806efd069b30f1b9534b6480126d6eaae176973ad837f2685f0e8155"
+    },
+    {
+      "target": "modules/nexus/pages/wallandstyle/AppearancePage.qml",
+      "sha256": "5bcd02a0e1b24492f2d6b6d834a12994697b970ae4ab7b1d441fcb7b781cbee7",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/wallandstyle/AppearancePage.qml",
+      "source_sha256": "5bcd02a0e1b24492f2d6b6d834a12994697b970ae4ab7b1d441fcb7b781cbee7"
+    },
+    {
+      "target": "modules/nexus/pages/wallandstyle/ColourSelect.qml",
+      "sha256": "d41db35b13d2f77c40921e0ca49b4af46e4039f23237d940ef1ae5e7a73b902e",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/wallandstyle/ColourSelect.qml",
+      "source_sha256": "d41db35b13d2f77c40921e0ca49b4af46e4039f23237d940ef1ae5e7a73b902e"
+    },
+    {
+      "target": "modules/nexus/pages/wallandstyle/ContextMenuPage.qml",
+      "sha256": "c046a9d3eeb78389da01e02b2f2edeed4bec9c03d49ed97d12e1da182b4c78cd",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/wallandstyle/ContextMenuPage.qml",
+      "source_sha256": "c046a9d3eeb78389da01e02b2f2edeed4bec9c03d49ed97d12e1da182b4c78cd"
+    },
+    {
+      "target": "modules/nexus/pages/wallandstyle/LockScreenPage.qml",
+      "sha256": "175fd5fd8e9924fa3ae4f4c6b8b267396ca1bd53ebc3ad2faa2d6648e3d3028e",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/wallandstyle/LockScreenPage.qml",
+      "source_sha256": "175fd5fd8e9924fa3ae4f4c6b8b267396ca1bd53ebc3ad2faa2d6648e3d3028e"
+    },
+    {
+      "target": "modules/nexus/pages/wallandstyle/VideoWallpapersPage.qml",
+      "sha256": "f33423cfdfbcb0b406680e1cfb73e623bed1a8ad23ba17e0e87bb9d3c85cff37",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/wallandstyle/VideoWallpapersPage.qml",
+      "source_sha256": "f33423cfdfbcb0b406680e1cfb73e623bed1a8ad23ba17e0e87bb9d3c85cff37"
+    },
+    {
+      "target": "modules/nexus/pages/wallandstyle/WallpaperSelect.qml",
+      "sha256": "e5503b7f797a0ee4bc31e76e1d5affbff7e3d96dabc6689e6d37b879dd37ec19",
+      "mode": 420,
+      "source": "kde-customizations/settings/overlay/modules/nexus/pages/wallandstyle/WallpaperSelect.qml",
+      "source_sha256": "e5503b7f797a0ee4bc31e76e1d5affbff7e3d96dabc6689e6d37b879dd37ec19"
+    },
+    {
+      "target": "modules/notifications/Content.qml",
+      "sha256": "f0e7df1240e5fc262e0e86540a1cb690c58ec0b4a738996ff9af4a1b4c5cfacd",
+      "mode": 420
+    },
+    {
+      "target": "modules/notifications/Notification.qml",
+      "sha256": "0f850b8e5cc9534b4631624fee12258b971cafecc602281b6779d91fcebd4e0f",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/notification-style/Notification.qml",
+      "source_sha256": "0f850b8e5cc9534b4631624fee12258b971cafecc602281b6779d91fcebd4e0f"
+    },
+    {
+      "target": "modules/notifications/Wrapper.qml",
+      "sha256": "b29003b9dc10f04caa13f23a103cbcf597fc1085ed05ae7405085240e4082e0a",
+      "mode": 420
+    },
+    {
+      "target": "modules/osd/Content.qml",
+      "sha256": "33745f87891c647fe4317b97d39f85dc2bc609a0110d234871f0f47ea2da70e5",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/osd-glass/Content.qml",
+      "source_sha256": "33745f87891c647fe4317b97d39f85dc2bc609a0110d234871f0f47ea2da70e5"
+    },
+    {
+      "target": "modules/osd/SegmentedSlider.qml",
+      "sha256": "e9a3754ebaea4c7f77565232a8ac904a22c45b7514089e92c90078267e31688c",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/osd-glass/SegmentedSlider.qml",
+      "source_sha256": "e9a3754ebaea4c7f77565232a8ac904a22c45b7514089e92c90078267e31688c"
+    },
+    {
+      "target": "modules/session/Content.qml",
+      "sha256": "c05490ba8f0d0894452e2149cf26f5d10a83083b0b6113a0236be1dec18492f9",
+      "mode": 420,
+      "source": "kde-customizations/session-mascot/Content.qml",
+      "source_sha256": "c05490ba8f0d0894452e2149cf26f5d10a83083b0b6113a0236be1dec18492f9"
+    },
+    {
+      "target": "modules/sidebar/AiAssistant.qml",
+      "sha256": "3e9000f17e1582637f2136c553673abd68b18b8d4830ef25513c19fa3520a151",
+      "mode": 420
+    },
+    {
+      "target": "modules/utilities/cards/CaptureCard.qml",
+      "sha256": "7b4a374ab8009868e22d2ec0c0914f481c963a61e849c0a4641a0f2a9e1a6c5f",
+      "mode": 420
+    },
+    {
+      "target": "modules/utilities/cards/QuickShareList.qml",
+      "sha256": "0b2165b054356237ccced57067ebe30f160fe172313a3617d7db2a1154dbfbba",
+      "mode": 420
+    },
+    {
+      "target": "modules/utilities/cards/RecordingList.qml",
+      "sha256": "2bdf15f4a43487659eea36787de3bd7d9ccd402a8b6a2bfe2bc863fd11f0a371",
+      "mode": 420
+    },
+    {
+      "target": "modules/utilities/cards/ScreenshotList.qml",
+      "sha256": "729c090ca558fcb85aa956b617790d5141d4a9c452c6232fd561faf1027e8dea",
+      "mode": 420
+    },
+    {
+      "target": "modules/windowinfo/Details.qml",
+      "sha256": "d13540bdca3cbb32aa1ad1acba21cd073f0f7f7b36207fb2ca74ec48360a5d38",
+      "mode": 420
+    },
+    {
+      "target": "scripts/app-visualiser.py",
+      "sha256": "1d7e9e68cecad0f17c2dc78ec379206a281eec5d6e26c5a857650db45b35a399",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/overlay/scripts/app-visualiser.py",
+      "source_sha256": "1d7e9e68cecad0f17c2dc78ec379206a281eec5d6e26c5a857650db45b35a399"
+    },
+    {
+      "target": "scripts/tailscale-vpn.py",
+      "sha256": "eaf7108dd24736a11e9e76a575f94e4be734186c6aac7f5ef803949340236e8e",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/network-popover/tailscale-vpn.py",
+      "source_sha256": "eaf7108dd24736a11e9e76a575f94e4be734186c6aac7f5ef803949340236e8e"
+    },
+    {
+      "target": "services/AppVisualiser.qml",
+      "sha256": "b192be9c2e4d26e69986c32ab565ce674924ffb10cb7ce8b4416cd0ab821bcba",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/overlay/AppVisualiser.qml",
+      "source_sha256": "b192be9c2e4d26e69986c32ab565ce674924ffb10cb7ce8b4416cd0ab821bcba"
+    },
+    {
+      "target": "services/Audio.qml",
+      "sha256": "3a521e46fa7f2922870bc552fc98b17ef4577c3ee2f93b75b0537bd7042678e3",
+      "mode": 420
+    },
+    {
+      "target": "services/Colours.qml",
+      "sha256": "da79731ed7a13c36b659e5e9d08191ad146451c84e88739de78d77fe95923aad",
+      "mode": 420
+    },
+    {
+      "target": "services/ContextMenuStore.qml",
+      "sha256": "01996ffd4099eba3da7337ae7df537360360434575a7e6181ad473bf69831b63",
+      "mode": 420,
+      "source": "kde-customizations/desktop-context-menu/services/ContextMenuStore.qml",
+      "source_sha256": "01996ffd4099eba3da7337ae7df537360360434575a7e6181ad473bf69831b63"
+    },
+    {
+      "target": "services/MenuStyle.qml",
+      "sha256": "12f1edc8e8a4484581f9a0e9d4a4e2bc2c6a4702ba34c877804f94dece44e19e",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/menu-style/MenuStyle.qml",
+      "source_sha256": "12f1edc8e8a4484581f9a0e9d4a4e2bc2c6a4702ba34c877804f94dece44e19e"
+    },
+    {
+      "target": "services/Nmcli.qml",
+      "sha256": "4d7d9c8691faa5794fad89b2eb390be4203ab3035cbeef4790b75ec05c55d80d",
+      "mode": 420
+    },
+    {
+      "target": "services/SystemLanguage.qml",
+      "sha256": "c3e3a7ed7dbd50eb53ee1848e3c9763cb2cd3cdf3fb48494b664ea750eeac425",
+      "mode": 420,
+      "source": "kde-customizations/localization/SystemLanguage.qml",
+      "source_sha256": "c3e3a7ed7dbd50eb53ee1848e3c9763cb2cd3cdf3fb48494b664ea750eeac425"
+    },
+    {
+      "target": "services/TaskbarGlassState.qml",
+      "sha256": "f4dc6fae4874f2d10b727d81085891e3e775c58aa9eea9d0e2553a287f3fe973",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/menu-style/TaskbarGlassState.qml",
+      "source_sha256": "f4dc6fae4874f2d10b727d81085891e3e775c58aa9eea9d0e2553a287f3fe973"
+    },
+    {
+      "target": "services/Time.qml",
+      "sha256": "9d3f094db4ba222119af685705b368232b399456ce16c15662a6dd3697b8a3fd",
+      "mode": 420
+    },
+    {
+      "target": "services/Uninstaller.qml",
+      "sha256": "3165d2d0a846d6bfa7ed1a9e9de445cfe9efde7889bcb3d46edc922b8844ee6a",
+      "mode": 420
+    },
+    {
+      "target": "services/UpdateChecker.qml",
+      "sha256": "e3c174ee5316d7ab4b3ac5524305294ecc11bf77d515a56790352e9ef396863b",
+      "mode": 420
+    },
+    {
+      "target": "services/UpdateHub.qml",
+      "sha256": "c9e7b83f04e5643ee42b4b088ee9c2efd10017fd7f5d67e6ef835753d9c20631",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/update-hub/UpdateHub.qml",
+      "source_sha256": "88337de597f4b442858a8cddeb5add94d10ecc34b4d460aeed9b76176c68698d"
+    },
+    {
+      "target": "services/Wallpapers.qml",
+      "sha256": "9221738da427ff1fbb655eaa5088d443960c6e1c87d2f34c5c5f3f6db381391b",
+      "mode": 420
+    },
+    {
+      "target": "services/update-hub-probe.py",
+      "sha256": "a0ebc38b4b61fc7b757ca2c06d1f60f57a31553d2089ec41429e7cc0948653bd",
+      "mode": 420,
+      "source": "kde-customizations/taskbar/update-hub/probe.py",
+      "source_sha256": "a0ebc38b4b61fc7b757ca2c06d1f60f57a31553d2089ec41429e7cc0948653bd"
+    },
+    {
+      "target": "shell.qml",
+      "sha256": "4f0bde7aab2124af4474dfe2dee49d0c20388be2454124fbef25c56096648969",
+      "mode": 420
+    }
+  ],
+  "excluded": [
+    "Personal shell.json, context_menu.json and Qt settings",
+    "Compiled binaries and translation catalogs",
+    "Updater metadata and checkout paths",
+    "Icons installed by the upstream installer"
+  ]
+}

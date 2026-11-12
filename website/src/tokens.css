@@ -1,0 +1,18 @@
+:root {
+  --flausen-blue: #2563C9;
+  --flausen-orange: #E56D2F;
+  --flausen-petrol: #278F8B;
+  --flausen-brown: #8F5B40;
+  --flausen-cream: #DED6C8;
+  --flausen-ink: #17191D;
+  --flausen-mist: #ECEEF0;
+  --flausen-chalk: #F5F4F0;
+  --flausen-label-font: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --flausen-body-font: system-ui, sans-serif;
+  --flausen-focus-width: 3px;
+  --flausen-touch-target: 44px;
+}
+/* Motion must additionally read matchMedia in its simulation module. */
+@media (prefers-reduced-motion: reduce) {
+  [data-flausen-motion] { animation: none !important; transition: none !important; }
+}

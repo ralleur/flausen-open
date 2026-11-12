@@ -1,0 +1,327 @@
+{
+  "saved": true,
+  "width": 681,
+  "height": 714,
+  "rows": [
+    {
+      "text": "screenshot_region",
+      "font": "Material Symbols Rounded",
+      "size": 20
+    },
+    {
+      "text": "Screen Capture",
+      "font": "Noto Sans",
+      "size": 27.547826086956526
+    },
+    {
+      "text": "Capture, OCR and image search",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "screenshot_region",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Capture",
+      "font": "Noto Sans",
+      "size": 16.695652173913047
+    },
+    {
+      "text": "expand_more",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "photo_camera",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Screenshot",
+      "font": "Noto Sans",
+      "size": 16.695652173913047
+    },
+    {
+      "text": "videocam",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Recording",
+      "font": "Noto Sans",
+      "size": 16.695652173913047
+    },
+    {
+      "text": "photo_library",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Recent captures",
+      "font": "Noto Sans",
+      "size": 15.693913043478263
+    },
+    {
+      "text": "6",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "folder_open",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "Newest first",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Newest first",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "unfold_more",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "02.11. 12:05",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:04",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:03",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:02",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:01",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:00",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Select a capture",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Copy",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Copy",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Extract text",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Extract text",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Image search",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Image search",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "photo_library",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Recent captures",
+      "font": "Noto Sans",
+      "size": 15.693913043478263
+    },
+    {
+      "text": "6",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "folder_open",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "Newest first",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Newest first",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "unfold_more",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "02.11. 12:05",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:04",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:03",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:02",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:01",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "02.11. 12:00",
+      "font": "Noto Sans",
+      "size": 13.189565217391307
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Select a capture",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Copy",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Copy",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Extract text",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Extract text",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Image search",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "Image search",
+      "font": "Noto Sans",
+      "size": 13.523478260869569
+    },
+    {
+      "text": "delete_outline",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    }
+  ]
+}

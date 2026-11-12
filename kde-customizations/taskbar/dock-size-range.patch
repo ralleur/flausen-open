@@ -1,0 +1,83 @@
+--- modules/bar/SplitBarSettings.qml
++++ modules/bar/SplitBarSettings.qml
+@@ -9,6 +9,8 @@
+ 
+     category: "RalleurTaskbar"
+     readonly property int edgeGap: 12
++    readonly property real minDockScale: 0.4
++    readonly property real maxDockScale: 3.2
+     property real dockScale: -1
+     property bool dockMagnification: true
+     property real dockMagnificationAmount: 0.55
+@@ -48,14 +50,14 @@
+     function setDockScale(value: real): void {
+         if (!isFinite(value))
+             return;
+-        dockScale = Math.max(0.6, Math.min(1.6, value));
++        dockScale = Math.max(minDockScale, Math.min(maxDockScale, value));
+         setValue("dockScale", dockScale);
+         sync();
+     }
+ 
+     Component.onCompleted: {
+         // Copy the previous common scale once. Subsequent topbar edits are independent.
+-        if (!isFinite(dockScale) || dockScale < 0.6 || dockScale > 1.6)
++        if (!isFinite(dockScale) || dockScale < minDockScale || dockScale > maxDockScale)
+             setDockScale(GlobalConfig.bar.scale);
+     }
+ }
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -32,7 +32,7 @@
+     readonly property int vPadding: Tokens.padding.large
+ 
+     readonly property real rawScale: dockOnly ? SplitBarSettings.dockScale : (!isNaN(Config.bar.scale) ? Config.bar.scale : 1.0)
+-    readonly property real barScale: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
++    readonly property real barScale: dockOnly ? rawScale : rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
+     readonly property int thickness: Math.round(Tokens.sizes.bar.innerWidth * barScale)
+ 
+     readonly property bool isHorizontal: position === "top" || position === "bottom"
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -42,6 +42,8 @@
+         return {
+             magnification: { enabled: zoomEnabled, active: zoomActive, amount: SplitBarSettings.dockMagnificationAmount, pointer: zoomPointer },
+             drag: { active: isDragging, id: draggedId, preview: dragPreview, pinned: previewPinnedCount },
++            resizing: isResizing,
++            scaleLimits: { min: SplitBarSettings.minDockScale, max: SplitBarSettings.maxDockScale },
+             separator: hasSections, gap: sectionGap,
+             recent: SplitBarSettings.recentApps(),
+             itemSize: container.itemSize,
+@@ -180,7 +182,7 @@
+     property real padding: Tokens.padding.medium * (bar.dockOnly ? scaleFactor : 1.0)
+ 
+     readonly property real rawScale: bar.rawScale
+-    readonly property real scaleFactor: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
++    readonly property real scaleFactor: bar.dockOnly ? rawScale : rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
+     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
+     readonly property int baseThickness: Tokens.sizes.bar.innerWidth
+     readonly property int effectiveThickness: rawScale < 1.0 ? baseThickness : barThickness
+@@ -710,7 +712,9 @@
+                     onPositionChanged: mouse => {
+                         if (pressed) {
+                             const delta = startY - mapToGlobal(mouse.x, mouse.y).y;
+-                            SplitBarSettings.dockScale = Math.max(0.6, Math.min(1.6, startScale + delta / 180));
++                            // The dock centre moves by half its height: follow the handle 1:1.
++                            SplitBarSettings.dockScale = Math.max(SplitBarSettings.minDockScale,
++                                Math.min(SplitBarSettings.maxDockScale, startScale + 2 * delta / root.baseThickness));
+                         }
+                     }
+                     onReleased: {
+--- modules/nexus/pages/panels/TaskbarPanel.qml
++++ modules/nexus/pages/panels/TaskbarPanel.qml
+@@ -194,8 +194,8 @@
+                 customSet: v => SplitBarSettings.setDockScale(v)
+             })
+             value: SplitBarSettings.dockScale
+-            from: 0.6
+-            to: 1.6
++            from: SplitBarSettings.minDockScale
++            to: SplitBarSettings.maxDockScale
+             stepSize: 0.05
+             onMoved: v => SplitBarSettings.setDockScale(v)
+         }

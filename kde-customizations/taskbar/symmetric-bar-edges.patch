@@ -1,0 +1,27 @@
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -362,7 +362,10 @@
+         anchors.verticalCenter: isHorizontal ? parent.verticalCenter : undefined
+         anchors.horizontalCenter: !isHorizontal ? parent.horizontalCenter : undefined
+ 
+-        anchors.leftMargin: isHorizontal ? root.vPadding : 0
++        // Match the launcher edge to the glass surface's screen inset.
++        anchors.leftMargin: position === "top"
++            ? Math.max(0, SplitBarSettings.edgeGap - Math.max(Tokens.padding.small, Config.border.thickness))
++            : (isHorizontal ? root.vPadding : 0)
+         anchors.topMargin: !isHorizontal ? root.vPadding : 0
+ 
+         columns: isHorizontal ? -1 : 1
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -519,8 +519,8 @@
+     }
+     GlassSurface {
+         id: topBarGlass
+-        // Align the glass cap with the left edge of the launcher button.
+-        x: bar.x + bar.padding + Tokens.padding.large
++        // The launcher and both glass edges share the same screen inset.
++        x: SplitBarSettings.edgeGap
+         y: bar.y + 4
+         width: Math.max(0, root.width - SplitBarSettings.edgeGap - x)
+         height: Math.max(0, bar.height - 8)

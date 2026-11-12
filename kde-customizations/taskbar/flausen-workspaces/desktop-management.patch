@@ -1,0 +1,125 @@
+--- a/modules/bar/popouts/PopoutState.qml
++++ b/modules/bar/popouts/PopoutState.qml
+@@ -5,6 +5,7 @@
+     property bool hasCurrent
+     property var dockModel: null
+     property var tasksModel: null
++    property string selectedWorkspaceId
+     property string selectedClientAddress: ""
+     property bool sidebarOpen: false
+     property bool isHorizontal: true
+--- a/modules/bar/popouts/Content.qml
++++ b/modules/bar/popouts/Content.qml
+@@ -26,7 +26,9 @@
+         return acc;
+     }, {})
+ 
+-    readonly property real contentMargin: ((popouts.currentName === "dockcontext" || popouts.currentName === "taskbarcontext") ? 8 : Tokens.padding.large) * (currentPopout?.item?.scaleOffset ?? 1.0)
++    readonly property bool compactContext: popouts.currentName === "dockcontext"
++        || popouts.currentName === "taskbarcontext" || popouts.currentName === "workspacescontext"
++    readonly property real contentMargin: (compactContext ? 8 : Tokens.padding.large) * (currentPopout?.item?.scaleOffset ?? 1.0)
+     readonly property real availableWidth: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.width ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+     readonly property real availableHeight: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.height ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+ 
+@@ -47,8 +49,8 @@
+                 popout[name] = context[name];
+     }
+ 
+-    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + ((popouts.currentName === "dockcontext" || popouts.currentName === "taskbarcontext") ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
+-    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + ((popouts.currentName === "dockcontext" || popouts.currentName === "taskbarcontext") ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
++    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + (compactContext ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
++    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + (compactContext ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
+ 
+     Flickable {
+         id: viewport
+@@ -329,12 +331,11 @@
+ 
+         Popout {
+             name: "workspacescontext"
+-            sourceComponent: BarComponentContext {
+-                popouts: root.popouts
+-                label: qsTr("Workspaces settings")
+-                subPageIdx: 7
+-                secondLabel: qsTr("Elements & Modules")
+-                secondSubPageIdx: 15
++            previewKey: "network"
++            minScale: 1.15
++            sourceComponent: TaskbarContext {
++                popouts: root.popouts
++                workspaceMenu: true
+             }
+         }
+ 
+--- a/modules/bar/components/workspaces/Workspaces.qml
++++ b/modules/bar/components/workspaces/Workspaces.qml
+@@ -20,6 +20,21 @@
+ 
+     implicitWidth: container.implicitWidth
+     implicitHeight: container.implicitHeight
++
++    function openContext(position: point): void {
++        const popouts = bar?.popouts;
++        if (!popouts)
++            return;
++        const local = root.mapToItem(layout, position);
++        const pill = container.pills.find(p => container.isHorizontal
++            ? local.x >= p.x && local.x <= p.x + p.width
++            : local.y >= p.y && local.y <= p.y + p.height);
++        popouts.selectedWorkspaceId = Kwin.uuidForIndex(pill?.ws ?? container.activeWsId);
++        popouts.currentName = "workspacescontext";
++        const center = root.mapToItem(null, width / 2, height / 2);
++        popouts.currentCenter = bar.isHorizontal ? center.x : center.y;
++        popouts.hasCurrent = true;
++    }
+ 
+     StyledClippingRect {
+         id: container
+@@ -170,12 +185,7 @@
+                 acceptedButtons: Qt.LeftButton | Qt.RightButton
+                 onClicked: event => {
+                     if (event.button === Qt.RightButton) {
+-                        const popouts = root.bar?.popouts;
+-                        if (!popouts)
+-                            return;
+-                        popouts.currentName = "workspacescontext";
+-                        popouts.currentCenter = root.bar.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
+-                        popouts.hasCurrent = true;
++                        root.openContext(layout.mapToItem(root, event.x, event.y));
+                         return;
+                     }
+                     const pill = container.pills.find(p => container.isHorizontal ? event.x >= p.x && event.x <= p.x + p.width : event.y >= p.y && event.y <= p.y + p.height);
+--- a/modules/bar/popouts/Wrapper.qml
++++ b/modules/bar/popouts/Wrapper.qml
+@@ -34,6 +34,7 @@
+     property alias hasCurrent: popoutState.hasCurrent
+     property alias dockModel: popoutState.dockModel
+     property alias tasksModel: popoutState.tasksModel
++    property alias selectedWorkspaceId: popoutState.selectedWorkspaceId
+     property real currentCenter
+     // Set by ClipWrapper: whether the current bar item sits under the sidebar,
+     // which can be narrower than the bar's right side now that it is resizable.
+--- a/modules/bar/BarWrapper.qml
++++ b/modules/bar/BarWrapper.qml
+@@ -57,7 +57,7 @@
+     readonly property bool keptOpen: Config.bar.persistent && !dodging
+     readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? contentWidth + topInset : Config.border.thickness
+     readonly property int visualThickness: !disabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
+-    readonly property bool contextOpen: popouts.hasCurrent && popouts.currentName === "taskbarcontext"
++    readonly property bool contextOpen: popouts.hasCurrent && (popouts.currentName === "taskbarcontext" || popouts.currentName === "workspacescontext")
+     readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || isHovered || contextOpen || SplitBarSettings.taskbarUnlocked)
+     property bool isHovered
+     readonly property bool isHorizontal: root.position === "top" || root.position === "bottom"
+@@ -133,6 +133,13 @@
+         property point start
+         onPressed: event => {
+             if (event.button === Qt.RightButton) {
++                const bar = content.item;
++                const position = taskbarPointer.mapToItem(bar, event.x, event.y);
++                const widget = bar?.getLoaderAt(position.x, position.y);
++                if (widget?.id === "workspaces" && widget.item) {
++                    widget.item.openContext(taskbarPointer.mapToItem(widget.item, event.x, event.y));
++                    return;
++                }
+                 root.popouts.currentCenter = root.isHorizontal ? root.x + event.x : root.y + event.y;
+                 root.popouts.currentName = "taskbarcontext";
+                 root.popouts.hasCurrent = true;

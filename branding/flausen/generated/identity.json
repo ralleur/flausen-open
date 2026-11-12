@@ -1,0 +1,13 @@
+{
+  "name": "flausen.",
+  "technicalProductName": "flausen OS",
+  "parent": "ralleur",
+  "tagline": "Your computer. Your playground.",
+  "mark": {
+    "structure": "three unequal circles, left to right: yellow, coral, blue",
+    "usage": "do not alter order, proportion, or colors"
+  },
+  "id": "flausen-os",
+  "descriptor": "Everyday OS",
+  "status": "development"
+}

@@ -1,0 +1,39 @@
+1
+00:00:00,000 --> 00:00:04,000
+Your computer. Your playground. Phase one. A connected desktop for everyday life and play.
+
+2
+00:00:04,000 --> 00:00:11,000
+Start with an idea. Search apps, return to a recent file or ask Hermes in the same Start menu.
+
+3
+00:00:11,000 --> 00:00:51,400
+Make room as you go. Actual Files, Kate, settings, tiling and fullscreen interactions.
+
+4
+00:00:51,400 --> 00:00:57,400
+Ask. See. Decide. Read system information, see each step and approve proposed shell commands.
+
+5
+00:00:57,400 --> 00:01:04,400
+Choose where it runs. Local model, network endpoint or cloud provider. Changes apply to a new conversation.
+
+6
+00:01:04,400 --> 00:01:10,400
+Keep the useful bits. Capture a region, window or screen. Edit shortcuts right where you use them.
+
+7
+00:01:10,400 --> 00:01:16,400
+Copy. Pin. Carry on. A screenshot flows into the gallery and clipboard. Pin the things you need again.
+
+8
+00:01:16,400 --> 00:01:22,400
+One update overview. See status across the desktop, games and apps. Open the responsible app to install.
+
+9
+00:01:22,400 --> 00:01:28,400
+Make this space yours. Light and dark appearance, six accents, wallpapers and native settings in one window.
+
+10
+00:01:28,400 --> 00:01:33,400
+One desktop. A continuous flow. Start an idea. Make room. Step into play. Return to what matters.

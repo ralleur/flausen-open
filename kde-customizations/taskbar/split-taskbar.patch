@@ -1,0 +1,403 @@
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -25,21 +25,26 @@
+     required property bool fullscreen
+     property Item currentHoveredItem: null
+ 
++    // Ralleur: reuse the native bar delegates on a second, bottom surface.
++    property bool dockOnly: false
++    readonly property string position: dockOnly ? "bottom" : Config.bar.position
++
+     readonly property int vPadding: Tokens.padding.large
+ 
+-    readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
++    readonly property real rawScale: dockOnly ? SplitBarSettings.dockScale : (!isNaN(Config.bar.scale) ? Config.bar.scale : 1.0)
+     readonly property real barScale: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
+     readonly property int thickness: Math.round(Tokens.sizes.bar.innerWidth * barScale)
+ 
+-    readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
++    readonly property bool isHorizontal: position === "top" || position === "bottom"
+ 
+     readonly property real leftZoneSize: isHorizontal ? leftLayout.implicitWidth : leftLayout.implicitHeight
+     readonly property real middleZoneSize: isHorizontal ? middleLayout.implicitWidth : middleLayout.implicitHeight
+     readonly property real rightZoneSize: isHorizontal ? rightLayout.implicitWidth : rightLayout.implicitHeight
+ 
+-    property var leftEntries: BarWidgets.zoneEntries(Config.bar.entries, "left")
+-    property var middleEntries: BarWidgets.zoneEntries(Config.bar.entries, "middle")
+-    property var rightEntries: BarWidgets.zoneEntries(Config.bar.entries, "right")
++    property var leftEntries: dockOnly ? [] : BarWidgets.zoneEntries(Config.bar.entries, "left")
++    property var middleEntries: (dockOnly ? Config.bar.position !== "top" : position === "top")
++        ? [] : BarWidgets.zoneEntries(Config.bar.entries, "middle")
++    property var rightEntries: dockOnly ? [] : BarWidgets.zoneEntries(Config.bar.entries, "right")
+ 
+     function resetHover(): void {
+         if (currentHoveredItem) {
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -27,16 +27,16 @@
+ 
+     property bool isDragging: false
+ 
+-    property real spacing: Tokens.spacing.medium
+-
+-    property real padding: Tokens.padding.medium
+-
+-    readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
++    property real spacing: Tokens.spacing.medium * (bar.dockOnly ? scaleFactor : 1.0)
++
++    property real padding: Tokens.padding.medium * (bar.dockOnly ? scaleFactor : 1.0)
++
++    readonly property real rawScale: bar.rawScale
+     readonly property real scaleFactor: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
+     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
+     readonly property int baseThickness: Tokens.sizes.bar.innerWidth
+     readonly property int effectiveThickness: rawScale < 1.0 ? baseThickness : barThickness
+-    readonly property real configuredItemSize: Math.max(16, Math.min(effectiveThickness, Config.bar.dock.iconSize || 32))
++    readonly property real configuredItemSize: Math.max(16, Math.min(effectiveThickness, (Config.bar.dock.iconSize || 32) * (bar.dockOnly ? scaleFactor : 1.0)))
+     // Icon size of a dock item. Derived from the configured item size rather than the
+     // delegate's laid-out width, which is still 0 while the delegate is being created.
+     readonly property real iconSize: Math.round(configuredItemSize * 0.7 / 2) * 2
+@@ -79,16 +79,16 @@
+             let w = size;
+             let h = size;
+ 
+-            if (Config.bar.position === "left") {
++            if (bar.position === "left") {
+                 w = x + size;
+                 x = 0;
+-            } else if (Config.bar.position === "right") {
++            } else if (bar.position === "right") {
+                 const winW = win ? win.width : 0;
+                 w = winW > 0 ? winW - x : size;
+-            } else if (Config.bar.position === "top") {
++            } else if (bar.position === "top") {
+                 h = y + size;
+                 y = 0;
+-            } else if (Config.bar.position === "bottom") {
++            } else if (bar.position === "bottom") {
+                 const winH = win ? win.height : 0;
+                 h = winH > 0 ? winH - y : size;
+             }
+@@ -1121,7 +1121,7 @@
+     }
+ 
+     Component.onDestruction: {
+-        if (root.bar && root.bar.screen)
++        if (root.bar && root.bar.screen && Visibilities.docks.get(root.bar.screen.name) === root)
+             Visibilities.unregisterDock(root.bar.screen);
+     }
+ }
+--- modules/bar/popouts/ClipWrapper.qml
++++ modules/bar/popouts/ClipWrapper.qml
+@@ -13,9 +13,13 @@
+     required property ShellScreen screen
+     Config.screen: screen.name
+     required property var bar
++    property real dockHeight: bar.contentWidth
+     required property real borderThickness
+     required property DrawerVisibilities visibilities
+ 
++    // Dock previews and context menus belong above the bottom capsule.
++    readonly property bool fromBottomDock: bar.position === "top" && content.currentName.startsWith("dock")
++    readonly property string popoutPosition: fromBottomDock ? "bottom" : bar.position
+     readonly property alias content: content
+     readonly property bool isHorizontal: bar.isHorizontal
+     property real offsetScale: content.isDetached || content.hasCurrent ? 0 : 1
+@@ -36,7 +40,7 @@
+                 return Math.max(off + diff, 0);
+             return Math.max(off, 0);
+         }
+-        if (bar.position === "right")
++        if (root.popoutPosition === "right")
+             return parent.width - implicitWidth;
+         return 0;
+     }
+@@ -52,8 +56,8 @@
+         if (content.isDetached)
+             return (parent.height - content.nonAnimHeight) / 2;
+         if (isHorizontal) {
+-            if (bar.position === "bottom")
+-                return parent.height - implicitHeight;
++            if (root.popoutPosition === "bottom")
++                return parent.height - implicitHeight - (root.fromBottomDock ? root.dockHeight + 20 - parent.bottomMargin : 0);
+             return 0;
+         }
+ 
+@@ -94,15 +98,15 @@
+         visibilities: root.visibilities
+         underSidebar: !root.isHorizontal || content.currentCenter - root.parent.leftMargin >= root.parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width)
+ 
+-        anchors.leftMargin: bar.position === "left" ? (-implicitWidth - 5) * root.offsetScale : 0
+-        anchors.rightMargin: bar.position === "right" ? (-implicitWidth - 5) * root.offsetScale : 0
+-        anchors.topMargin: bar.position === "top" ? (-implicitHeight - 5) * root.offsetScale : 0
+-        anchors.bottomMargin: bar.position === "bottom" ? (-implicitHeight - 5) * root.offsetScale : 0
++        anchors.leftMargin: root.popoutPosition === "left" ? (-implicitWidth - 5) * root.offsetScale : 0
++        anchors.rightMargin: root.popoutPosition === "right" ? (-implicitWidth - 5) * root.offsetScale : 0
++        anchors.topMargin: root.popoutPosition === "top" ? (-implicitHeight - 5) * root.offsetScale : 0
++        anchors.bottomMargin: root.popoutPosition === "bottom" ? (-implicitHeight - 5) * root.offsetScale : 0
+ 
+         states: [
+             State {
+                 name: "left"
+-                when: bar.position === "left"
++                when: root.popoutPosition === "left"
+ 
+                 AnchorChanges {
+                     target: content
+@@ -116,7 +120,7 @@
+             },
+             State {
+                 name: "right"
+-                when: bar.position === "right"
++                when: root.popoutPosition === "right"
+ 
+                 AnchorChanges {
+                     target: content
+@@ -130,7 +134,7 @@
+             },
+             State {
+                 name: "top"
+-                when: bar.position === "top"
++                when: root.popoutPosition === "top"
+ 
+                 AnchorChanges {
+                     target: content
+@@ -144,7 +148,7 @@
+             },
+             State {
+                 name: "bottom"
+-                when: bar.position === "bottom"
++                when: root.popoutPosition === "bottom"
+ 
+                 AnchorChanges {
+                     target: content
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -5,6 +5,7 @@
+ import Quickshell
+ import Quickshell.Services.SystemTray
+ import Caelestia.Config
++import qs.modules.bar as BarSettings
+ import qs.components
+ import qs.services as QsServices
+ 
+@@ -477,7 +478,8 @@
+ 
+         readonly property real masterScale: !isNaN(GlobalConfig.bar.previewScale) ? GlobalConfig.bar.previewScale : 1.0
+         readonly property real elementOffset: GlobalConfig.bar.perElementPreviewScale ? (!isNaN(GlobalConfig.bar.previewScales[previewKey]) ? GlobalConfig.bar.previewScales[previewKey] : 0.0) : 0.0
+-        readonly property real barScaleOffset: GlobalConfig.bar.previewScaleWithBar ? (!isNaN(GlobalConfig.bar.scale) ? GlobalConfig.bar.scale : 1.0) : 1.0
++        readonly property real surfaceScale: name.startsWith("dock") ? BarSettings.SplitBarSettings.dockScale : GlobalConfig.bar.scale
++        readonly property real barScaleOffset: GlobalConfig.bar.previewScaleWithBar ? (!isNaN(surfaceScale) ? surfaceScale : 1.0) : 1.0
+         readonly property real scaleOffset: Math.max(minScale, (masterScale + elementOffset) * barScaleOffset)
+         readonly property real elementFontOffset: GlobalConfig.bar.perElementFontScale ? (!isNaN(GlobalConfig.bar.previewFontScales[previewKey]) ? GlobalConfig.bar.previewFontScales[previewKey] : 0.0) : 0.0
+         readonly property real fontScale: Math.max(0.1, scaleOffset + (!isNaN(GlobalConfig.bar.fontScaleOffset) ? GlobalConfig.bar.fontScaleOffset : 0.0) + elementFontOffset)
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -27,6 +27,7 @@
+     property real blurOffsetRight: 0
+     property alias overviewAnimConfig: animConfig
+     readonly property alias bar: bar
++    readonly property alias bottomDock: bottomDock
+     readonly property alias interactionWrapper: interactions
+     readonly property alias visibilities: visibilities
+     // The per-screen state object the drawers share. The dashboard's tab and the
+@@ -526,6 +527,7 @@
+         visibilities: visibilities
+         panels: panels
+         bar: bar
++        bottomDock: bottomDock
+         borderThickness: root.borderLayoutThickness
+         fullscreen: root.hasFullscreen
+         focusGrab: focusGrabState
+@@ -657,6 +659,7 @@
+             popouts.transform: Matrix4x4 {
+                 matrix: popoutBg.deformMatrix
+             }
++            popoutsWrapper.dockHeight: bottomDock.height
+             cursorPos: Qt.point(interactions.mouseX, interactions.mouseY)
+         }
+         BarWrapper {
+@@ -670,6 +673,19 @@
+             popouts: panels.popouts
+             fullscreen: root.hasFullscreen
+             Component.onCompleted: Visibilities.registerBar(root.screen, this)
++        }
++        SplitDock {
++            id: bottomDock
++
++            anchors.left: parent.left
++            anchors.right: parent.right
++            anchors.bottom: parent.bottom
++            anchors.bottomMargin: 12
++            screen: root.screen
++            visibilities: visibilities
++            popouts: panels.popouts
++            fullscreen: root.hasFullscreen
++            visible: bar.position === "top" && middleEntries.length > 0 && !bar.disabled && bar.shouldBeVisible && !root.hasFullscreen
+         }
+         Connections {
+             function onOpenDesktopContextMenu(x, y, screenName) {
+--- modules/drawers/Drawers.qml
++++ modules/drawers/Drawers.qml
+@@ -15,6 +15,7 @@
+         Exclusions {
+             screen: scope.modelData
+             bar: content.bar
++            dock: content.bottomDock
+             visibilities: content.visibilities
+         }
+ 
+--- modules/drawers/Exclusions.qml
++++ modules/drawers/Exclusions.qml
+@@ -13,6 +13,7 @@
+ 
+     required property ShellScreen screen
+     required property Bar.BarWrapper bar
++    required property Bar.SplitDock dock
+     required property DrawerVisibilities visibilities
+     // A pinned sidebar reserves its width so maximised windows sit beside it
+     // rather than under it. It stays reserved while hidden for a fullscreen window
+@@ -52,7 +53,7 @@
+ 
+     ExclusionZone {
+         anchors.bottom: true
+-        exclusiveZone: root.bar.position === "bottom" ? root.bar.exclusiveZone : Config.border.thickness
++        exclusiveZone: root.bar.position === "top" && !root.bar.disabled && root.dock.middleEntries.length > 0 && (Config.bar.persistent || root.visibilities.bar) ? root.dock.height + 12 : (root.bar.position === "bottom" ? root.bar.exclusiveZone : Config.border.thickness)
+         Config.screen: root.screen.name
+     }
+ 
+--- modules/drawers/Interactions.qml
++++ modules/drawers/Interactions.qml
+@@ -16,6 +16,7 @@
+     required property DrawerVisibilities visibilities
+     required property Panels panels
+     required property Bar.BarWrapper bar
++    required property Bar.SplitDock bottomDock
+     required property real borderThickness
+     required property bool fullscreen
+     property var focusGrab: null
+@@ -27,6 +28,10 @@
+     // Uses clampedThickness rather than the raw implicit size so the bar stays
+     // reachable when the border thickness is set to 0 (the collapsed bar is 0px wide).
+ 
++    function inBottomDock(x: real, y: real): bool {
++        return bottomDock.visible && y >= bottomDock.y && y <= bottomDock.y + bottomDock.height + 12
++            && Math.abs(x - screen.width / 2) <= bottomDock.footprintWidth / 2;
++    }
+     function inBarArea(x: real, y: real): bool {
+         if (bar.position === "left")
+             return x < bar.x + bar.clampedThickness;
+@@ -58,6 +63,10 @@
+         return x >= b.x && x <= b.y;
+     }
+     function inLeftPanel(panel: Item, x: real, y: real): bool {
++        if (panel === panels.popoutsWrapper && panel.fromBottomDock) {
++            const top = panels.topMargin + panel.y;
++            return y >= top && (withinPanelWidth(panel, x, y) || abovePopoutItem(panel, x));
++        }
+         const panelWidth = panel.content ? panel.content.nonAnimWidth : panel.width;
+         const panelHeight = panel.content ? panel.content.nonAnimHeight : panel.height;
+ 
+@@ -108,7 +117,9 @@
+     function onWheel(event: WheelEvent): void {
+         if (fullscreen)
+             return;
+-        if (inBarArea(event.x, event.y)) {
++        if (inBottomDock(event.x, event.y)) {
++            bottomDock.handleWheel(event.x, event.angleDelta);
++        } else if (inBarArea(event.x, event.y)) {
+             bar.handleWheel(isBarHorizontal ? event.x : event.y, event.angleDelta);
+         }
+     }
+@@ -122,7 +133,7 @@
+         if (root.focusGrab && (root.focusGrab.active || popouts.isDetached)) {
+             let inside = false;
+ 
+-            if (inBarArea(event.x, event.y)) inside = true;
++            if (inBarArea(event.x, event.y) || inBottomDock(event.x, event.y)) inside = true;
+             else if (visibilities.launcher && inBottomPanel(panels.launcher, event.x, event.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) inside = true;
+             else if (visibilities.session && inRightPanel(panels.sessionWrapper, event.x, event.y)) inside = true;
+             else if (visibilities.sidebar && inRightPanel(panels.sidebar, event.x, event.y)) inside = true;
+@@ -168,6 +179,12 @@
+ 
+         if (fullscreen) {
+             root.panels.osd.hovered = inRightPanel(panels.osdWrapper, x, y, Config.osd.hoverThickness, Config.osd.hoverWidth);
++            return;
++        }
++
++        if (inBottomDock(x, y)) {
++            bottomDock.checkPopout(x);
++            popoutHideTimer.stop();
+             return;
+         }
+ 
+--- modules/drawers/Regions.qml
++++ modules/drawers/Regions.qml
+@@ -30,6 +30,14 @@
+     height: win.height - barTopHeight - barBottomHeight - win.dragMaskPadding * 2
+     intersection: Intersection.Xor
+ 
++    // Only the visible capsule takes input; the rest of the bottom stays usable.
++    Region {
++        x: (root.win.width - root.win.bottomDock.footprintWidth) / 2
++        y: root.win.bottomDock.y
++        width: root.win.bottomDock.visible ? root.win.bottomDock.footprintWidth : 0
++        height: root.win.bottomDock.visible ? root.win.bottomDock.height + 12 : 0
++        intersection: Intersection.Subtract
++    }
+     R {
+         panel: root.panels.dashboard
+         y: 0
+--- modules/nexus/PageDictionary.qml
++++ modules/nexus/PageDictionary.qml
+@@ -81,6 +81,8 @@
+                 { label: qsTr("Per-element scaling offsets"), keywords: ["scale", "font scale", "preview"], pagePath: "panels/taskbar/BarPreviewScales.qml", subPageIdx: 14 },
+                 { label: qsTr("Elements & Modules"), keywords: ["workspaces", "tray", "clock", "modules"], pagePath: "panels/taskbar/TaskbarElements.qml", subPageIdx: 15 },
+                 { label: qsTr("Update indicator"), keywords: ["updates", "indicator"], pagePath: "panels/taskbar/BarUpdates.qml", subPageIdx: 17 },
++                { label: qsTr("Topbar-Maßstab"), keywords: ["topbar", "scale", "size", "Maßstab", "Größe"], pagePath: "panels/TaskbarPanel.qml", subPageIdx: 2 },
++                { label: qsTr("Dock-Maßstab"), keywords: ["dock", "scale", "size", "Maßstab", "Größe"], pagePath: "panels/TaskbarPanel.qml", subPageIdx: 2 },
+                 { label: qsTr("Preview scale"), keywords: ["preview", "thumbnails", "scale"], pagePath: "panels/TaskbarPanel.qml", subPageIdx: 2 },
+                 { label: qsTr("Performance"), keywords: ["performance widgets", "dashboard", "randomize shape colors", "cpu", "memory", "storage"], pagePath: "panels/DashboardPanel.qml", subPageIdx: 1 },
+                 { label: qsTr("Dashboard clock seconds"), keywords: ["clock", "seconds", "dashboard", "time"], pagePath: "panels/DashboardPanel.qml", subPageIdx: 1 },
+--- modules/nexus/pages/panels/TaskbarPanel.qml
++++ modules/nexus/pages/panels/TaskbarPanel.qml
+@@ -8,6 +8,7 @@
+ import qs.services
+ import qs.utils
+ import qs.modules.nexus.common
++import qs.modules.bar
+ 
+ PageBase {
+     id: root
+@@ -173,14 +174,29 @@
+ 
+         StepperRow {
+             first: true
+-            label: qsTr("Bar scale")
+-            subtext: qsTr("Scales taskbar thickness and component sizing")
++            label: qsTr("Topbar-Maßstab")
++            subtext: qsTr("Größe der oberen Leiste und ihrer Komponenten")
+             reset: ({ node: GlobalConfig.bar, setting: "scale" })
+             value: GlobalConfig.bar.scale
+             from: 0.6
+             to: 1.6
+             stepSize: 0.05
+             onMoved: v => GlobalConfig.bar.scale = v
++        }
++
++        StepperRow {
++            label: qsTr("Dock-Maßstab")
++            subtext: qsTr("Größe der unteren Anwendungsleiste, unabhängig von der Topbar")
++            reset: ({
++                customGet: () => SplitBarSettings.dockScale,
++                customDef: 1.0,
++                customSet: v => SplitBarSettings.setDockScale(v)
++            })
++            value: SplitBarSettings.dockScale
++            from: 0.6
++            to: 1.6
++            stepSize: 0.05
++            onMoved: v => SplitBarSettings.setDockScale(v)
+         }
+ 
+         StepperRow {

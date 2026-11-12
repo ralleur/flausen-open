@@ -1,0 +1,2 @@
+#!/bin/sh
+exec nice -n 10 "$HOME/.local/share/ralleur-hermes/venv/bin/python" -u "$HOME/.local/share/ralleur-hermes/bridge.py" "$@"

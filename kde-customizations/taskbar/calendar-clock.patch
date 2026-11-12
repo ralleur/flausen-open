@@ -1,0 +1,88 @@
+--- modules/bar/components/Clock.qml
++++ modules/bar/components/Clock.qml
+@@ -90,70 +90,12 @@
+ 
+         StyledText {
+             Layout.alignment: Qt.AlignVCenter
+-            visible: Config.bar.clock.showDate
+-            text: Time.format("ddd")
++            // One label preserves punctuation and the two spaces before the time.
++            text: (Config.bar.clock.showDate
++                ? Time.date.toLocaleString(Qt.locale("de_DE"), "ddd d. MMM").replace(/\.$/, "") + "  "
++                : "") + Time.format(Config.bar.clock.showSeconds ? "HH:mm:ss" : "HH:mm")
+             font: Tokens.font.body.builders.small.size(root.textSize).build()
+             color: root.colour
+-        }
+-
+-        StyledText {
+-            Layout.alignment: Qt.AlignVCenter
+-            visible: Config.bar.clock.showDate
+-            text: Time.format("d")
+-            font: Tokens.font.body.builders.small.size(root.textSize).build()
+-            color: root.colour
+-        }
+-
+-        Rectangle {
+-            Layout.alignment: Qt.AlignVCenter
+-            Layout.preferredWidth: 1
+-            Layout.preferredHeight: Math.round(root.textSize * 1.3)
+-            visible: Config.bar.clock.showDate
+-
+-            color: root.colour
+-            opacity: 0.2
+-        }
+-
+-        StyledText {
+-            Layout.alignment: Qt.AlignVCenter
+-            text: Time.hourStr
+-            font: root.font.build()
+-            color: root.colour
+-        }
+-
+-        StyledText {
+-            Layout.alignment: Qt.AlignVCenter
+-            text: ":"
+-            font: root.font.build()
+-            color: root.colour
+-        }
+-
+-        StyledText {
+-            Layout.alignment: Qt.AlignVCenter
+-            text: Time.minuteStr
+-            font: root.font.build()
+-            color: root.colour
+-        }
+-
+-        StyledText {
+-            Layout.alignment: Qt.AlignVCenter
+-            visible: Config.bar.clock.showSeconds
+-            text: ":" + Time.format("ss")
+-            font: root.font.build()
+-            color: root.colour
+-        }
+-
+-        Loader {
+-            Layout.alignment: Qt.AlignVCenter
+-            asynchronous: true
+-            active: Units.twelveHourClock
+-            visible: active
+-
+-            sourceComponent: StyledText {
+-                text: Time.amPmStr.toLowerCase()
+-                font: Tokens.font.body.builders.small.size(Math.round(root.textSize * 0.9)).build()
+-                color: root.colour
+-            }
+         }
+     }
+ 
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -136,6 +136,8 @@
+ 
+         Popout {
+             name: "clock"
++            // Keep the calendar readable even when the topbar is scaled down.
++            minScale: 1.15
+             sourceComponent: CalendarPopout {
+                 popouts: root.popouts
+             }

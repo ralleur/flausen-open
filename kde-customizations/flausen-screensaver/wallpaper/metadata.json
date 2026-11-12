@@ -1,0 +1,12 @@
+{
+  "KPackageStructure": "Plasma/Wallpaper",
+  "KPlugin": {
+    "Id": "com.flausen.kinetic.screensaver",
+    "Name": "flausen. — Kinetic Playground",
+    "Description": "Playful native vector animation of the flausen kinetic forms",
+    "Version": "1.0",
+    "License": "LGPL-2.0-or-later",
+    "Authors": [{"Name": "ralleur"}]
+  },
+  "X-KDE-ParentApp": "org.kde.plasmashell"
+}

@@ -1,0 +1,62 @@
+{
+  "isolatedFixtures": true,
+  "recordingAndClipboardActionsExecuted": false,
+  "nativePreviews": {
+    "capture-style-de": {
+      "saved": true,
+      "width": 520,
+      "height": 379,
+      "textFontFamilies": [
+        "Noto Sans"
+      ]
+    },
+    "capture-style-dropdown-de": {
+      "saved": true,
+      "width": 520,
+      "height": 379,
+      "textFontFamilies": [
+        "Noto Sans"
+      ]
+    },
+    "clipboard-style-de": {
+      "saved": true,
+      "width": 520,
+      "height": 385.20000000000005,
+      "textFontFamilies": [
+        "Noto Sans"
+      ]
+    },
+    "capture-style-record": {
+      "saved": true,
+      "width": 520,
+      "height": 312,
+      "textFontFamilies": [
+        "Noto Sans"
+      ]
+    },
+    "clipboard-style-empty": {
+      "saved": true,
+      "width": 520,
+      "height": 159.29999999999998,
+      "textFontFamilies": [
+        "Noto Sans"
+      ]
+    },
+    "capture-style-large": {
+      "saved": true,
+      "width": 520,
+      "height": 458,
+      "textFontFamilies": [
+        "Noto Sans"
+      ]
+    },
+    "clipboard-style-large": {
+      "saved": true,
+      "width": 520,
+      "height": 422.20000000000005,
+      "textFontFamilies": [
+        "Noto Sans"
+      ]
+    }
+  }
+}

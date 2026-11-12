@@ -1,0 +1,48 @@
+{
+  "viewBox": [
+    0,
+    0,
+    1536,
+    1024
+  ],
+  "units": "SVG user units",
+  "rootPivot": [
+    766,
+    73
+  ],
+  "parts": [
+    {
+      "id": "blue-object",
+      "pivot": [
+        486,
+        157
+      ],
+      "content": "play"
+    },
+    {
+      "id": "orange-wedge",
+      "pivot": [
+        921,
+        291
+      ],
+      "content": "everyday"
+    },
+    {
+      "id": "petrol-strip",
+      "pivot": [
+        1111,
+        353
+      ],
+      "content": "idea"
+    },
+    {
+      "id": "brown-weight",
+      "pivot": [
+        1378,
+        296
+      ],
+      "content": null
+    }
+  ],
+  "note": "Static authoring coordinates. Derive world-space attachment points through parent transforms when animating. Supplied scene omits the custom wordmark."
+}

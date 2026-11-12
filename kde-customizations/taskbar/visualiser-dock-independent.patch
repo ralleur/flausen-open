@@ -1,0 +1,52 @@
+--- modules/background/Visualiser.qml
++++ modules/background/Visualiser.qml
+@@ -18,19 +18,14 @@
+     readonly property bool windowHidesVisualiser: Kwin.windowHidesDesktopWidgets(root.screen ? root.screen.name : "", Config.background.visualiser.hideOnAllMonitors)
+     readonly property bool shouldBeActive: Config.background.visualiser.enabled && !Audio.muted && !(GameMode.enabled && GlobalConfig.utilities.gameMode.disableVisualizer) && (!Config.background.visualiser.autoHide || !windowHidesVisualiser)
+     property real offset: shouldBeActive ? 0 : screen.height * 0.2
+-    readonly property var barWrapper: {
+-        let name = root.screen ? root.screen.name : undefined;
+-        let bar = name ? Visibilities.bars.get(name) : undefined;
+-        return bar;
+-    }
+-    readonly property int barExclusiveZone: barWrapper ? barWrapper.visualThickness : 0
+-    readonly property real visualiserSpacing: Tokens.spacing.small * Config.background.visualiser.spacing
+     readonly property real fallbackMargin: Tokens.padding.large + Tokens.spacing.small
+ 
+     readonly property var dock: Visibilities.docks.get(root.screen.name)
+-    // Match the separate dock, including its gap from the screen edge.
+-    readonly property real dockHeight: dock?.bar?.height ?? Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, SplitBarSettings.dockScale))
+-    readonly property real maxBarHeight: Math.max(0, dockHeight + SplitBarSettings.edgeGap - Config.border.thickness)
++    // Use the actual lower dock, independently of the main taskbar's edge/scale.
++    readonly property real dockHeight: dock?.bar?.height ?? Math.round(Tokens.sizes.bar.innerWidth * SplitBarSettings.dockScale)
++    readonly property real dockBottomMargin: dock?.bar
++        ? Math.max(0, screen.height - dock.bar.y - dockHeight) : SplitBarSettings.edgeGap
++    readonly property real maxBarHeight: Math.max(0, dockHeight)
+ 
+     opacity: shouldBeActive ? 1 : 0
+ 
+@@ -71,19 +66,17 @@
+                 Item {
+                     id: barsArea
+ 
+-                    readonly property real baseMargin: root.barExclusiveZone + root.visualiserSpacing
+-
+                     anchors.left: parent.left
+                     anchors.right: parent.right
+                     anchors.bottom: parent.bottom
+                     // VisualiserBars uses 40% of its item height for full amplitude.
+                     height: Math.max(0, Math.min(parent.height - anchors.topMargin - anchors.bottomMargin,
+-                        Config.bar.position === "top" ? root.maxBarHeight / 0.4 : parent.height))
++                        root.maxBarHeight / 0.4))
+                     anchors.margins: Config.border.thickness
+-                    anchors.leftMargin: Config.bar.position === "left" ? (root.barExclusiveZone + root.fallbackMargin) : root.fallbackMargin
+-                    anchors.rightMargin: Config.bar.position === "right" ? (root.barExclusiveZone + root.fallbackMargin) : root.fallbackMargin
+-                    anchors.topMargin: Config.bar.position === "top" ? root.barExclusiveZone : Config.border.thickness
+-                    anchors.bottomMargin: Config.bar.position === "bottom" ? root.barExclusiveZone : Config.border.thickness
++                    anchors.leftMargin: root.fallbackMargin
++                    anchors.rightMargin: root.fallbackMargin
++                    anchors.topMargin: Config.border.thickness
++                    anchors.bottomMargin: root.dockBottomMargin
+                     Repeater {
+                         model: AppVisualiser.split ? Math.min(5, AppVisualiser.apps.length) : 2
+                         delegate: Item {

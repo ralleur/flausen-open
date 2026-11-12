@@ -1,0 +1,253 @@
+--- components/MenuPrimarySurface.qml
++++ components/MenuPrimarySurface.qml
+@@ -16,6 +16,10 @@
+         anchors.fill: parent
+         anchors.margins: 1
+         radius: Math.max(0, root.radius - 1)
++        topLeftRadius: Math.max(0, root.topLeftRadius - 1)
++        topRightRadius: Math.max(0, root.topRightRadius - 1)
++        bottomLeftRadius: Math.max(0, root.bottomLeftRadius - 1)
++        bottomRightRadius: Math.max(0, root.bottomRightRadius - 1)
+         color: "transparent"
+         border.width: 1
+         border.color: MenuStyle.primaryLight
+--- /dev/null
++++ components/PrimaryControlFill.qml
+@@ -0,0 +1,17 @@
++import QtQuick
++import qs.services
++
++// Decoration only: preserve the owning control's layout, input and state layer.
++MenuPrimarySurface {
++    property bool active: true
++    property color sourceColor: parent.color
++    anchors.fill: parent
++    anchors.margins: parent.border.width > 1 ? parent.border.width : 0
++    radius: Math.max(0, parent.radius - anchors.margins)
++    topLeftRadius: Math.max(0, parent.topLeftRadius - anchors.margins)
++    topRightRadius: Math.max(0, parent.topRightRadius - anchors.margins)
++    bottomLeftRadius: Math.max(0, parent.bottomLeftRadius - anchors.margins)
++    bottomRightRadius: Math.max(0, parent.bottomRightRadius - anchors.margins)
++    visible: active && enabled && (parent.disabled === undefined || !parent.disabled)
++        && MenuStyle.isBlueControl(sourceColor)
++}
+--- components/controls/ButtonBase.qml
++++ components/controls/ButtonBase.qml
+@@ -5,6 +5,7 @@
+ 
+ StyledRect {
+     id: root
++    PrimaryControlFill {} // Capture primary material
+ 
+     enum ButtonType {
+         Filled,
+--- components/controls/SegmentedTrack.qml
++++ components/controls/SegmentedTrack.qml
+@@ -1,5 +1,6 @@
+ pragma ComponentBehavior: Bound
+ import QtQuick
++import qs.components
+ 
+ // Visual only: native slider range, step, keyboard and pointer handling survive.
+ Item {
+@@ -35,6 +36,7 @@
+             height: root.vertical ? root.pitch - root.gap : Math.max(18, Math.min(24, root.height - 6))
+             radius: 1.8
+             color: lit ? root.fillColor : root.emptyColor
++            PrimaryControlFill {} // Capture primary material
+             Rectangle {
+                 anchors.fill: parent
+                 anchors.margins: -2
+--- components/controls/SplitButton.qml
++++ components/controls/SplitButton.qml
+@@ -41,6 +41,7 @@
+         topRightRadius: Tokens.rounding.medium / 2
+         bottomRightRadius: Tokens.rounding.medium / 2
+         color: root.disabled ? Colours.disabledContainer : root.colour
++        PrimaryControlFill {} // Capture primary material
+ 
+         implicitWidth: Math.max(root.minLeftWidth, textRow.implicitWidth + root.horizontalPadding * 2)
+         implicitHeight: expandBtn.implicitHeight
+@@ -100,6 +101,7 @@
+         topLeftRadius: rad
+         bottomLeftRadius: rad
+         color: root.disabled ? Colours.disabledContainer : root.colour
++        PrimaryControlFill {} // Capture primary material
+ 
+         implicitWidth: implicitHeight
+         implicitHeight: expandIcon.implicitHeight + root.verticalPadding * 2
+--- components/controls/StyledRadioButton.qml
++++ components/controls/StyledRadioButton.qml
+@@ -38,6 +38,7 @@
+ 
+             radius: Tokens.rounding.full
+             color: !root.enabled ? Colours.disabledContent : root.checked ? Colours.palette.m3primary : "transparent"
++            PrimaryControlFill {} // Capture primary material
+         }
+ 
+         Behavior on border.color {
+--- components/controls/StyledSwitch.qml
++++ components/controls/StyledSwitch.qml
+@@ -18,6 +18,7 @@
+     }
+ 
+     indicator: StyledRect {
++        PrimaryControlFill {} // Capture primary material
+         radius: Tokens.rounding.full
+         color: !root.enabled ? Colours.disabledContainer : root.checked ? Colours.palette.m3primary : Colours.layer(Colours.palette.m3surfaceContainerHighest, root.cLayer)
+ 
+--- components/controls/ToggleButton.qml
++++ components/controls/ToggleButton.qml
+@@ -9,6 +9,7 @@
+ 
+ StyledRect {
+     id: root
++    PrimaryControlFill {} // Capture primary material
+ 
+     required property bool toggled
+     property string icon
+--- modules/bar/popouts/Battery.qml
++++ modules/bar/popouts/Battery.qml
+@@ -285,6 +285,7 @@
+ 
+                 StyledRect {
+                     id: indicator
++                    PrimaryControlFill {} // Capture primary material
+ 
+                     color: Colours.palette.m3primary
+                     radius: Tokens.rounding.full * root.scaleOffset
+--- modules/bar/popouts/Bluetooth.qml
++++ modules/bar/popouts/Bluetooth.qml
+@@ -118,6 +118,7 @@
+                         y: (powerSwitch.height - height) / 2
+                         radius: height / 2
+                         color: powerSwitch.checked ? root.accent : Qt.alpha(Colours.palette.m3onSurface, 0.22)
++                        PrimaryControlFill {} // Capture primary material
+                         opacity: powerSwitch.enabled ? 1 : 0.5
+                         Rectangle {
+                             y: 3 * root.scaleOffset
+--- modules/bar/popouts/CalendarPopout.qml
++++ modules/bar/popouts/CalendarPopout.qml
+@@ -210,6 +210,7 @@
+                         radius: width / 2
+                         visible: dayItem.isToday
+                         color: MenuStyle.accent
++                        PrimaryControlFill {} // Capture primary material
+                     }
+                     MenuText {
+                         anchors.centerIn: parent
+--- modules/bar/popouts/MenuScreenshotList.qml
++++ modules/bar/popouts/MenuScreenshotList.qml
+@@ -256,6 +256,7 @@
+                     width: 24; height: 24; radius: 12
+                     visible: shot.selected
+                     color: MenuStyle.accent
++                    PrimaryControlFill {} // Capture primary material
+                     MaterialIcon { anchors.centerIn: parent; text: "check"; color: "white"; fontStyle: Tokens.font.icon.builders.medium.size(13).build() }
+                 }
+                 RowLayout {
+--- modules/bar/popouts/Network.qml
++++ modules/bar/popouts/Network.qml
+@@ -155,6 +155,7 @@
+                         y: (wifiSwitch.height - height) / 2
+                         radius: height / 2
+                         color: wifiSwitch.checked ? root.accent : Qt.alpha(Colours.palette.m3onSurface, 0.22)
++                        PrimaryControlFill {} // Capture primary material
+                         opacity: wifiSwitch.enabled ? 1 : 0.5
+                         Rectangle {
+                             y: 3 * root.scaleOffset
+--- modules/bar/popouts/Updates.qml
++++ modules/bar/popouts/Updates.qml
+@@ -180,6 +180,7 @@
+         }
+         StyledRect {
+             id: updateButton
++            PrimaryControlFill {} // Capture primary material
+             implicitWidth: buttonContents.implicitWidth + 24 * root.scaleOffset
+             implicitHeight: 32 * root.scaleOffset
+             radius: height / 2
+--- modules/launcher/HermesChat.qml
++++ modules/launcher/HermesChat.qml
+@@ -453,7 +453,7 @@
+                         text: qsTr("Run once")
+                         enabled: !root.approvalSent
+                         implicitHeight: 34
+-                        background: Rectangle { radius: 9; color: root.accent; opacity: allowButton.enabled ? 1 : 0.5 }
++                        background: Rectangle { radius: 9; color: root.accent; opacity: allowButton.enabled ? 1 : 0.5; PrimaryControlFill {} }
+                         contentItem: Text { text: allowButton.text; color: Colours.palette.m3onPrimary; font.pixelSize: 12; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                         onClicked: {
+                             root.approvalSent = true;
+@@ -539,7 +539,7 @@
+                 implicitWidth: 36; implicitHeight: 36
+                 enabled: !root.busy && composer.text.trim().length > 0
+                 ToolTip.visible: hovered; ToolTip.text: qsTr("Send · Enter")
+-                background: Rectangle { radius: 11; color: sendButton.enabled ? root.accent : Qt.alpha(root.foreground, 0.07); opacity: sendButton.hovered ? 0.85 : 1 }
++                background: Rectangle { radius: 11; color: sendButton.enabled ? root.accent : Qt.alpha(root.foreground, 0.07); opacity: sendButton.hovered ? 0.85 : 1; PrimaryControlFill {} }
+                 contentItem: MaterialIcon { text: "arrow_upward"; color: sendButton.enabled ? Colours.palette.m3onPrimary : root.muted; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                 onClicked: root.send(composer.text)
+             }
+--- modules/nexus/common/AudioDeviceList.qml
++++ modules/nexus/common/AudioDeviceList.qml
+@@ -68,6 +68,7 @@
+                 implicitHeight: devIcon.implicitHeight + Tokens.padding.small * 2
+                 radius: Tokens.rounding.full
+                 color: device.active ? Colours.palette.m3primary : FlausenStyle.selected
++                PrimaryControlFill {} // Capture primary material
+ 
+                 MaterialIcon {
+                     id: devIcon
+--- modules/nexus/flausen/FlausenSwitch.qml
++++ modules/nexus/flausen/FlausenSwitch.qml
+@@ -1,5 +1,6 @@
+ pragma ComponentBehavior: Bound
+ import QtQuick
++import qs.components
+ import QtQuick.Controls
+ Switch {
+     id: root
+@@ -11,6 +12,7 @@
+         y: (root.height - height) / 2
+         width: 44; height: 25; radius: 13
+         color: root.checked ? FlausenStyle.accent : FlausenStyle.light ? "#d2d3d6" : "#464b52"
++        PrimaryControlFill {} // Capture primary material
+         border.width: root.visualFocus ? 2 : 0
+         border.color: FlausenStyle.text
+         Rectangle {
+--- modules/nexus/flausen/KcmSkin.qml
++++ modules/nexus/flausen/KcmSkin.qml
+@@ -121,6 +121,7 @@
+             x: control.text ? (control.mirrored ? control.width-width-control.rightPadding : control.leftPadding) : (control.width-width)/2; y: control.topPadding+(control.availableHeight-height)/2
+             radius:13
+             color:control.checked ? FlausenStyle.accent : FlausenStyle.light ? "#d2d3d6" : "#464b52"
++            PrimaryControlFill {} // Capture primary material
+             opacity:control.enabled ? 1 : .4
+             Rectangle {x:parent.control.checked ? 22 : 3; y:3; width:19; height:19; radius:10; color:"white"; Behavior on x {NumberAnimation {duration:FlausenStyle.motionDuration}}}
+         }
+@@ -134,11 +135,12 @@
+             x: control.text ? (control.mirrored ? control.width-width-control.rightPadding : control.leftPadding) : (control.width-width)/2; y:control.topPadding+(control.availableHeight-height)/2
+             radius:radio ? 10 : 6
+             color:control.checked && !radio ? FlausenStyle.accent : FlausenStyle.card
++            PrimaryControlFill {} // Capture primary material
+             border.width:control.activeFocus ? 2 : 1
+             border.color:control.checked || control.activeFocus ? FlausenStyle.accent : FlausenStyle.secondary
+             opacity:control.enabled ? 1 : .4
+             Text {anchors.centerIn:parent;visible:parent.control.checked && !parent.radio;text:parent.control.checkState === Qt.PartiallyChecked ? "−" : "✓";color:"white";font.pixelSize:15}
+-            Rectangle {anchors.centerIn:parent;visible:parent.control.checked && parent.radio;width:10;height:10;radius:5;color:FlausenStyle.accent}
++            Rectangle {anchors.centerIn:parent;visible:parent.control.checked && parent.radio;width:10;height:10;radius:5;color:FlausenStyle.accent; PrimaryControlFill {} }
+         }
+     }
+     Component {
+--- services/MenuStyle.qml
++++ services/MenuStyle.qml
+@@ -28,6 +28,11 @@
+     readonly property color primaryBottom: "#0871ef"
+     readonly property color primaryEdge: "#7db5ff"
+     readonly property color primaryLight: "#38ffffff"
++    // Solid blue fills only; muted selection tints and other accent hues survive.
++    function isBlueControl(colour: color): bool {
++        return colour.a > 0.85 && colour.b > colour.r * 1.25
++            && colour.b > colour.g * 1.06 && colour.b - colour.r > 0.15;
++    }
+     // Native Dolphin context-menu values (dolphin-header/contextmenu.cpp).
+     readonly property color contextSurface: Colours.light ? "#59f8f6f3" : "#401c2024"
+     readonly property color contextBorder: Colours.light ? "#66ffffff" : "#38ffffff"

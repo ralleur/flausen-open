@@ -1,0 +1,122 @@
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -24,61 +24,6 @@
+     id: root
+ 
+     readonly property bool launcherBackdropActive: visibilities.launcher && Config.launcher.enabled
+-    readonly property string launcherBlurOwner: "launcher:" + screen.name
+-    property bool launcherBlurRequested: false
+-    property bool launcherBlurReady: false
+-    function syncLauncherBlur(): void {
+-        if (!launcherBlurProcess.running) {
+-            launcherBlurProcess.command = [Quickshell.env("HOME") + "/.local/libexec/ralleur/blur-settings", launcherBlurRequested ? "on" : "off", launcherBlurOwner];
+-            launcherBlurProcess.running = true;
+-        }
+-    }
+-    onLauncherBackdropActiveChanged: {
+-        if (launcherBackdropActive) {
+-            releaseLauncherBlur.stop();
+-            launcherBlurRequested = true;
+-        } else {
+-            releaseLauncherBlur.restart();
+-        }
+-    }
+-    onLauncherBlurRequestedChanged: syncLauncherBlur()
+-    Timer {
+-        id: releaseLauncherBlur
+-        interval: 360
+-        onTriggered: root.launcherBlurRequested = false
+-    }
+-    Process {
+-        id: launcherBlurProcess
+-        onExited: (exitCode, exitStatus) => {
+-            root.launcherBlurReady = command[1] === "on" && exitCode === 0;
+-            if (command[1] !== (root.launcherBlurRequested ? "on" : "off"))
+-                root.syncLauncherBlur();
+-        }
+-    }
+-    // KWin fades this helper surface without fading the menu or bars.
+-    readonly property bool launcherSurfaceVisible: launcherBackdropActive
+-    onLauncherSurfaceVisibleChanged: syncBackdropSurface()
+-    function syncBackdropSurface(): void {
+-        if (backdropSocket.connected) {
+-            backdropSocket.write(JSON.stringify({screen: screen.name, shown: launcherSurfaceVisible}) + "\n");
+-            backdropSocket.flush();
+-        }
+-    }
+-    Socket {
+-        id: backdropSocket
+-        path: Quickshell.env("XDG_RUNTIME_DIR") + "/ralleur-start-backdrop.sock"
+-        connected: true
+-        onConnectionStateChanged: {
+-            if (connected) root.syncBackdropSurface();
+-            else reconnectBackdrop.restart();
+-        }
+-    }
+-    Timer {
+-        id: reconnectBackdrop
+-        interval: 250
+-        onTriggered: backdropSocket.connected = true
+-    }
+-
+     property real blurOffsetTop: 0
+     property real blurOffsetBottom: 0
+     property real blurOffsetLeft: 0
+@@ -160,7 +105,7 @@
+     anchors.left: true
+     anchors.right: true
+     WlrLayershell.exclusionMode: ExclusionMode.Ignore
+-    WlrLayershell.layer: (root.launcherBackdropActive || ((topBarGlass.visible || bottomDock.visible) && !root.hasFullscreen) || (panels.popouts.hasCurrent && !panels.popouts.isDetached)) ? WlrLayer.Overlay : !wantsKeyboard && (hasOpenOverlay || (actualFullscreen && fsTransitionProg < 1) || (fsTransitionProg > 0 && Config.general.showOverFullscreen) || (panels.notifications.visible && panels.notifications.height > 0 && GlobalConfig.notifs.fullscreen === "on") || (((monitor?.lastIpcObject?.specialWorkspace?.name?.length ?? 0) > 0) && (monitor?.activeWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false))) ? WlrLayer.Overlay : WlrLayer.Top
++    WlrLayershell.layer: (panels.launcher.visible || panels.dashboard.visible || ((topBarGlass.visible || bottomDock.visible) && !root.hasFullscreen) || (panels.popouts.hasCurrent && !panels.popouts.isDetached)) ? WlrLayer.Overlay : !wantsKeyboard && (hasOpenOverlay || (actualFullscreen && fsTransitionProg < 1) || (fsTransitionProg > 0 && Config.general.showOverFullscreen) || (panels.notifications.visible && panels.notifications.height > 0 && GlobalConfig.notifs.fullscreen === "on") || (((monitor?.lastIpcObject?.specialWorkspace?.name?.length ?? 0) > 0) && (monitor?.activeWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false))) ? WlrLayer.Overlay : WlrLayer.Top
+     WlrLayershell.keyboardFocus: wantsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+ 
+     // A pinned sidebar gets out of the way of fullscreen windows (games, video)
+@@ -665,6 +610,30 @@
+         cornerRadius: request?.radius ?? 14
+         bottomAnchored: request?.bottomAnchored ?? false
+     }
++    // Launcher and dashboard share the same prewarmed smoke material/pool policy.
++    TaskbarGlass {
++        id: launcherSmoke
++        screen: root.screen
++        prewarm: true
++        suspended: root.hasFullscreen
++        minimumSize: Qt.size(768, 896)
++        active: panels.launcher.visible
++        geometry: Qt.rect(panels.launcher.x + panels.leftMargin, panels.launcher.y + panels.topMargin, panels.launcher.width, panels.launcher.height)
++        reserveGeometry: Qt.rect(0, 0, panels.launcher.implicitWidth, panels.launcher.implicitHeight)
++        cornerRadius: 24
++    }
++    TaskbarGlass {
++        id: dashboardSmoke
++        screen: root.screen
++        prewarm: true
++        suspended: root.hasFullscreen
++        minimumSize: Qt.size(1152, 1024)
++        centered: true
++        active: panels.dashboard.visible
++        geometry: Qt.rect(panels.dashboard.x + panels.leftMargin, panels.dashboard.y + panels.topMargin, panels.dashboard.width, panels.dashboard.height)
++        reserveGeometry: Qt.rect(0, 0, panels.dashboard.nonAnimWidth, panels.dashboard.nonAnimHeight)
++        cornerRadius: panels.dashboard.glassRadius
++    }
+     DrawerVisibilities {
+         id: visibilities
+ 
+@@ -1101,7 +1070,7 @@
+             deformMatrix: sessionBg.deformMatrix
+         }
+         BlurMask {
+-            target: panels.launcher
++            target: null // Dedicated rounded launcher region and pooled smoke.
+             contentItem: root.contentItem
+             blurOffsetTop: root.blurOffsetTop
+             blurOffsetBottom: root.blurOffsetBottom
+@@ -1113,7 +1082,7 @@
+             deformMatrix: launcherBg.deformMatrix
+         }
+         BlurMask {
+-            target: panels.dashboard
++            target: null // Dedicated rounded dashboard region and pooled smoke.
+             contentItem: root.contentItem
+             blurOffsetTop: root.blurOffsetTop
+             blurOffsetBottom: root.blurOffsetBottom

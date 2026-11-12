@@ -1,0 +1,23 @@
+0.0-4.0s | Your computer. Your playground. Phase one. A connected desktop for everyday life and play.
+
+4.0-11.0s | Start with an idea. Search apps, return to a recent file or ask Hermes in the same Start menu.
+
+11.0-51.4s | Make room as you go. Actual Files, Kate, settings, tiling and fullscreen interactions.
+
+51.4-57.4s | Ask. See. Decide. Read system information, see each step and approve proposed shell commands.
+
+57.4-64.4s | Choose where it runs. Local model, network endpoint or cloud provider. Changes apply to a new conversation.
+
+64.4-70.4s | Keep the useful bits. Capture a region, window or screen. Edit shortcuts right where you use them.
+
+70.4-76.4s | Copy. Pin. Carry on. A screenshot flows into the gallery and clipboard. Pin the things you need again.
+
+76.4-82.4s | One update overview. See status across the desktop, games and apps. Open the responsible app to install.
+
+82.4-88.4s | Make this space yours. Light and dark appearance, six accents, wallpapers and native settings in one window.
+
+88.4-93.4s | One desktop. A continuous flow. Start an idea. Make room. Step into play. Return to what matters.
+
+Live section: real desktop actions. Fullscreen routing uses a local media clip.
+Other sections: focused native UI captures. Gallery, clipboard and recent documents are staged.
+No voiceover or music is included.

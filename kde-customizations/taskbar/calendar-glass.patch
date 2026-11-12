@@ -1,0 +1,79 @@
+--- modules/bar/popouts/ClipWrapper.qml
++++ modules/bar/popouts/ClipWrapper.qml
+@@ -103,9 +103,15 @@
+         visible: root.fromFloatingBar && !root.framelessDockPreview
+         // Same glass material and contour as the start menu.
+         radius: ["updateIndicator", "network", "ethernet", "wirelesspassword", "bluetooth", "audio", "battery", "clock", "screencapture", "clipboard"].includes(content.currentName) ? 28 : 24
+-        color: MenuStyle.surface
++        color: content.currentName === "clock" ? MenuStyle.calendarSurface : MenuStyle.surface
+         border.width: 1
+         border.color: MenuStyle.border
++    }
++
++    CalendarGlass {
++        screen: root.screen
++        target: root
++        active: root.fromFloatingBar && content.currentName === "clock" && content.hasCurrent && root.width > 0 && root.height > 0
+     }
+ 
+     Wrapper {
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -160,7 +160,7 @@
+     anchors.left: true
+     anchors.right: true
+     WlrLayershell.exclusionMode: ExclusionMode.Ignore
+-    WlrLayershell.layer: root.launcherBackdropActive ? WlrLayer.Overlay : !wantsKeyboard && (hasOpenOverlay || (actualFullscreen && fsTransitionProg < 1) || (fsTransitionProg > 0 && Config.general.showOverFullscreen) || (panels.notifications.visible && panels.notifications.height > 0 && GlobalConfig.notifs.fullscreen === "on") || (((monitor?.lastIpcObject?.specialWorkspace?.name?.length ?? 0) > 0) && (monitor?.activeWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false))) ? WlrLayer.Overlay : WlrLayer.Top
++    WlrLayershell.layer: (root.launcherBackdropActive || (panels.popouts.hasCurrent && panels.popouts.currentName === "clock")) ? WlrLayer.Overlay : !wantsKeyboard && (hasOpenOverlay || (actualFullscreen && fsTransitionProg < 1) || (fsTransitionProg > 0 && Config.general.showOverFullscreen) || (panels.notifications.visible && panels.notifications.height > 0 && GlobalConfig.notifs.fullscreen === "on") || (((monitor?.lastIpcObject?.specialWorkspace?.name?.length ?? 0) > 0) && (monitor?.activeWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false))) ? WlrLayer.Overlay : WlrLayer.Top
+     WlrLayershell.keyboardFocus: wantsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+ 
+     // A pinned sidebar gets out of the way of fullscreen windows (games, video)
+--- services/MenuStyle.qml
++++ services/MenuStyle.qml
+@@ -12,6 +12,8 @@
+     readonly property real captionPixels: 12
+     readonly property real listPixels: 15
+     readonly property color surface: Colours.light ? "#e6f4f5f7" : "#d911161d"
++    // Calendar-only smoke prototype; other surfaces keep the established material.
++    readonly property color calendarSurface: Colours.light ? "#e6e9ecef" : "#d92b3034"
+     readonly property color border: Colours.light ? "#70969ca5" : "#38ffffff"
+     readonly property color ink: Colours.light ? "#20252d" : "#f3f4f6"
+     readonly property color muted: Colours.light ? "#5b626d" : "#aeb6c2"
+--- /dev/null
++++ modules/bar/popouts/CalendarGlass.qml
+@@ -0,0 +1,35 @@
++pragma ComponentBehavior: Bound
++import QtQuick
++import Quickshell
++import Quickshell.Wayland
++
++// Local compositor passes: never change the shared KWin blur configuration.
++Scope {
++    id: root
++    required property var screen
++    required property Item target
++    required property bool active
++    readonly property point origin: Qt.point(target.x + target.parent.leftMargin, target.y + target.parent.topMargin)
++    Variants {
++        model: root.active ? [0, 1, 2, 3, 4, 5, 6, 7] : []
++        PanelWindow {
++            id: pass
++            required property var modelData
++            screen: root.screen
++            visible: root.active
++            anchors { top: true; left: true }
++            margins { top: Math.round(root.origin.y); left: Math.round(root.origin.x) }
++            implicitWidth: Math.max(1, Math.min(Math.ceil(root.target.width), root.screen.width - Math.round(root.origin.x)))
++            implicitHeight: Math.ceil(root.target.height)
++            exclusionMode: ExclusionMode.Ignore
++            WlrLayershell.layer: WlrLayer.Top
++            WlrLayershell.namespace: "ralleur-calendar-glass"
++            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
++            mask: Region {}
++            color: "transparent"
++            surfaceFormat.opaque: false
++            Rectangle { anchors.fill: parent; radius: 28; color: "#01000000" }
++            BackgroundEffect.blurRegion: Region { item: pass.contentItem; radius: 28 }
++        }
++    }
++}

@@ -1,0 +1,337 @@
+--- components/controls/Menu.qml
++++ components/controls/Menu.qml
+@@ -27,6 +27,7 @@
+     property int attachSideY: Menu.Bottom
+     property int thisSideX: Menu.Right
+     property int thisSideY: Menu.Top
++    property bool constrainToWindow: false
+     property real marginX
+     property real marginY
+ 
+@@ -164,7 +165,8 @@
+             if (root.thisSideX === Menu.Right)
+                 off -= width;
+             const pt = item.mapToItem(root.parent, off, 0);
+-            return (pt ? pt.x : 0) + root.marginX;
++            const desired = (pt ? pt.x : 0) + root.marginX;
++            return root.constrainToWindow ? Math.max(8, Math.min(root.parent.width - width - 8, desired)) : desired;
+         }
+         y: {
+             watcher.transform;
+@@ -314,6 +316,22 @@
+                                 color: Colours.palette.m3onSurface
+                             }
+ 
++                            StyledText {
++                                visible: item.modelData.shortcutName.length > 0
++                                text: item.modelData.shortcutText || qsTr("Not assigned")
++                                font: Tokens.font.label.medium
++                                color: Colours.palette.m3onSurfaceVariant
++                            }
++
++                            IconButton {
++                                visible: item.modelData.shortcutName.length > 0
++                                type: IconButton.Text
++                                padding: Tokens.padding.small
++                                icon: "edit"
++                                font: Tokens.font.icon.small
++                                onClicked: item.modelData.editShortcut(this)
++                            }
++
+                             Loader {
+                                 asynchronous: true
+                                 Layout.alignment: Qt.AlignVCenter
+--- components/controls/MenuItem.qml
++++ components/controls/MenuItem.qml
+@@ -9,5 +9,9 @@
+     property bool visible: true
+     property var value
+ 
++    property string shortcutName
++    property string shortcutText
++    signal editShortcut(var target)
++
+     signal clicked
+ }
+--- modules/Shortcuts.qml
++++ modules/Shortcuts.qml
+@@ -12,6 +12,31 @@
+ 
+ Scope {
+     id: root
++
++    function captureScreen(mode: string): void {
++        const now = new Date();
++        const pad = n => String(n).padStart(2, "0");
++        const file = `${GlobalConfig.paths.screenshotsDir}/screenshot-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}.png`;
++        Quickshell.execDetached(["spectacle", "-b", mode, "-o", file]);
++    }
++
++    CustomShortcut {
++        name: "captureFullscreen"
++        description: qsTr("Capture fullscreen")
++        onPressed: root.captureScreen("-f")
++    }
++
++    CustomShortcut {
++        name: "captureActiveWindow"
++        description: qsTr("Capture active window")
++        onPressed: root.captureScreen("-a")
++    }
++
++    CustomShortcut {
++        name: "captureSpectacle"
++        description: qsTr("Open Spectacle")
++        onPressed: Quickshell.execDetached(["spectacle"])
++    }
+ 
+     property bool launcherInterrupted
+     property string lastAction: ""
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -88,6 +88,8 @@
+     }
+ 
+     function checkPopout(pos: real): void {
++        if (popouts.hasCurrent && popouts.currentName === "screencapture" && (popouts.current?.hoverLocked ?? false))
++            return;
+         // A context menu stays open while the pointer moves over the bar, so
+         // the hover routing below must not take it over or close it.
+         if (popouts.hasCurrent && (popouts.currentName === "clockcontext" || popouts.currentName === "dockcontext" || popouts.currentName === "greetercontext" || popouts.currentName === "statusiconscontext" || popouts.currentName === "workspacescontext" || popouts.currentName === "traycontext" || popouts.currentName === "githubcontext" || popouts.currentName === "weathercontext" || popouts.currentName === "mediacontext" || popouts.currentName === "performancecontext" || popouts.currentName === "screencapturecontext" || popouts.currentName === "keepawakecontext" || popouts.currentName === "osiconcontext" || popouts.currentName === "dockbgcontext" || popouts.currentName === "elementscontext"))
+--- modules/bar/popouts/ScreenCapture.qml
++++ modules/bar/popouts/ScreenCapture.qml
+@@ -14,6 +14,8 @@
+ 
+     required property var popouts
+     required property DrawerVisibilities visibilities
++
++    readonly property bool hoverLocked: captureView.hoverLocked
+ 
+     width: Math.max(360, captureView.implicitWidth)
+     spacing: Tokens.spacing.small
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -96,7 +96,8 @@
+     // active workspace changes — hasFullscreenOn() filters by workspace, but
+     // a plain function call only re-runs when its direct property deps change.
+     readonly property bool actualFullscreen: (Kwin.activeWsId, Kwin.hasFullscreenOn(screen?.name ?? ""))
+-    readonly property bool hasOpenOverlay: focusGrabState.active || panels.popouts.isDetached || desktopContextMenu.expanded || desktopIconContextMenu.expanded || dropMenu.expanded || viewOptions.open || widgetGallery.open || visibilities.overview || visibilities.launcher || visibilities.dashboard || visibilities.sidebar || visibilities.session || visibilities.utilities
++    readonly property bool captureMenuLocked: panels.popouts.hasCurrent && panels.popouts.currentName === "screencapture" && (panels.popouts.current?.hoverLocked ?? false)
++    readonly property bool hasOpenOverlay: captureMenuLocked || focusGrabState.active || panels.popouts.isDetached || desktopContextMenu.expanded || desktopIconContextMenu.expanded || dropMenu.expanded || viewOptions.open || widgetGallery.open || visibilities.overview || visibilities.launcher || visibilities.dashboard || visibilities.sidebar || visibilities.session || visibilities.utilities
+     readonly property bool hasFullscreen: actualFullscreen && !hasOpenOverlay
+ 
+     // The sidebar is the only thing open and it is pinned (or one of the shell's
+--- modules/drawers/Interactions.qml
++++ modules/drawers/Interactions.qml
+@@ -63,6 +63,18 @@
+         return x >= b.x && x <= b.y;
+     }
+     function inLeftPanel(panel: Item, x: real, y: real): bool {
++        if (panel === panels.popoutsWrapper && popouts.currentName === "screencapture" && popouts.hasCurrent) {
++            if (popouts.current?.hoverLocked ?? false)
++                return true;
++            const left = panels.leftMargin + panel.x;
++            const top = panels.topMargin + panel.y;
++            const inCard = x >= left - 48 && x <= left + panel.width + 48
++                && y >= top - 32 && y <= top + panel.height + 32;
++            const inBridge = Math.abs(x - popouts.currentCenter) <= 80
++                && (bar.position === "top" ? y <= top + 32 : bar.position === "bottom" ? y >= top + panel.height - 32 : false);
++            if (inCard || inBridge)
++                return true;
++        }
+         if (panel === panels.popoutsWrapper && panel.fromBottomDock) {
+             const top = panels.topMargin + panel.y;
+             return y >= top && (withinPanelWidth(panel, x, y) || abovePopoutItem(panel, x));
+@@ -297,7 +309,9 @@
+         }
+ 
+         if (inBarArea(x, y)) {
+-            bar.checkPopout(isBarHorizontal ? x : y);
++            if (!(popouts.hasCurrent && popouts.currentName === "screencapture"
++                    && Math.abs((isBarHorizontal ? x : y) - popouts.currentCenter) <= 80))
++                bar.checkPopout(isBarHorizontal ? x : y);
+             popoutHideTimer.stop();
+         } else {
+             bar.resetHover();
+@@ -370,8 +384,11 @@
+     Timer {
+         id: popoutHideTimer
+ 
+-        interval: 150
++        interval: popouts.currentName === "screencapture" ? 650 : 150
+         onTriggered: {
++            if (popouts.currentName === "screencapture" && popouts.hasCurrent
++                    && (popouts.current?.hoverLocked ?? false))
++                return;
+             if (!popouts.currentName.startsWith("traymenu") || ((popouts.current as StackView)?.depth ?? 0) <= 1) {
+                 popouts.hasCurrent = false;
+                 bar.closeTray();
+--- modules/nexus/common/KeyCaptureDialog.qml
++++ modules/nexus/common/KeyCaptureDialog.qml
+@@ -15,6 +15,8 @@
+ Popup {
+     id: root
+ 
++    property bool appendKey: true
++    property bool allowClear: false
+     property string shortcutName: ""
+     property string currentKey: ""
+     property string capturedKey: ""
+@@ -154,6 +156,15 @@
+             font: Tokens.font.title.medium
+             color: Colours.palette.m3onSurface
+             Layout.fillWidth: true
++        }
++
++        StyledText {
++            Layout.fillWidth: true
++            visible: !root.appendKey
++            text: root.currentKey ? qsTr("Current: %1").arg(root.currentKey) : qsTr("Not assigned")
++            color: Colours.palette.m3onSurfaceVariant
++            font: Tokens.font.body.small
++            wrapMode: Text.Wrap
+         }
+ 
+         FocusScope {
+@@ -284,6 +295,15 @@
+                 onClicked: root.close()
+             }
+ 
++            Controls.TextButton {
++                visible: root.allowClear && root.currentKey !== ""
++                text: qsTr("Clear")
++                onClicked: {
++                    root.clear(root.shortcutName)
++                    root.close()
++                }
++            }
++
+             Item { Layout.fillWidth: true }
+ 
+             Controls.TextButton {
+@@ -291,7 +311,7 @@
+                 enabled: root.capturedKey !== ""
+                 onClicked: {
+                     let finalKey = root.capturedKey
+-                    if (root.targetItem && root.currentKey !== "") {
++                    if (root.appendKey && root.targetItem && root.currentKey !== "") {
+                         finalKey = root.currentKey + "; " + root.capturedKey
+                     }
+                     if (root.conflict !== "") {
+--- modules/utilities/cards/CaptureCard.qml
++++ modules/utilities/cards/CaptureCard.qml
+@@ -4,6 +4,8 @@
+ import QtQuick.Layouts
+ import Quickshell
+ import Caelestia.Components
++import Caelestia.Services
++import qs.modules.nexus.common
+ import Caelestia.Config
+ import qs.components
+ import qs.components.controls
+@@ -17,6 +19,35 @@
+     required property DrawerVisibilities visibilities
+     readonly property bool shotMode: root.props.captureMode === "shot"
+     readonly property real nonAnimHeight: btnLayout.implicitHeight + modeRow.implicitHeight + listOrControls.implicitHeight + layout.spacing * 2 + layout.anchors.margins * 2
++
++    readonly property bool hoverLocked: captureButton.expanded || shortcutDialog.visible
++    property int shortcutRevision: 0
++
++    function shortcutText(name: string): string {
++        root.shortcutRevision;
++        return KeybindsModel.getKey(name);
++    }
++
++    function editShortcut(name: string, target: Item): void {
++        shortcutDialog.shortcutName = name;
++        shortcutDialog.currentKey = KeybindsModel.getKey(name);
++        shortcutDialog.targetItem = target;
++        shortcutDialog.open();
++        captureButton.expanded = false;
++    }
++
++    Connections {
++        target: KeybindsModel
++        function onKeybindsChanged(): void { root.shortcutRevision++; }
++    }
++
++    KeyCaptureDialog {
++        id: shortcutDialog
++        appendKey: false
++        allowClear: true
++        onConfirm: (name, newKey) => KeybindsModel.setKey(name, newKey)
++        onClear: name => KeybindsModel.setKey(name, "")
++    }
+ 
+     Layout.fillWidth: true
+     implicitHeight: layout.implicitHeight + layout.anchors.margins * 2
+@@ -142,6 +173,9 @@
+             }
+ 
+             SplitButton {
++                id: captureButton
++                menu.constrainToWindow: true
++                menu.maxHeight: 480
+                 visible: root.shotMode
+                 disabled: Recorder.running
+ 
+@@ -153,6 +187,9 @@
+ 
+                         icon: "screenshot_region"
+                         text: qsTr("Capture region")
++                        shortcutName: "screenshot"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Capture")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -164,6 +201,9 @@
+                     MenuItem {
+                         icon: "fullscreen"
+                         text: qsTr("Capture fullscreen")
++                        shortcutName: "captureFullscreen"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Fullscreen")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -178,6 +218,9 @@
+                     MenuItem {
+                         icon: "select_window"
+                         text: qsTr("Capture active window")
++                        shortcutName: "captureActiveWindow"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Window")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -192,6 +235,9 @@
+                     MenuItem {
+                         icon: "text_fields"
+                         text: qsTr("Recognize text")
++                        shortcutName: "ocr"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Recognize")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -203,6 +249,9 @@
+                     MenuItem {
+                         icon: "image_search"
+                         text: qsTr("Search image")
++                        shortcutName: "googleLens"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Search")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -214,6 +263,9 @@
+                     MenuItem {
+                         icon: "screenshot_monitor"
+                         text: qsTr("Use Spectacle")
++                        shortcutName: "captureSpectacle"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Spectacle")
+                         onClicked: {
+                             root.visibilities.utilities = false;

@@ -1,0 +1,164 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -26,6 +26,27 @@
+     readonly property bool monochromeTopBar: !bar.dockOnly && bar.position === "top"
+     readonly property bool recolourIcons: monochromeTopBar || (Config.bar.dock.recolourIcons ?? false)
+ 
++    // Keep the running-only section within the native scrolling view.
++    readonly property int pinnedCount: modelDataArray.filter(app => app.isPinned).length
++    readonly property bool hasSections: bar.dockOnly && bar.isHorizontal
++        && pinnedCount > 0 && pinnedCount < modelDataArray.length
++    readonly property real sectionGap: hasSections ? Math.round(16 * scaleFactor) : 0
++
++    function itemOffset(index: int): real {
++        return index * (container.itemSize + spacing)
++            + (hasSections && index >= pinnedCount ? sectionGap : 0);
++    }
++
++    function inspectSections(): var {
++        return {
++            separator: hasSections, gap: sectionGap,
++            apps: modelDataArray.map((app, index) => ({
++                id: app.id, pinned: app.isPinned, windows: app.toplevels.length,
++                offset: itemOffset(index)
++            }))
++        };
++    }
++
+     property int modelUpdateTrigger: 0
+ 
+     property var launchingApps: ({})
+@@ -68,7 +89,6 @@
+         const horizontal = bar.isHorizontal;
+         const origin = listView.mapToItem(null, 0, 0);
+         const size = Math.round(container.itemSize);
+-        const step = container.itemSize + root.spacing;
+         const span = horizontal ? listView.width : listView.height;
+         const scrolled = horizontal ? listView.contentX : listView.contentY;
+ 
+@@ -77,7 +97,7 @@
+             if (tops.length === 0)
+                 continue;
+ 
+-            const offset = Math.max(0, Math.min(i * step - scrolled, span - size));
++            const offset = Math.max(0, Math.min(root.itemOffset(i) - scrolled, span - size));
+ 
+             let x = Math.round(horizontal ? origin.x + offset : origin.x);
+             let y = Math.round(horizontal ? origin.y : origin.y + offset);
+@@ -295,7 +315,7 @@
+ 
+         property int __itemCount: dockModel.count
+ 
+-        property real __computedContentWidth: __itemCount > 0 ? __itemCount * itemSize + (__itemCount - 1) * root.spacing : 0
++        property real __computedContentWidth: __itemCount > 0 ? __itemCount * itemSize + (__itemCount - 1) * root.spacing + root.sectionGap : 0
+ 
+         implicitWidth: bar.isHorizontal ? (__computedContentWidth + padding * 2) : bar.thickness
+         implicitHeight: bar.isHorizontal ? bar.thickness : (__computedContentWidth + padding * 2)
+@@ -492,12 +512,24 @@
+                 required property int index
+                 required property string appId
+ 
+-                width: container.itemSize
++                readonly property real sectionInset: root.hasSections && index === root.pinnedCount ? root.sectionGap : 0
++                width: container.itemSize + sectionInset
+                 height: container.itemSize
+                 implicitWidth: width
+                 implicitHeight: height
+ 
+                 property var modelData: root.modelDataMap[appId] || root.modelDataArray[index]
++
++                Rectangle {
++                    visible: delegateContainer.sectionInset > 0
++                    x: (delegateContainer.sectionInset - root.spacing) / 2 - width / 2
++                    anchors.verticalCenter: parent.verticalCenter
++                    width: Math.max(1, root.scaleFactor)
++                    height: container.itemSize * 0.65
++                    radius: width / 2
++                    color: Colours.palette.m3onSurface
++                    opacity: 0.2
++                }
+ 
+                 DropArea {
+                     anchors.fill: parent
+@@ -505,7 +537,8 @@
+                     onEntered: drag => {
+                         const from = drag.source.delegateIndex;
+                         const to = delegateContainer.index;
+-                        if (from !== undefined && to !== undefined && from !== to) {
++                        if (from !== undefined && to !== undefined && from !== to
++                                && (!root.bar.dockOnly || root.currentOrder[from]?.isPinned === root.currentOrder[to]?.isPinned)) {
+                             dockModel.move(from, to, 1);
+                             const movedItem = root.currentOrder.splice(from, 1)[0];
+                             root.currentOrder.splice(to, 0, movedItem);
+@@ -519,7 +552,8 @@
+                 Item {
+                     id: delegateItem
+ 
+-                    width: delegateContainer.width
++                    x: delegateContainer.sectionInset
++                    width: container.itemSize
+                     height: delegateContainer.height
+ 
+                     property int delegateIndex: delegateContainer.index
+@@ -605,7 +639,7 @@
+                         onReleased: {
+                             held = false;
+                             root.isDragging = false;
+-                            delegateItem.x = 0;
++                            delegateItem.x = delegateContainer.sectionInset;
+                             delegateItem.y = 0;
+                             root.saveNewOrder();
+                         }
+@@ -613,7 +647,7 @@
+                         onCanceled: {
+                             held = false;
+                             root.isDragging = false;
+-                            delegateItem.x = 0;
++                            delegateItem.x = delegateContainer.sectionInset;
+                             delegateItem.y = 0;
+                         }
+                     }
+@@ -806,7 +840,6 @@
+         if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
+ 
+         const itemSize = container.itemSize;
+-        const itemWidthWithSpacing = itemSize + spacing;
+         const adjustedPos = isHorizontal ? relPos - container.x - padding : relPos - container.y - padding;
+         const scrolled = isHorizontal ? listView.contentX : listView.contentY;
+         const visibleSpan = isHorizontal ? listView.width : listView.height;
+@@ -816,11 +849,13 @@
+             return;
+         }
+ 
+-        const index = Math.floor((adjustedPos + scrolled) / itemWidthWithSpacing);
++        const position = adjustedPos + scrolled;
++        const index = modelDataArray.findIndex((app, i) =>
++            position >= root.itemOffset(i) && position < root.itemOffset(i) + itemSize);
+ 
+         if (index >= 0 && index < modelDataArray.length) {
+             bar.popouts.currentName = "dockhover";
+-            const centerOffset = index * itemWidthWithSpacing + itemSize / 2 - scrolled;
++            const centerOffset = root.itemOffset(index) + itemSize / 2 - scrolled;
+             if (centerOffset < 0 || centerOffset > visibleSpan) {
+                 bar.popouts.hasCurrent = false;
+                 return;
+@@ -832,6 +867,8 @@
+             bar.popouts.currentCenter = absoluteCenter;
+             bar.popouts.dockModel = modelDataArray[index];
+             bar.popouts.hasCurrent = true;
++        } else {
++            bar.popouts.hasCurrent = false;
+         }
+     }
+ 
+@@ -1002,6 +1039,10 @@
+             apps = orderedApps;
+         }
+ 
++        // Preserve user order within each section, including pin/unpin changes.
++        if (bar.dockOnly)
++            apps = apps.filter(app => app.isPinned).concat(apps.filter(app => !app.isPinned));
++
+         let changed = false;
+         if (apps.length !== dockModel.count) {
+             changed = true;

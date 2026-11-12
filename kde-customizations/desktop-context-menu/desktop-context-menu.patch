@@ -1,0 +1,301 @@
+--- components/controls/Menu.qml
++++ components/controls/Menu.qml
+@@ -5,6 +5,7 @@
+ import QtQuick.Effects
+ import QtQuick.Layouts
+ import Quickshell
++import Quickshell.Widgets
+ import Caelestia.Config
+ import qs.components
+ import qs.components.controls
+@@ -38,6 +39,11 @@
+     property bool rightClickReposition: false
+     property real maxHeight: 320
+     readonly property alias backgroundItem: menu
++    property bool dolphinContextStyle: false
++    property bool sharedPopoverStyle:false
++    property real menuFontScale:1.15
++    property real menuGeometryScale:1.15
++    readonly property bool styledMenu:dolphinContextStyle || sharedPopoverStyle
+     property bool transparentBackground: false
+     // Unfold sideways from the anchor with a short, non-overshooting curve
+     // instead of dropping down.
+@@ -180,10 +186,10 @@
+             return (pt ? pt.y : 0) + root.marginY;
+         }
+ 
+-        radius: Tokens.rounding.large
++        radius: root.styledMenu ? MenuStyle.contextRadius : Tokens.rounding.large
+         level: root.transparentBackground ? 0 : 2
+-        implicitWidth: Math.max(200, column.implicitWidth + Tokens.padding.extraSmall * 2)
+-        implicitHeight: Math.min(root.maxHeight, column.implicitHeight + Tokens.padding.extraSmall * 2)
++        implicitWidth: Math.max(200, column.implicitWidth + (root.styledMenu ? MenuStyle.contextPadding : Tokens.padding.extraSmall) * 2)
++        implicitHeight: Math.min(root.maxHeight, column.implicitHeight + (root.styledMenu ? MenuStyle.contextPadding : Tokens.padding.extraSmall) * 2)
+         width: root.revealHorizontal ? implicitWidth * animScale : implicitWidth
+         height: root.revealHorizontal ? implicitHeight : implicitHeight * animScale
+         clip: root.revealHorizontal
+@@ -221,7 +227,9 @@
+             }
+ 
+             radius: parent.radius
+-            color: root.transparentBackground
++            border.width: root.styledMenu ? 1 : 0
++            border.color: root.sharedPopoverStyle ? MenuStyle.border : MenuStyle.contextBorder
++            color: root.sharedPopoverStyle ? MenuStyle.surface : root.styledMenu ? MenuStyle.contextSurface : root.transparentBackground
+                 ? Qt.alpha(Colours.palette.m3surfaceContainerLow, 0)
+                 : (GlobalConfig.appearance.pitchBlack
+                     ? "#000000"
+@@ -231,7 +239,7 @@
+                 id: flickable
+ 
+                 anchors.fill: parent
+-                anchors.margins: Tokens.padding.extraSmall
++                anchors.margins: root.styledMenu ? MenuStyle.contextPadding : Tokens.padding.extraSmall
+                 contentWidth: width
+                 contentHeight: column.implicitHeight
+                 clip: true
+@@ -264,23 +272,38 @@
+                         visible: modelData?.visible ?? false
+ 
+                         Layout.fillWidth: true
+-                        implicitWidth: menuOptionRow.implicitWidth + Tokens.padding.medium * 2
+-                        implicitHeight: visible ? menuOptionRow.implicitHeight + Tokens.padding.medium * 2 : 0
+-
+-
+-                        radius: active ? Tokens.rounding.medium : Tokens.rounding.extraSmall
+-                        topLeftRadius: index === root.firstVisibleIndex ? Tokens.rounding.medium : radius
+-                        topRightRadius: index === root.firstVisibleIndex ? Tokens.rounding.medium : radius
+-                        bottomLeftRadius: index === root.lastVisibleIndex ? Tokens.rounding.medium : radius
+-                        bottomRightRadius: index === root.lastVisibleIndex ? Tokens.rounding.medium : radius
+-
+-                        color: "transparent"
++                        implicitWidth: menuOptionRow.implicitWidth + (root.styledMenu ? 36 : Tokens.padding.medium * 2)
++                        implicitHeight: visible ? menuOptionRow.implicitHeight + (root.styledMenu ? ((modelData?.footerAction ?? false) ? 16 : 22) : Tokens.padding.medium * 2) : 0
++                        Layout.topMargin: root.styledMenu && (modelData?.footerAction ?? false) ? 8 : 0
++
++
++                        radius: root.styledMenu ? MenuStyle.contextRowRadius : active ? Tokens.rounding.medium : Tokens.rounding.extraSmall
++                        topLeftRadius: root.styledMenu ? MenuStyle.contextRowRadius : index === root.firstVisibleIndex ? Tokens.rounding.medium : radius
++                        topRightRadius: root.styledMenu ? MenuStyle.contextRowRadius : index === root.firstVisibleIndex ? Tokens.rounding.medium : radius
++                        bottomLeftRadius: root.styledMenu ? MenuStyle.contextRowRadius : index === root.lastVisibleIndex ? Tokens.rounding.medium : radius
++                        bottomRightRadius: root.styledMenu ? MenuStyle.contextRowRadius : index === root.lastVisibleIndex ? Tokens.rounding.medium : radius
++
++                        color: root.styledMenu && contextMouse.containsMouse ? MenuStyle.contextHover : "transparent"
++
++                        Rectangle {
++                            visible:root.styledMenu && (item.modelData?.footerAction ?? false)
++                            x:10;y:-4;width:parent.width-20;height:1
++                            color:MenuStyle.contextBorder
++                        }
++                        MouseArea {
++                            id:contextMouse
++                            anchors.fill:parent
++                            visible:root.styledMenu
++                            hoverEnabled:true
++                            onClicked:{root.itemSelected(item.modelData);root.active=item.modelData;item.modelData.clicked();root.expanded=false;}
++                        }
+ 
+                         Behavior on radius {
+                             Anim {}
+                         }
+ 
+                         StateLayer {
++                            visible: !root.styledMenu
+                             topLeftRadius: parent.topLeftRadius
+                             topRightRadius: parent.topRightRadius
+                             bottomLeftRadius: parent.bottomLeftRadius
+@@ -300,31 +323,41 @@
+                             id: menuOptionRow
+ 
+                             anchors.fill: parent
+-                            anchors.margins: Tokens.padding.medium
++                            anchors.leftMargin:root.styledMenu ? 12 : Tokens.padding.medium
++                            anchors.rightMargin:root.styledMenu ? 22 : Tokens.padding.medium
++                            anchors.topMargin:root.styledMenu ? ((item.modelData?.footerAction ?? false) ? 8 : 11) : Tokens.padding.medium
++                            anchors.bottomMargin:root.styledMenu ? ((item.modelData?.footerAction ?? false) ? 8 : 11) : Tokens.padding.medium
+                             spacing: Tokens.spacing.small
+ 
++                            IconImage {
++                                visible:root.dolphinContextStyle && !(item.modelData?.footerAction ?? false)
++                                Layout.preferredWidth:16;Layout.preferredHeight:16
++                                source:Quickshell.iconPath(({skip_next:"media-skip-forward",settings:"settings-configure",content_paste:"edit-paste",terminal:"utilities-terminal",wallpaper:"preferences-desktop-wallpaper",widgets:"preferences-desktop-widgets",sort:"view-sort-ascending",visibility:"view-visible",visibility_off:"view-hidden",lock:"object-locked",lock_open:"object-unlocked"})[item.modelData?.icon] ?? item.modelData?.icon,"application-x-executable")
++                            }
+                             MaterialIcon {
++                                visible:!root.dolphinContextStyle
+                                 Layout.alignment: Qt.AlignVCenter
+                                 text: item.modelData?.icon ?? ""
+-                                color: Colours.palette.m3onSurfaceVariant
++                                color: root.sharedPopoverStyle ? MenuStyle.muted : Colours.palette.m3onSurfaceVariant
+                             }
+ 
+                             StyledText {
+                                 Layout.alignment: Qt.AlignVCenter
+                                 Layout.fillWidth: true
+                                 text: item.modelData?.text ?? ""
+-                                color: Colours.palette.m3onSurface
++                                font:root.styledMenu ? Qt.font({family:MenuStyle.fontFamily,pointSize:(root.sharedPopoverStyle ? MenuStyle.bodyPointSize(root.menuFontScale) : MenuStyle.applicationFont.pointSize)*((item.modelData?.footerAction ?? false) ? 0.85 : 1),italic:(item.modelData?.footerAction ?? false)}) : Tokens.font.body.small
++                                color:root.styledMenu ? ((item.modelData?.footerAction ?? false) ? MenuStyle.muted : MenuStyle.ink) : Colours.palette.m3onSurface
+                             }
+ 
+                             StyledText {
+-                                visible: item.modelData.shortcutName.length > 0
+-                                text: item.modelData.shortcutText || qsTr("Not assigned")
+-                                font: Tokens.font.label.medium
+-                                color: Colours.palette.m3onSurfaceVariant
++                                visible: (item.modelData?.shortcutName?.length ?? 0) > 0
++                                text: item.modelData?.shortcutText || qsTr("Not assigned")
++                                font:root.sharedPopoverStyle ? Qt.font({family:MenuStyle.fontFamily,pointSize:MenuStyle.bodyPointSize(root.menuFontScale)*0.79}) : Tokens.font.label.medium
++                                color: root.sharedPopoverStyle ? MenuStyle.muted : Colours.palette.m3onSurfaceVariant
+                             }
+ 
+                             IconButton {
+-                                visible: item.modelData.shortcutName.length > 0
++                                visible: (item.modelData?.shortcutName?.length ?? 0) > 0
+                                 type: IconButton.Text
+                                 padding: Tokens.padding.small
+                                 icon: "edit"
+@@ -335,12 +368,12 @@
+                             Loader {
+                                 asynchronous: true
+                                 Layout.alignment: Qt.AlignVCenter
+-                                active: item.modelData?.trailingIcon.length > 0
++                                active: (item.modelData?.trailingIcon?.length ?? 0) > 0
+                                 visible: active
+ 
+                                 sourceComponent: MaterialIcon {
+                                     text: item.modelData.trailingIcon
+-                                    color: Colours.palette.m3onSurfaceVariant
++                                    color: root.sharedPopoverStyle ? MenuStyle.muted : Colours.palette.m3onSurfaceVariant
+                                 }
+                             }
+                         }
+--- components/controls/MenuItem.qml
++++ components/controls/MenuItem.qml
+@@ -1,6 +1,7 @@
+ import QtQuick
+ 
+ QtObject {
++    property bool footerAction: false
+     property string text: ""
+     property string icon
+     property string trailingIcon
+--- modules/background/DesktopContextMenu.qml
++++ modules/background/DesktopContextMenu.qml
+@@ -10,6 +10,7 @@
+ 
+ Controls.Menu {
+     id: root
++    dolphinContextStyle: true
+ 
+     property real _menuW: root.backgroundItem && root.backgroundItem.implicitWidth > 0 ? root.backgroundItem.implicitWidth : 250
+     property real _menuH: root.backgroundItem && root.backgroundItem.implicitHeight > 0 ? root.backgroundItem.implicitHeight : 350
+@@ -88,11 +89,14 @@
+         const normalized = (!entries || entries.length === 0)
+             ? ContextMenuStore.cloneEntries(ContextMenuStore.defaultEntries())
+             : ContextMenuStore.cloneEntries(entries);
++        // Keep the editor action last, independently of the configured entry order.
++        const editor = normalized.filter(entry => entry.action === "OpenRightClickMenu");
++        const ordered = normalized.filter(entry => entry.action !== "OpenRightClickMenu").concat(editor);
+         const newArr = [];
+         const nextEntryByKey = {};
+ 
+-        for (let i = 0; i < normalized.length; i++) {
+-            let entry = normalized[i];
++        for (let i = 0; i < ordered.length; i++) {
++            let entry = ordered[i];
+             if (!entry.enabled) continue;
+ 
+             let key = (entry.id && entry.id.length > 0) ? entry.id : ("idx_" + i);
+@@ -105,7 +109,12 @@
+                 root.itemPool[key] = item;
+             }
+ 
+-            if (entry.action === "ToggleDesktopIcons") {
++            item.footerAction = entry.action === "OpenRightClickMenu";
++            if (item.footerAction) {
++                item.text = qsTr("Customize menu");
++                item.icon = "";
++                item.visible = true;
++            } else if (entry.action === "ToggleDesktopIcons") {
+                 item.text = Qt.binding(() => root.iconsEnabled ? qsTr("Hide Desktop Icons") : qsTr("Show Desktop Icons"));
+                 item.icon = Qt.binding(() => root.iconsEnabled ? "visibility_off" : "visibility");
+                 item.visible = true;
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -516,10 +516,11 @@
+         }
+         PanelBg {
+             id: contextMenuBg
++            group: null // Desktop menu paints the same glass as Dolphin.
+ 
+             panel: desktopContextMenu.backgroundItem
+             // Stay up while the closing animation runs, not just while expanded.
+-            visible: desktopContextMenu.visible && panel.width > 0
++            visible: false
+             x: panel.x
+             y: panel.y
+         }
+@@ -878,6 +879,14 @@
+ 
+     Config.screen: screen.name
+     BackgroundEffect.blurRegion: Region {
++        Region {
++            readonly property var menu:desktopContextMenu.backgroundItem
++            x:menu.x;y:menu.y
++            width:desktopContextMenu.visible ? menu.width : 0
++            height:desktopContextMenu.visible ? menu.height : 0
++            radius:MenuStyle.contextRadius
++            intersection:Intersection.Combine
++        }
+         // Start menu glass remains blurred independently of other panel preferences.
+         Region {
+             x: panels.launcher.x + panels.leftMargin
+@@ -1085,18 +1094,6 @@
+             deformMatrix: utilsBg.deformMatrix
+         }
+         BlurMask {
+-            target: desktopContextMenu.visible ? desktopContextMenu.backgroundItem : null
+-            contentItem: root.contentItem
+-            blurOffsetTop: root.blurOffsetTop
+-            blurOffsetBottom: root.blurOffsetBottom
+-            blurOffsetLeft: root.blurOffsetLeft + 1
+-            blurOffsetRight: root.blurOffsetRight
+-            vAnchor: desktopContextMenu.backgroundItem.vAnchor
+-            hAnchor: desktopContextMenu.backgroundItem.hAnchor
+-            offsetScale: desktopContextMenu.backgroundItem.offsetScale
+-            deformMatrix: contextMenuBg.deformMatrix
+-        }
+-        BlurMask {
+             target: (visibilities.overview && !GlobalConfig.overview.disableWallpaperBlur) ? panels.overview : null
+             contentItem: root.contentItem
+             blurOffsetTop: root.blurOffsetTop
+--- services/ContextMenuStore.qml
++++ services/ContextMenuStore.qml
+@@ -32,9 +32,9 @@
+             { id: "toggle_desktop_icons", label: qsTr("Desktop Icons"), icon: "desktop_windows", action: "ToggleDesktopIcons", enabled: true, type: "default" },
+             { id: "next_wallpaper", label: qsTr("Next Wallpaper"), icon: "skip_next", action: "Wallpapers.next()", enabled: true, type: "default" },
+             { id: "wallpaper_style", label: qsTr("Wallpaper & style"), icon: "wallpaper", action: "WindowFactory.create()", enabled: true, type: "default" },
+-            { id: "system_settings", label: qsTr("flausen Einstellungen"), icon: "settings", command: "flausen-settings", enabled: true, type: "default" },
++            { id: "system_settings", label: qsTr("Settings"), icon: "settings", command: "flausen-settings", enabled: true, type: "default" },
+             { id: "open_terminal", label: qsTr("Open Terminal"), icon: "terminal", command: "terminal", enabled: true, type: "default" },
+-            { id: "add_shortcut", label: qsTr("Add Shortcut..."), icon: "add", action: "OpenRightClickMenu", enabled: true, type: "default" }
++            { id: "add_shortcut", label: qsTr("Customize menu"), icon: "add", action: "OpenRightClickMenu", enabled: true, type: "default" }
+         ];
+     }
+ 
+--- services/MenuStyle.qml
++++ services/MenuStyle.qml
+@@ -18,6 +18,13 @@
+     readonly property color rule: Colours.light ? "#2420252d" : "#26ffffff"
+     readonly property color cardFill: Colours.light ? "#0a000000" : "#09ffffff"
+     readonly property color accent: "#287dff"
++    // Native Dolphin context-menu values (dolphin-header/contextmenu.cpp).
++    readonly property color contextSurface: Colours.light ? "#59f8f6f3" : "#401c2024"
++    readonly property color contextBorder: Colours.light ? "#66ffffff" : "#38ffffff"
++    readonly property color contextHover: Colours.light ? "#10000000" : "#18ffffff"
++    readonly property int contextRadius: 14
++    readonly property int contextPadding: 8
++    readonly property int contextRowRadius: 9
+     // Preserve the separate accessibility font scale; 1.15 is the menu baseline.
+     function bodyPointSize(fontScale: real): real {
+         return bodyPixels * 0.75 * fontScale / 1.15;

@@ -1,0 +1,59 @@
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -28,7 +28,7 @@
+     property bool launcherBlurReady: false
+     function syncLauncherBlur(): void {
+         if (!launcherBlurProcess.running) {
+-            launcherBlurProcess.command = ["python3", Quickshell.env("HOME") + "/.config/quickshell/minimal-polkit/blur-strength.py", launcherBlurRequested ? "on" : "off", launcherBlurOwner];
++            launcherBlurProcess.command = [Quickshell.env("HOME") + "/.local/libexec/ralleur/blur-settings", launcherBlurRequested ? "on" : "off", launcherBlurOwner];
+             launcherBlurProcess.running = true;
+         }
+     }
+@@ -49,26 +49,33 @@
+     Process {
+         id: launcherBlurProcess
+         onExited: (exitCode, exitStatus) => {
+-            root.launcherBlurReady = command[2] === "on" && exitCode === 0;
+-            if (command[2] !== (root.launcherBlurRequested ? "on" : "off"))
++            root.launcherBlurReady = command[1] === "on" && exitCode === 0;
++            if (command[1] !== (root.launcherBlurRequested ? "on" : "off"))
+                 root.syncLauncherBlur();
+         }
+     }
+     // KWin fades this helper surface without fading the menu or bars.
+-    readonly property bool launcherSurfaceVisible: launcherBackdropActive && launcherBlurReady
++    readonly property bool launcherSurfaceVisible: launcherBackdropActive
+     onLauncherSurfaceVisibleChanged: syncBackdropSurface()
+     function syncBackdropSurface(): void {
+-        if (!backdropControl.running) {
+-            backdropControl.command = ["quickshell", "ipc", "-p", Quickshell.env("HOME") + "/.config/quickshell/ralleur-start-backdrop", "call", "backdrop", "set", screen.name, launcherSurfaceVisible ? "true" : "false"];
+-            backdropControl.running = true;
+-        }
+-    }
+-    Process {
+-        id: backdropControl
+-        onExited: {
+-            if (command[8] !== (root.launcherSurfaceVisible ? "true" : "false"))
+-                root.syncBackdropSurface();
+-        }
++        if (backdropSocket.connected) {
++            backdropSocket.write(JSON.stringify({screen: screen.name, shown: launcherSurfaceVisible}) + "\n");
++            backdropSocket.flush();
++        }
++    }
++    Socket {
++        id: backdropSocket
++        path: Quickshell.env("XDG_RUNTIME_DIR") + "/ralleur-start-backdrop.sock"
++        connected: true
++        onConnectionStateChanged: {
++            if (connected) root.syncBackdropSurface();
++            else reconnectBackdrop.restart();
++        }
++    }
++    Timer {
++        id: reconnectBackdrop
++        interval: 250
++        onTriggered: backdropSocket.connected = true
+     }
+ 
+     property real blurOffsetTop: 0

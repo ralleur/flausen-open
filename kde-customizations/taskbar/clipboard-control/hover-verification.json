@@ -1,0 +1,29 @@
+{
+  "method": "Real relative pointer events using temporary uinput device, no clicks",
+  "transitions": [
+    {
+      "target": "clipboard",
+      "pointer": [
+        324.234375,
+        29.8046875
+      ],
+      "open": true
+    },
+    {
+      "target": "screencapture",
+      "pointer": [
+        272.37890625,
+        29.8046875
+      ],
+      "open": true
+    },
+    {
+      "target": "clipboard",
+      "pointer": [
+        323.4453125,
+        29.8046875
+      ],
+      "open": true
+    }
+  ]
+}

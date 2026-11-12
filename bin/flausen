@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Read-only entry point for the flausen. repository (Python 3.11+)."""
+
+import argparse
+import json
+from pathlib import Path
+import sys
+
+
+ROOT = Path(__file__).resolve().parent.parent
+CATALOGUE = Path("installation/components.json")
+LAYERS = ("shell", "apps", "wm", "session", "appearance", "branding")
+
+
+def checked_path(root, value):
+    if not isinstance(value, str) or not value:
+        raise ValueError("Pfad muss eine nichtleere Zeichenkette sein")
+    path = Path(value)
+    if path.is_absolute() or ".." in path.parts:
+        raise ValueError(f"Pfad muss relativ im Repository liegen: {value}")
+    resolved = (root / path).resolve()
+    if not resolved.is_relative_to(root.resolve()):
+        raise ValueError(f"Pfad verlässt das Repository: {value}")
+    return resolved
+
+
+def load_components(root):
+    data = json.loads((root / CATALOGUE).read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or data.get("schema_version") != 1:
+        raise ValueError("Katalog erwartet schema_version 1")
+    components = data.get("components")
+    if not isinstance(components, list) or not components:
+        raise ValueError("components muss eine nichtleere Liste sein")
+    ids, sources = set(), set()
+    for component in components:
+        if not isinstance(component, dict):
+            raise ValueError("Komponenteneintrag muss ein Objekt sein")
+        for field in ("id", "name", "layer", "source"):
+            if not isinstance(component.get(field), str) or not component[field].strip():
+                raise ValueError(f"Komponente benötigt Textfeld {field}")
+        key = component["id"]
+        if key in ids:
+            raise ValueError(f"Doppelte Komponenten-ID: {key}")
+        ids.add(key)
+        if component["layer"] not in LAYERS:
+            raise ValueError(f"Unbekannter Bereich bei {key}: {component['layer']}")
+        source = checked_path(root, component["source"])
+        if not source.is_dir():
+            raise ValueError(f"Quellverzeichnis fehlt: {component['source']}")
+        if source in sources:
+            raise ValueError(f"Doppelte Quelle: {component['source']}")
+        sources.add(source)
+        if "documentation" in component:
+            documentation = checked_path(root, component["documentation"])
+            if not documentation.is_file():
+                raise ValueError(f"Dokumentation fehlt: {component['documentation']}")
+    desktop = root / "kde-customizations"
+    if not desktop.is_dir():
+        raise ValueError("Desktop-Quellverzeichnis fehlt: kde-customizations")
+    missing = sorted(
+        str(path.relative_to(root))
+        for path in desktop.iterdir()
+        if path.is_dir() and not path.name.startswith((".", "__"))
+        and path.resolve() not in sources
+    )
+    if missing:
+        raise ValueError("Nicht registrierte Desktop-Komponenten: " + ", ".join(missing))
+    return components
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    listing = commands.add_parser("components", help="Komponenten und Quellen anzeigen")
+    listing.add_argument("--layer", choices=LAYERS, help="Nach Bereich filtern")
+    listing.add_argument("--json", action="store_true", help="Maschinenlesbare Ausgabe")
+    commands.add_parser("check", help="Katalog und Quellpfade prüfen (keine Live-Prüfung)")
+    args = parser.parse_args(argv)
+    try:
+        components = load_components(ROOT)
+    except (OSError, ValueError) as error:
+        print(f"Repository-Prüfung fehlgeschlagen: {error}", file=sys.stderr)
+        return 1
+    if args.command == "check":
+        print(f"OK: {len(components)} Komponenten, Quellpfade und Katalog vollständig.")
+        print("Keine Installer ausgeführt; laufendes System nicht geprüft.")
+    else:
+        selected = [c for c in components if args.layer is None or c["layer"] == args.layer]
+        if args.json:
+            print(json.dumps(selected, ensure_ascii=False, indent=2))
+        else:
+            for component in selected:
+                print(f"{component['id']} [{component['layer']}] · {component['name']}")
+                print(f"  Quelle: {component['source']}")
+                if "documentation" in component:
+                    print(f"  Doku:   {component['documentation']}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

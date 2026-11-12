@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "KWin/Effect",
+    "KPlugin": {
+        "Id": "ralleur-start-backdrop",
+        "Name": "Ralleur Start Menu Background Fade",
+        "Description": "Fade the dedicated start menu blur surface in and out",
+        "License": "GPL-2.0-or-later",
+        "Version": "1.0",
+        "EnabledByDefault": true
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js",
+    "X-KDE-Ordering": 5
+}

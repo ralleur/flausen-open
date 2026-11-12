@@ -1,0 +1,403 @@
+--- modules/bar/SplitBarSettings.qml
++++ modules/bar/SplitBarSettings.qml
+@@ -10,6 +10,20 @@
+     category: "RalleurTaskbar"
+     readonly property int edgeGap: 12
+     property real dockScale: -1
++    property bool dockMagnification: true
++    property real dockMagnificationAmount: 0.55
++
++    function setMagnification(enabled: bool): void {
++        dockMagnification = enabled;
++        setValue("dockMagnification", enabled);
++        sync();
++    }
++    function setMagnificationAmount(value: real): void {
++        if (!isFinite(value)) return;
++        dockMagnificationAmount = Math.max(0.15, Math.min(0.9, value));
++        setValue("dockMagnificationAmount", dockMagnificationAmount);
++        sync();
++    }
+     // Only launchable desktop IDs are retained; windows and process IDs are not stored.
+     property string recentDockApps: "[]"
+ 
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -364,7 +364,7 @@
+ 
+     Component.onCompleted: Logger.mark("bar-ready")
+ 
+-    clip: true
++    clip: !dockOnly
+ 
+     GridLayout {
+         id: leftLayout
+--- modules/bar/SplitDock.qml
++++ modules/bar/SplitDock.qml
+@@ -10,7 +10,8 @@
+ 
+     dockOnly: true
+     height: thickness
+-    readonly property real footprintWidth: Math.min(width, middleZoneSize)
++    readonly property real zoomExtent: (Visibilities.docks.get(root.screen.name)?.zoomActive ?? false) ? Math.ceil(thickness * SplitBarSettings.dockMagnificationAmount) : 0
++    readonly property real footprintWidth: Math.min(width, middleZoneSize + (Visibilities.docks.get(root.screen.name)?.zoomSpread ?? 0) * 2)
+ 
+     // Read-only diagnostics for the installed geometry and native popout routing.
+     IpcHandler {
+--- modules/drawers/Regions.qml
++++ modules/drawers/Regions.qml
+@@ -32,10 +32,10 @@
+ 
+     // Only the visible capsule takes input; the rest of the bottom stays usable.
+     Region {
+-        x: (root.win.width - root.win.bottomDock.footprintWidth) / 2
+-        y: root.win.bottomDock.y
+-        width: root.win.bottomDock.visible ? root.win.bottomDock.footprintWidth : 0
+-        height: root.win.bottomDock.visible ? root.win.bottomDock.height + 12 : 0
++        x: (root.win.width - root.win.bottomDock.footprintWidth) / 2 - root.win.bottomDock.zoomExtent
++        y: root.win.bottomDock.y - root.win.bottomDock.zoomExtent
++        width: root.win.bottomDock.visible ? root.win.bottomDock.footprintWidth + root.win.bottomDock.zoomExtent * 2 : 0
++        height: root.win.bottomDock.visible ? root.win.bottomDock.height + root.win.bottomDock.zoomExtent + 12 : 0
+         intersection: Intersection.Subtract
+     }
+     R {
+--- modules/drawers/Interactions.qml
++++ modules/drawers/Interactions.qml
+@@ -29,8 +29,8 @@
+     // reachable when the border thickness is set to 0 (the collapsed bar is 0px wide).
+ 
+     function inBottomDock(x: real, y: real): bool {
+-        return bottomDock.visible && y >= bottomDock.y && y <= bottomDock.y + bottomDock.height + 12
+-            && Math.abs(x - screen.width / 2) <= bottomDock.footprintWidth / 2;
++        return bottomDock.visible && y >= bottomDock.y - bottomDock.zoomExtent && y <= bottomDock.y + bottomDock.height + 12
++            && Math.abs(x - screen.width / 2) <= bottomDock.footprintWidth / 2 + bottomDock.zoomExtent;
+     }
+     function inBarArea(x: real, y: real): bool {
+         if (bar.position === "left")
+--- modules/nexus/pages/panels/taskbar/BarDock.qml
++++ modules/nexus/pages/panels/taskbar/BarDock.qml
+@@ -65,6 +65,30 @@
+ 
+         ToggleRow {
+             Layout.fillWidth: true
++            text: qsTr("Magnification")
++            subtext: qsTr("Smoothly enlarge app icons and their neighbours under the pointer")
++            checked: SplitBarSettings.dockMagnification
++            reset: ({ customGet: () => SplitBarSettings.dockMagnification, customDef: true,
++                customSet: v => SplitBarSettings.setMagnification(v) })
++            onToggled: SplitBarSettings.setMagnification(checked)
++        }
++
++        StepperRow {
++            Layout.fillWidth: true
++            label: qsTr("Magnification strength")
++            subtext: qsTr("Maximum enlargement of icons in the bottom dock")
++            enabled: SplitBarSettings.dockMagnification
++            value: SplitBarSettings.dockMagnificationAmount
++            from: 0.15
++            to: 0.9
++            stepSize: 0.05
++            reset: ({ customGet: () => SplitBarSettings.dockMagnificationAmount, customDef: 0.55,
++                customSet: v => SplitBarSettings.setMagnificationAmount(v) })
++            onMoved: v => SplitBarSettings.setMagnificationAmount(v)
++        }
++
++        ToggleRow {
++            Layout.fillWidth: true
+             text: qsTr("Recolor icons")
+             subtext: qsTr("Recolor application icons using the system theme")
+             reset: ({ node: GlobalConfig.bar.dock, setting: "recolourIcons" })
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -40,6 +40,8 @@
+ 
+     function inspectSections(): var {
+         return {
++            magnification: { enabled: zoomEnabled, active: zoomActive, amount: SplitBarSettings.dockMagnificationAmount, pointer: zoomPointer },
++            drag: { active: isDragging, id: draggedId, preview: dragPreview, pinned: previewPinnedCount },
+             separator: hasSections, gap: sectionGap,
+             recent: SplitBarSettings.recentApps(),
+             itemSize: container.itemSize,
+@@ -48,6 +50,9 @@
+             separatorPosition: listView.mapToGlobal(root.itemOffset(root.pinnedCount) - root.sectionGap / 2 - root.spacing / 2 - listView.contentX, container.itemSize / 2),
+             apps: modelDataArray.map((app, index) => ({
+                 id: app.id, desktopId: app.entry?.id, pinned: app.isPinned, windows: app.toplevels.length,
++                actualCenter: listView.itemAtIndex(index)?.iconCenter(),
++                iconInset: listView.itemAtIndex(index)?.iconInset,
++                zoom: zoomAt(index), zoomShift: zoomShiftAt(index),
+                 offset: itemOffset(index)
+             }))
+         };
+@@ -74,50 +79,67 @@
+         }
+     }
+ 
+-    // Convert the dropped icon into a launcher at the requested left-side slot.
+-    function pinAt(entry: var, slot: int): bool {
+-        if (!entry || entry.isPinned || !entry.entry)
+-            return false;
+-        const id = entry.entry.id;
+-        const pinned = [...(GlobalConfig.bar.dock.pinnedApps || [])];
+-        if (!pinned.includes(id)) {
+-            pinned.splice(Math.max(0, Math.min(pinned.length, slot)), 0, id);
+-            GlobalConfig.bar.dock.pinnedApps = pinned;
+-        }
+-        return true;
+-    }
+-
+-    function unpinEntry(entry: var): bool {
+-        if (!entry?.isPinned)
+-            return false;
+-        const id = entry.entry?.id || entry.id;
+-        const pinned = GlobalConfig.bar.dock.pinnedApps || [];
+-        const remaining = pinned.filter(pattern => !Strings.testRegexList([pattern], id));
+-        if (remaining.length === pinned.length)
+-            return false;
+-        // Keep even a closed launcher available on the right after it is unpinned.
+-        SplitBarSettings.saveRecentApps([id, ...SplitBarSettings.recentApps().filter(value => value !== id)]);
+-        GlobalConfig.bar.dock.pinnedApps = remaining;
+-        return true;
+-    }
+-
+-    function finishIconDrag(entry: var, position: point, moved: bool): void {
+-        const contentPosition = position.x + listView.contentX;
+-        const boundary = root.itemOffset(root.pinnedCount) - root.sectionGap / 2;
+-        const inLeftSection = root.pinnedCount === 0 ? contentPosition <= root.spacing : contentPosition < boundary;
+-        const inDock = position.x >= -root.padding && position.x <= listView.width + root.padding
+-            && position.y >= -root.padding && position.y <= listView.height + root.padding;
+-        // Commit intra-section reordering before changing the favourites.
+-        root.saveNewOrder();
+-        if (moved && bar.dockOnly && entry && inDock) {
+-            if (!entry.isPinned && inLeftSection) {
+-                const slot = Math.round(contentPosition / (container.itemSize + root.spacing));
+-                root.pinAt(entry, slot);
+-            } else if (entry.isPinned && !inLeftSection) {
+-                root.unpinEntry(entry);
+-            }
+-        }
+-        root.rebuildModel();
++    property string draggedId: ""
++    property var dragPreview: []
++    property int previewPinnedCount: pinnedCount
++    property bool dropInDock: false
++    property bool dropPinned: false
++
++    function updateIconDrag(entry: var, position: point): void {
++        if (!bar.dockOnly || !entry) return;
++        draggedId = entry.id;
++        const x = position.x + listView.contentX;
++        dropInDock = position.x >= -padding && position.x <= listView.width + padding
++            && position.y >= -padding && position.y <= listView.height + padding;
++        const boundary = pinnedCount * (container.itemSize + spacing) + sectionGap / 2 - spacing / 2;
++        dropPinned = !!entry.entry && (pinnedCount === 0 ? x <= container.itemSize / 2 : x < boundary);
++        if (!dropInDock) {
++            dragPreview = [];
++            return;
++        }
++        const remaining = modelDataArray.filter(app => app.id !== entry.id);
++        const section = remaining.filter(app => app.isPinned === dropPinned);
++        const left = remaining.filter(app => app.isPinned);
++        const right = remaining.filter(app => !app.isPinned);
++        const sectionStart = dropPinned ? 0 : left.length * (container.itemSize + spacing) + sectionGap;
++        const slot = Math.max(0, Math.min(section.length,
++            Math.round((x - sectionStart - container.itemSize / 2) / (container.itemSize + spacing))));
++        (dropPinned ? left : right).splice(slot, 0, entry);
++        previewPinnedCount = left.length;
++        dragPreview = left.concat(right).map(app => app.id);
++    }
++
++    function previewOffset(id: string, index: int): real {
++        if (!isDragging || !dragPreview.length || id === draggedId) return 0;
++        const target = dragPreview.indexOf(id);
++        if (target < 0) return 0;
++        return target * (container.itemSize + spacing)
++            + (previewPinnedCount > 0 && target >= previewPinnedCount ? sectionGap : 0)
++            - itemOffset(index);
++    }
++
++    function clearIconDrag(): void {
++        draggedId = "";
++        dragPreview = [];
++        dropInDock = false;
++    }
++
++    function finishIconDrag(entry: var, moved: bool): void {
++        if (moved && bar.dockOnly && entry && dropInDock && dragPreview.length) {
++            const desired = dragPreview.map(id => modelDataMap[id]).filter(app => !!app);
++            const pinned = desired.filter(app => app.id === entry.id ? dropPinned : app.isPinned)
++                .map(app => app.entry?.id || app.id);
++            if (entry.isPinned && !dropPinned)
++                SplitBarSettings.saveRecentApps([entry.entry?.id || entry.id,
++                    ...SplitBarSettings.recentApps().filter(id => id !== (entry.entry?.id || entry.id))]);
++            // One commit after the preview: no DelegateModel moves or identity changes under the pointer.
++            root.currentOrder = desired.map(app => app.id === entry.id
++                ? Object.assign({}, app, { isPinned: dropPinned, id: dropPinned ? app.entry.id : app.id }) : app);
++            GlobalConfig.bar.dock.pinnedApps = [...new Set(pinned)];
++        } else if (!bar.dockOnly) {
++            root.saveNewOrder();
++        }
++        root.clearIconDrag();
+     }
+ 
+     function updateRecentApps(apps: var): var {
+@@ -170,6 +192,37 @@
+     implicitWidth: bar.isHorizontal ? container.width : container.implicitWidth
+     implicitHeight: bar.isHorizontal ? container.implicitHeight : container.height
+ 
++    readonly property bool zoomEnabled: bar.dockOnly && bar.isHorizontal && SplitBarSettings.dockMagnification && Tokens.anim.enabled
++    readonly property real zoomPointer: {
++        if (!zoomEnabled || !bar.parent.containsMouse) return -1;
++        const p = listView.mapFromItem(bar.parent, bar.parent.mouseX, bar.parent.mouseY);
++        const extent = bar.thickness * SplitBarSettings.dockMagnificationAmount;
++        return p.y >= -extent && p.y <= listView.height + padding
++            && p.x >= -padding - extent && p.x <= listView.width + padding + extent ? p.x + listView.contentX : -1;
++    }
++    readonly property bool zoomActive: zoomEnabled && zoomPointer >= 0 && !isDragging && !isResizing
++        && !(bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext")
++    function zoomAt(index: int): real {
++        if (!zoomActive) return 1;
++        const distance = Math.abs(itemOffset(index) + container.itemSize / 2 - zoomPointer);
++        const radius = (container.itemSize + spacing) * 2.5;
++        return 1 + SplitBarSettings.dockMagnificationAmount * (distance < radius ? (1 + Math.cos(Math.PI * distance / radius)) / 2 : 0);
++    }
++    property real zoomSpread: {
++        let extra = 0;
++        for (let i = 0; i < modelDataArray.length; i++) extra += container.itemSize * (zoomAt(i) - 1);
++        return extra / 2;
++    }
++    Behavior on zoomSpread { NumberAnimation { duration: Tokens.anim.enabled ? 100 : 0; easing.type: Easing.OutCubic } }
++    function zoomShiftAt(index: int): real {
++        if (!zoomActive) return 0;
++        let shift = 0;
++        for (let i = 0; i < modelDataArray.length; i++) {
++            const extra = container.itemSize * (zoomAt(i) - 1);
++            shift += i < index ? extra / 2 : i > index ? -extra / 2 : 0;
++        }
++        return shift;
++    }
+     HoverHandler { id: dockHover }
+ 
+     Timer {
+@@ -441,6 +494,8 @@
+ 
+         GlassSurface {
+             anchors.fill: parent
++            anchors.leftMargin: -root.zoomSpread
++            anchors.rightMargin: -root.zoomSpread
+             visible: dockModel.count > 0
+         }
+ 
+@@ -582,7 +637,7 @@
+                 orientation: bar.isHorizontal ? ListView.Horizontal : ListView.Vertical
+                 spacing: root.spacing
+                 interactive: bar.isHorizontal ? contentWidth > width + 1 : contentHeight > height + 1
+-                clip: true
++                clip: !bar.dockOnly
+ 
+                 onContentWidthChanged: root.clampScroll()
+                 onWidthChanged: root.clampScroll()
+@@ -620,7 +675,8 @@
+                 id: sectionDivider
+                 parent: listView.contentItem
+                 visible: root.hasSections
+-                x: root.pinnedCount * (container.itemSize + root.spacing) - root.spacing / 2
++                x: (root.dragPreview.length ? root.previewPinnedCount : root.pinnedCount) * (container.itemSize + root.spacing) - root.spacing / 2 + root.zoomShiftAt(root.pinnedCount)
++                Behavior on x { NumberAnimation { duration: Tokens.anim.enabled ? 150 : 0; easing.type: Easing.OutCubic } }
+                 width: root.sectionGap
+                 height: container.itemSize
+                 z: 20
+@@ -714,11 +770,23 @@
+                 implicitHeight: height
+ 
+                 property var modelData: root.modelDataMap[appId] || root.modelDataArray[index]
++                readonly property real iconInset: delegateItem.x
++                function iconCenter(): point {
++                    return delegateItem.mapToGlobal(delegateItem.width / 2, delegateItem.height / 2);
++                }
++                transform: Translate {
++                    x: root.previewOffset(delegateContainer.appId, delegateContainer.index) + delegateContainer.zoomShift
++                    Behavior on x { NumberAnimation { duration: Tokens.anim.enabled ? 150 : 0; easing.type: Easing.OutCubic } }
++                }
++                readonly property real zoom: root.zoomAt(delegateContainer.index)
++                readonly property real zoomShift: root.zoomShiftAt(delegateContainer.index)
++                z: zoom > 1 ? 10 : 0
+ 
+                 DropArea {
+                     anchors.fill: parent
+                     anchors.margins: Tokens.padding.small
+                     onEntered: drag => {
++                        if (root.bar.dockOnly) return;
+                         const from = drag.source.delegateIndex;
+                         const to = delegateContainer.index;
+                         if (from !== undefined && to !== undefined && from !== to
+@@ -729,7 +797,7 @@
+                         }
+                     }
+                     onDropped: drag => {
+-                        root.saveNewOrder();
++                        if (!root.bar.dockOnly) root.saveNewOrder();
+                     }
+                 }
+ 
+@@ -741,6 +809,13 @@
+                     height: delegateContainer.height
+ 
+                     property int delegateIndex: delegateContainer.index
++                    transform: Scale {
++                        origin.x: delegateItem.width / 2
++                        origin.y: delegateItem.height
++                        xScale: delegateContainer.zoom
++                        yScale: xScale
++                        Behavior on xScale { NumberAnimation { duration: Tokens.anim.enabled ? 100 : 0; easing.type: Easing.OutCubic } }
++                    }
+ 
+                     Drag.active: dragArea.held
+                     Drag.source: delegateItem
+@@ -812,9 +887,15 @@
+                             stateLayer.press(mouse.x, mouse.y);
+                         }
+ 
+-                        onPositionChanged: {
++                        onPositionChanged: mouse => {
+                             if (drag.active) {
+                                 moved = true;
++                                const position = mapToItem(listView, mouse.x, mouse.y);
++                                if (bar.dockOnly) {
++                                    delegateItem.x = position.x - delegateItem.width / 2;
++                                    delegateItem.y = 0;
++                                }
++                                root.updateIconDrag(delegateContainer.modelData, position);
+                                 root.bar.popouts.hasCurrent = false;
+                             }
+                         }
+@@ -841,21 +922,24 @@
+                         }
+ 
+                         onReleased: mouse => {
+-                            const position = mapToItem(listView, mouse.x, mouse.y);
++                            // The last move already selected and displayed the insertion slot.
++                            // Reprojecting the release through the moving/scaled delegate can
++                            // select a different slot, especially with an off-centre grip.
+                             const entry = delegateContainer.modelData;
++                            root.finishIconDrag(entry, moved);
+                             held = false;
++                            delegateItem.x = Qt.binding(() => delegateContainer.sectionInset);
++                            delegateItem.y = 0;
+                             root.isDragging = false;
+-                            delegateItem.x = delegateContainer.sectionInset;
+-                            delegateItem.y = 0;
+-                            root.finishIconDrag(entry, position, moved);
++                            root.rebuildModel();
+                         }
+ 
+                         onCanceled: {
+                             held = false;
+                             root.isDragging = false;
+-                            delegateItem.x = delegateContainer.sectionInset;
++                            delegateItem.x = Qt.binding(() => delegateContainer.sectionInset);
+                             delegateItem.y = 0;
+-                            root.saveNewOrder();
++                            root.clearIconDrag();
+                             root.rebuildModel();
+                         }
+                     }

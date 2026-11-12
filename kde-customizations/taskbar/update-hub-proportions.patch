@@ -1,0 +1,199 @@
+--- modules/bar/popouts/Updates.qml
++++ modules/bar/popouts/Updates.qml
+@@ -24,6 +24,11 @@
+     readonly property color muted: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.52 : 0.59)
+     readonly property color rule: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.12 : 0.16)
+     readonly property string shellIcon: UpdateChecker.checkingUpdates ? "sync" : UpdateChecker.hasUpdate ? "arrow_upward" : UpdateChecker.lastCheckMs > 0 && UpdateChecker.currentVersion !== "unknown" ? "check" : "question_mark"
++    // Proportions are measured against the reference at equal outer width.
++    // App icons stay large while typography and row rhythm become quieter.
++    readonly property real bodyPointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.84
++    readonly property real titlePointSize: root.bodyPointSize * 1.68
++    readonly property real contentInset: 7 * root.scaleOffset
+     property double nowMs: Date.now()
+     readonly property string checkedText: {
+         const checks = UpdateHub.sources.filter(s => UpdateHub.enabled(s.key)).map(s => UpdateHub.status[s.key]?.checkedAt ?? 0);
+@@ -38,7 +43,7 @@
+ 
+     width: 420 * scaleOffset
+     implicitWidth: width
+-    spacing: 12 * scaleOffset
++    spacing: 10 * scaleOffset
+ 
+     function openSettings(): void {
+         root.popouts.hasCurrent = false;
+@@ -51,18 +56,18 @@
+ 
+     RowLayout {
+         Layout.fillWidth: true
+-        Layout.topMargin: 7 * root.scaleOffset
+-        Layout.leftMargin: 6 * root.scaleOffset
+-        Layout.rightMargin: 4 * root.scaleOffset
++        Layout.topMargin: 3 * root.scaleOffset
++        Layout.leftMargin: 12 * root.scaleOffset
++        Layout.rightMargin: root.contentInset
+         spacing: 6 * root.scaleOffset
+         ColumnLayout {
+             Layout.fillWidth: true
+-            spacing: 5 * root.scaleOffset
++            spacing: 4 * root.scaleOffset
+             StyledText {
+                 Layout.fillWidth: true
+                 text: "Updates"
+                 font.weight: 600
+-                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.65
++                font.pointSize: root.titlePointSize
+             }
+             RowLayout {
+                 Layout.fillWidth: true
+@@ -77,7 +82,7 @@
+                     Layout.fillWidth: true
+                     text: root.checking ? "Wird geprüft …" : root.updateCount === 1 ? "1 Update verfügbar" : root.updateCount > 1 ? root.updateCount + " Updates verfügbar" : root.incomplete ? "Prüfung unvollständig" : "Alles aktuell"
+                     color: root.muted
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.95
++                    font.pointSize: root.bodyPointSize * 0.94
+                 }
+             }
+         }
+@@ -151,6 +156,8 @@
+ 
+     Rectangle {
+         Layout.fillWidth: true
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
+         Layout.topMargin: 5 * root.scaleOffset
+         Layout.bottomMargin: 2 * root.scaleOffset
+         implicitHeight: 1
+@@ -159,18 +166,20 @@
+     RowLayout {
+         Layout.fillWidth: true
+         Layout.bottomMargin: 5 * root.scaleOffset
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
+         spacing: 12 * root.scaleOffset
+         StyledText {
+             Layout.fillWidth: true
+             text: root.checkedText
+             color: root.muted
+-            font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.87
++            font.pointSize: root.bodyPointSize * 0.84
+             elide: Text.ElideRight
+         }
+         StyledRect {
+             id: updateButton
+-            implicitWidth: buttonContents.implicitWidth + 30 * root.scaleOffset
+-            implicitHeight: 36 * root.scaleOffset
++            implicitWidth: buttonContents.implicitWidth + 24 * root.scaleOffset
++            implicitHeight: 32 * root.scaleOffset
+             radius: height / 2
+             color: root.accent
+             enabled: (root.updateCount > 0 || root.incomplete) && !root.checking
+@@ -182,13 +191,13 @@
+                 MaterialIcon {
+                     text: root.updateCount > 0 ? "arrow_upward" : "check"
+                     color: "white"
+-                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
++                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 0.9
+                 }
+                 StyledText {
+                     text: root.updateCount > 0 ? "Updates öffnen" : root.incomplete ? "Details öffnen" : "Alles aktuell"
+                     color: "white"
+                     font.weight: 600
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.95
++                    font.pointSize: root.bodyPointSize * 0.94
+                 }
+             }
+             StateLayer {
+@@ -201,16 +210,18 @@
+     Timer { interval: 30000; running: true; repeat: true; onTriggered: root.nowMs = Date.now() }
+ 
+     component SectionLabel: StyledText {
+-        Layout.leftMargin: 5 * root.scaleOffset
++        Layout.leftMargin: 12 * root.scaleOffset
+         Layout.topMargin: 3 * root.scaleOffset
+         Layout.bottomMargin: -3 * root.scaleOffset
+         color: root.muted
+         font.weight: 500
+-        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.96
++        font.pointSize: root.bodyPointSize * 0.94
+     }
+     component GroupCard: StyledRect {
+         property alias content: cardRows.data
+         Layout.fillWidth: true
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
+         implicitHeight: cardRows.implicitHeight + 4 * root.scaleOffset
+         radius: 14 * root.scaleOffset
+         color: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.025 : 0.035)
+@@ -226,8 +237,9 @@
+         }
+     }
+     component Divider: Rectangle {
+-        Layout.fillWidth: true
+-        Layout.leftMargin: 67 * root.scaleOffset
++        property bool alignToIconEdge: false
++        Layout.fillWidth: true
++        Layout.leftMargin: (alignToIconEdge ? 53 : 67) * root.scaleOffset
+         Layout.rightMargin: 15 * root.scaleOffset
+         implicitHeight: 1
+         color: root.rule
+@@ -249,7 +261,7 @@
+                 detail: UpdateHub.details(gameCard.provider)
+                 onClicked: root.openSource(gameCard.provider)
+             },
+-            Divider { visible: UpdateHub.enabled(gameCard.provider) && UpdateHub.enabled(gameCard.games) },
++            Divider { alignToIconEdge: true; visible: UpdateHub.enabled(gameCard.provider) && UpdateHub.enabled(gameCard.games) },
+             StatusRow {
+                 visible: UpdateHub.enabled(gameCard.games)
+                 label: "Spiele"
+@@ -266,6 +278,7 @@
+         required property string icon
+         required property string description
+         signal clicked
++        Layout.alignment: Qt.AlignTop
+         implicitWidth: 38 * root.scaleOffset
+         implicitHeight: 38 * root.scaleOffset
+         radius: Tokens.rounding.full
+@@ -298,7 +311,7 @@
+         property bool showUpdateLabel: false
+         signal clicked
+         Layout.fillWidth: true
+-        implicitHeight: (row.subtitle ? 64 : row.nested ? 45 : 57) * root.scaleOffset
++        implicitHeight: (row.showUpdateLabel ? 43 : row.subtitle ? 55 : row.nested ? 38 : 47) * root.scaleOffset
+         radius: 13 * root.scaleOffset
+         color: "transparent"
+         RowLayout {
+@@ -320,7 +333,7 @@
+                     visible: !!row.symbol
+                     text: row.symbol
+                     color: Colours.palette.m3onSurface
+-                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * (row.nested ? 1.1 : 1.4)
++                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * (row.nested ? 1.25 : 1.35)
+                 }
+             }
+             ColumnLayout {
+@@ -330,14 +343,14 @@
+                     Layout.fillWidth: true
+                     text: row.label
+                     font.weight: row.nested ? 400 : 600
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.05
++                    font.pointSize: root.bodyPointSize
+                     elide: Text.ElideRight
+                 }
+                 StyledText {
+                     visible: !!row.subtitle
+                     text: row.subtitle
+                     color: root.muted
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.83
++                    font.pointSize: root.bodyPointSize * 0.79
+                 }
+             }
+             MaterialIcon {
+@@ -349,7 +362,7 @@
+                 visible: row.showUpdateLabel && row.statusIcon === "arrow_upward"
+                 text: "Update verfügbar"
+                 color: root.accent
+-                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.9
++                font.pointSize: root.bodyPointSize * 0.9
+             }
+         }
+         StateLayer {

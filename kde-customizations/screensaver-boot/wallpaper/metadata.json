@@ -1,0 +1,16 @@
+{
+  "KPackageStructure": "Plasma/Wallpaper",
+  "KPlugin": {
+    "Id": "com.ralleur.screensaver",
+    "Name": "ralleur OLED",
+    "Description": "Native vector logo animation on black, without video decoding",
+    "Version": "2.1",
+    "License": "LicenseRef-Local",
+    "Authors": [
+      {
+        "Name": "ralleur"
+      }
+    ]
+  },
+  "X-KDE-ParentApp": "org.kde.plasmashell"
+}

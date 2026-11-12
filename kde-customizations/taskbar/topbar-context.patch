@@ -1,0 +1,290 @@
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -52,8 +52,7 @@
+     }
+ 
+     property var leftEntries: dockOnly ? [] : BarWidgets.zoneEntries(Config.bar.entries, "left")
+-    property var middleEntries: (dockOnly ? Config.bar.position !== "top" : position === "top")
+-        ? [] : BarWidgets.zoneEntries(Config.bar.entries, "middle")
++    property var middleEntries: dockOnly ? BarWidgets.zoneEntries(Config.bar.entries, "middle") : []
+     property var rightEntries: dockOnly ? [] : BarWidgets.zoneEntries(Config.bar.entries, "right")
+ 
+     function resetHover(): void {
+@@ -102,7 +101,7 @@
+             return;
+         // A context menu stays open while the pointer moves over the bar, so
+         // the hover routing below must not take it over or close it.
+-        if (popouts.hasCurrent && (popouts.currentName === "clockcontext" || popouts.currentName === "dockcontext" || popouts.currentName === "greetercontext" || popouts.currentName === "statusiconscontext" || popouts.currentName === "workspacescontext" || popouts.currentName === "traycontext" || popouts.currentName === "githubcontext" || popouts.currentName === "weathercontext" || popouts.currentName === "mediacontext" || popouts.currentName === "performancecontext" || popouts.currentName === "screencapturecontext" || popouts.currentName === "keepawakecontext" || popouts.currentName === "osiconcontext" || popouts.currentName === "dockbgcontext" || popouts.currentName === "elementscontext"))
++        if (popouts.hasCurrent && (popouts.currentName === "taskbarcontext" || popouts.currentName === "clockcontext" || popouts.currentName === "dockcontext" || popouts.currentName === "greetercontext" || popouts.currentName === "statusiconscontext" || popouts.currentName === "workspacescontext" || popouts.currentName === "traycontext" || popouts.currentName === "githubcontext" || popouts.currentName === "weathercontext" || popouts.currentName === "mediacontext" || popouts.currentName === "performancecontext" || popouts.currentName === "screencapturecontext" || popouts.currentName === "keepawakecontext" || popouts.currentName === "osiconcontext" || popouts.currentName === "dockbgcontext" || popouts.currentName === "elementscontext"))
+             return;
+ 
+         const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos) as WrappedLoader;
+--- modules/bar/BarWrapper.qml
++++ modules/bar/BarWrapper.qml
+@@ -57,7 +57,8 @@
+     readonly property bool keptOpen: Config.bar.persistent && !dodging
+     readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? contentWidth + topInset : Config.border.thickness
+     readonly property int visualThickness: !disabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
+-    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || isHovered)
++    readonly property bool contextOpen: popouts.hasCurrent && popouts.currentName === "taskbarcontext"
++    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || isHovered || contextOpen || SplitBarSettings.taskbarUnlocked)
+     property bool isHovered
+     readonly property bool isHorizontal: root.position === "top" || root.position === "bottom"
+     readonly property int clampedThickness: Math.max(Config.border.minThickness, isHorizontal ? implicitHeight : implicitWidth)
+@@ -113,6 +114,70 @@
+             }
+         }
+     ]
++
++    // Grab only the right button while locked; widget left-clicks stay native.
++    property bool moving: false
++    property string dropEdge: ""
++    function edgeAt(x: real, y: real): string {
++        const distances = [y, screen.height - y, x, screen.width - x];
++        const edges = ["top", "bottom", "left", "right"];
++        const closest = Math.min(...distances);
++        return closest <= Math.max(80, contentWidth * 1.5) ? edges[distances.indexOf(closest)] : "";
++    }
++    MouseArea {
++        id: taskbarPointer
++        anchors.fill: parent
++        z: 1000
++        acceptedButtons: Qt.RightButton | (SplitBarSettings.taskbarUnlocked ? Qt.LeftButton : Qt.NoButton)
++        cursorShape: SplitBarSettings.taskbarUnlocked ? Qt.SizeAllCursor : Qt.ArrowCursor
++        property point start
++        onPressed: event => {
++            if (event.button === Qt.RightButton) {
++                root.popouts.currentCenter = root.isHorizontal ? root.x + event.x : root.y + event.y;
++                root.popouts.currentName = "taskbarcontext";
++                root.popouts.hasCurrent = true;
++            } else {
++                start = mapToItem(null, event.x, event.y);
++                root.popouts.hasCurrent = false;
++                root.dropEdge = "";
++            }
++        }
++        onPositionChanged: event => {
++            if (!(pressedButtons & Qt.LeftButton)) return;
++            const point = mapToItem(null, event.x, event.y);
++            if (!root.moving && Math.hypot(point.x - start.x, point.y - start.y) < 12) return;
++            root.moving = true;
++            root.dropEdge = root.edgeAt(point.x, point.y);
++        }
++        onReleased: event => {
++            if (event.button !== Qt.LeftButton) return;
++            const edge = root.dropEdge;
++            const commit = root.moving && edge !== "";
++            root.moving = false;
++            root.dropEdge = "";
++            if (commit) GlobalConfig.forScreen(root.screen.name).bar.position = edge;
++        }
++        onCanceled: {
++            root.moving = false;
++            root.dropEdge = "";
++        }
++        Keys.onEscapePressed: {
++            root.moving = false;
++            root.dropEdge = "";
++        }
++    }
++    Rectangle {
++        // Edge preview remains on the source screen during the pointer grab.
++        parent: root.parent
++        z: 1001
++        visible: root.moving && root.dropEdge !== ""
++        x: root.dropEdge === "right" ? root.screen.width - 6 : 0
++        y: root.dropEdge === "bottom" ? root.screen.height - 6 : 0
++        width: root.dropEdge === "left" || root.dropEdge === "right" ? 6 : root.screen.width
++        height: root.dropEdge === "top" || root.dropEdge === "bottom" ? 6 : root.screen.height
++        radius: 3
++        color: MenuStyle.accent
++    }
+ 
+     Component {
+         id: horizontalBar
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -26,7 +26,7 @@
+         return acc;
+     }, {})
+ 
+-    readonly property real contentMargin: (popouts.currentName === "dockcontext" ? 8 : Tokens.padding.large) * (currentPopout?.item?.scaleOffset ?? 1.0)
++    readonly property real contentMargin: ((popouts.currentName === "dockcontext" || popouts.currentName === "taskbarcontext") ? 8 : Tokens.padding.large) * (currentPopout?.item?.scaleOffset ?? 1.0)
+     readonly property real availableWidth: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.width ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+     readonly property real availableHeight: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.height ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+ 
+@@ -47,8 +47,8 @@
+                 popout[name] = context[name];
+     }
+ 
+-    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + (popouts.currentName === "dockcontext" ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
+-    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + (popouts.currentName === "dockcontext" ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
++    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + ((popouts.currentName === "dockcontext" || popouts.currentName === "taskbarcontext") ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
++    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + ((popouts.currentName === "dockcontext" || popouts.currentName === "taskbarcontext") ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
+ 
+     Flickable {
+         id: viewport
+@@ -407,6 +407,15 @@
+                 subPageIdx: 23
+                 secondLabel: qsTr("Elements & Modules")
+                 secondSubPageIdx: 15
++            }
++        }
++
++        Popout {
++            name: "taskbarcontext"
++            previewKey: "network"
++            minScale: 1.15
++            sourceComponent: TaskbarContext {
++                popouts: root.popouts
+             }
+         }
+ 
+--- modules/bar/popouts/Wrapper.qml
++++ modules/bar/popouts/Wrapper.qml
+@@ -29,7 +29,7 @@
+     // hover previews and context menus are transient, so shoving panels around for
+     // them feels jittery. The clock popout is deliberately NOT here — the calendar
+     // is a real panel-sized popout and displaces notifications like audio/network do.
+-    readonly property bool isDockPopout: currentName === "dockhover" || currentName === "dockcontext" || currentName === "dockbgcontext" || currentName === "greeter" || currentName === "greetercontext" || currentName === "activewindow" || currentName === "github" || currentName === "clockcontext" || currentName === "statusiconscontext" || currentName === "workspacescontext" || currentName === "traycontext" || currentName === "githubcontext"
++    readonly property bool isDockPopout: currentName === "taskbarcontext" || currentName === "dockhover" || currentName === "dockcontext" || currentName === "dockbgcontext" || currentName === "greeter" || currentName === "greetercontext" || currentName === "activewindow" || currentName === "github" || currentName === "clockcontext" || currentName === "statusiconscontext" || currentName === "workspacescontext" || currentName === "traycontext" || currentName === "githubcontext"
+     property alias currentName: popoutState.currentName
+     property alias hasCurrent: popoutState.hasCurrent
+     property alias dockModel: popoutState.dockModel
+@@ -90,7 +90,7 @@
+         // Only attach to the sidebar when the popout would open below it anyway;
+         // otherwise it would end up away from the item that opened it.
+         sidebarOpen: root.visibilities.sidebar && root.underSidebar
+-        isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
++        isHorizontal: root.currentName.startsWith("dock") || Config.bar.position === "top" || Config.bar.position === "bottom"
+         onDetachRequested: mode => root.detach(mode)
+     }
+     HyprlandFocusGrab {
+--- modules/bar/popouts/ClipWrapper.qml
++++ modules/bar/popouts/ClipWrapper.qml
+@@ -14,17 +14,18 @@
+     Config.screen: screen.name
+     required property var bar
+     property real dockHeight: bar.contentWidth
++    property real dockBottomInset: 12
+     required property real borderThickness
+     required property DrawerVisibilities visibilities
+ 
+     // Dock previews and context menus belong above the bottom capsule.
+-    readonly property bool fromBottomDock: bar.position === "top" && content.currentName.startsWith("dock")
++    readonly property bool fromBottomDock: content.currentName.startsWith("dock")
+     readonly property string popoutPosition: fromBottomDock ? "bottom" : bar.position
+     readonly property bool fromFloatingTopBar: popoutPosition === "top" && !content.isDetached
+     readonly property bool framelessDockPreview: (fromBottomDock || bar.position === "bottom") && content.currentName === "dockhover"
+-    readonly property bool fromFloatingBar: !content.isDetached && (fromFloatingTopBar || fromBottomDock)
++    readonly property bool fromFloatingBar: !content.isDetached && (fromFloatingTopBar || fromBottomDock || content.currentName === "taskbarcontext")
+     readonly property alias content: content
+-    readonly property bool isHorizontal: bar.isHorizontal
++    readonly property bool isHorizontal: fromBottomDock || bar.isHorizontal
+     property real offsetScale: content.isDetached || content.hasCurrent ? 0 : 1
+     // Where x is heading; x itself animates towards it.
+     readonly property real targetX: {
+@@ -60,7 +61,7 @@
+             return (parent.height - content.nonAnimHeight) / 2;
+         if (isHorizontal) {
+             if (root.popoutPosition === "bottom")
+-                return parent.height - implicitHeight - (root.fromBottomDock ? root.dockHeight + 20 - parent.bottomMargin : 0);
++                return parent.height - implicitHeight - (root.fromBottomDock ? root.dockHeight + root.dockBottomInset + 8 - parent.bottomMargin : 0);
+             // Panels begins at the bar wrapper's bottom; the glass ends 4 px earlier.
+             // Reveal content from the visible capsule rather than from the screen edge.
+             return root.popoutPosition === "top" ? -4 : 0;
+@@ -133,8 +134,8 @@
+         visibilities: root.visibilities
+         underSidebar: !root.isHorizontal || content.currentCenter - root.parent.leftMargin >= root.parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width)
+ 
+-        anchors.leftMargin: root.popoutPosition === "left" ? (-implicitWidth - 5) * root.offsetScale : 0
+-        anchors.rightMargin: root.popoutPosition === "right" ? (-implicitWidth - 5) * root.offsetScale : 0
++        anchors.leftMargin: root.popoutPosition === "left" && !root.fromFloatingBar ? (-implicitWidth - 5) * root.offsetScale : 0
++        anchors.rightMargin: root.popoutPosition === "right" && !root.fromFloatingBar ? (-implicitWidth - 5) * root.offsetScale : 0
+         anchors.topMargin: 0
+         anchors.bottomMargin: root.popoutPosition === "bottom" && !root.fromFloatingBar ? (-implicitHeight - 5) * root.offsetScale : 0
+ 
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -122,6 +122,7 @@
+ 
+     WlrLayershell.namespace: "dock"
+     mask: {
++        if (bar.moving) return fullRegion;
+         if (hasOpenOverlay && !sidebarPassthrough) return fullRegion;
+         if (hasFullscreen) return emptyRegion;
+         return regions;
+@@ -410,8 +411,8 @@
+             Config.screen: root.screen.name
+         }
+         BlobRect {
+-            visible: GlobalConfig.appearance.islands && bar.position !== "top"
+-            group: GlobalConfig.appearance.islands && bar.position !== "top" ? blobGroup : null
++            visible: false // The shared floating glass covers all four taskbar edges.
++            group: null
+             x: bar.x
+             y: bar.y
+             implicitWidth: bar.width
+@@ -556,12 +557,12 @@
+         id: topBarGlass
+         smoke: true
+         // The launcher and both glass edges share the same screen inset.
+-        x: SplitBarSettings.edgeGap
+-        y: bar.y + 4
+-        width: Math.max(0, root.width - SplitBarSettings.edgeGap - x)
+-        height: Math.max(0, bar.height - 8)
++        x: bar.isHorizontal ? SplitBarSettings.edgeGap : bar.x + 4
++        y: bar.isHorizontal ? bar.y + 4 : SplitBarSettings.edgeGap
++        width: Math.max(0, bar.isHorizontal ? root.width - SplitBarSettings.edgeGap * 2 : bar.width - 8)
++        height: Math.max(0, bar.isHorizontal ? bar.height - 8 : root.height - SplitBarSettings.edgeGap * 2)
+         rounded: true
+-        visible: bar.position === "top" && bar.visible
++        visible: bar.visible
+ 
+         // Remove the glass tint AND its border behind the translucent launcher.
+         // Map the real button rather than assuming it is the first bar widget.
+@@ -811,6 +812,7 @@
+                 matrix: popoutBg.deformMatrix
+             }
+             popoutsWrapper.dockHeight: bottomDock.height
++            popoutsWrapper.dockBottomInset: bottomDock.anchors.bottomMargin
+             cursorPos: Qt.point(interactions.mouseX, interactions.mouseY)
+         }
+         BarWrapper {
+@@ -831,12 +833,12 @@
+             anchors.left: parent.left
+             anchors.right: parent.right
+             anchors.bottom: parent.bottom
+-            anchors.bottomMargin: SplitBarSettings.edgeGap
++            anchors.bottomMargin: SplitBarSettings.edgeGap + (bar.position === "bottom" ? bar.height + 8 : 0)
+             screen: root.screen
+             visibilities: visibilities
+             popouts: panels.popouts
+             fullscreen: root.hasFullscreen
+-            visible: bar.position === "top" && middleEntries.length > 0 && !bar.disabled && bar.shouldBeVisible && !root.hasFullscreen
++            visible: middleEntries.length > 0 && !bar.disabled && !root.hasFullscreen && !visibilities.overview
+         }
+         Connections {
+             function onOpenDesktopContextMenu(x, y, screenName) {
+--- modules/drawers/Interactions.qml
++++ modules/drawers/Interactions.qml
+@@ -181,7 +181,7 @@
+         }
+     }
+     onPositionChanged: event => {
+-        if (popouts.isDetached)
++        if (bar.moving || popouts.isDetached)
+             return;
+ 
+         const x = event.x;
+@@ -200,8 +200,8 @@
+             return;
+         }
+ 
+-        if (!visibilities.bar && Config.bar.showOnHover && inBarArea(x, y))
+-            bar.isHovered = true;
++        if (Config.bar.showOnHover)
++            bar.isHovered = inBarArea(x, y) || (popouts.hasCurrent && inLeftPanel(panels.popoutsWrapper, x, y));
+ 
+         if (pressed && inBarArea(dragStart.x, dragStart.y)) {
+             if (bar.position === "left") {

@@ -1,0 +1,47 @@
+{
+  "saved": true,
+  "width": 207,
+  "height": 135,
+  "rows": [
+    {
+      "text": "Next Wallpaper",
+      "font": "Noto Sans",
+      "pointSize": 10,
+      "italic": false
+    },
+    {
+      "text": "flausen Einstellungen",
+      "font": "Noto Sans",
+      "pointSize": 10,
+      "italic": false
+    },
+    {
+      "text": "Menü anpassen",
+      "font": "Noto Sans",
+      "pointSize": 8,
+      "italic": true
+    }
+  ],
+  "entries": [
+    {
+      "text": "Paste",
+      "visible": false,
+      "footer": false
+    },
+    {
+      "text": "Next Wallpaper",
+      "visible": true,
+      "footer": false
+    },
+    {
+      "text": "flausen Einstellungen",
+      "visible": true,
+      "footer": false
+    },
+    {
+      "text": "Menü anpassen",
+      "visible": true,
+      "footer": true
+    }
+  ]
+}

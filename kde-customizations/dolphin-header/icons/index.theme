@@ -1,0 +1,13 @@
+[Icon Theme]
+Name=Ralleur Rounded Folders
+Comment=Rounded folder SVGs for Dolphin; other icons inherit the existing KDE theme
+Inherits=@PARENT@,hicolor
+FollowsColorScheme=true
+Directories=scalable/places
+
+[scalable/places]
+Size=64
+MinSize=16
+MaxSize=512
+Type=Scalable
+Context=Places

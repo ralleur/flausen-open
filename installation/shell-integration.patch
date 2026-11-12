@@ -1,0 +1,3855 @@
+--- a/components/controls/AppStreamRow.qml
++++ b/components/controls/AppStreamRow.qml
+@@ -13,6 +13,8 @@
+ 
+     property bool muteOnIconClick: false
+ 
++    sliderColour: root.enabled ? AppVisualiser.colorForApp(Audio.getStreamName(root.node)) : Colours.disabledContent
++
+     iconClickable: root.muteOnIconClick
+     icon: Icons.getVolumeIcon(Audio.getAppVolume(root.node), Audio.getAppMuted(root.node))
+     label: Audio.getStreamName(root.node)
+--- a/components/controls/ButtonBase.qml
++++ b/components/controls/ButtonBase.qml
+@@ -5,6 +5,7 @@
+ 
+ StyledRect {
+     id: root
++    PrimaryControlFill {} // Capture primary material
+ 
+     enum ButtonType {
+         Filled,
+--- a/components/controls/SliderRow.qml
++++ b/components/controls/SliderRow.qml
+@@ -12,6 +12,7 @@
+     id: root
+ 
+     property alias icon: icon.text
++    property alias sliderColour: slider.fgColour
+     property alias label: label.text
+     property alias valueLabel: valueLabel.text
+     property string subtext
+@@ -121,6 +122,7 @@
+                 implicitHeight: spacious ? Tokens.padding.medium * 2 : Tokens.padding.large
+ 
+                 StyledSlider {
++                    id: slider
+                     anchors.left: parent.left
+                     anchors.right: parent.right
+                     anchors.verticalCenter: parent.verticalCenter
+--- a/components/controls/SplitButton.qml
++++ b/components/controls/SplitButton.qml
+@@ -41,6 +41,7 @@
+         topRightRadius: Tokens.rounding.medium / 2
+         bottomRightRadius: Tokens.rounding.medium / 2
+         color: root.disabled ? Colours.disabledContainer : root.colour
++        PrimaryControlFill {} // Capture primary material
+ 
+         implicitWidth: Math.max(root.minLeftWidth, textRow.implicitWidth + root.horizontalPadding * 2)
+         implicitHeight: expandBtn.implicitHeight
+@@ -100,6 +101,7 @@
+         topLeftRadius: rad
+         bottomLeftRadius: rad
+         color: root.disabled ? Colours.disabledContainer : root.colour
++        PrimaryControlFill {} // Capture primary material
+ 
+         implicitWidth: implicitHeight
+         implicitHeight: expandIcon.implicitHeight + root.verticalPadding * 2
+--- a/components/controls/StyledRadioButton.qml
++++ b/components/controls/StyledRadioButton.qml
+@@ -38,6 +38,7 @@
+ 
+             radius: Tokens.rounding.full
+             color: !root.enabled ? Colours.disabledContent : root.checked ? Colours.palette.m3primary : "transparent"
++            PrimaryControlFill {} // Capture primary material
+         }
+ 
+         Behavior on border.color {
+--- a/components/controls/StyledSwitch.qml
++++ b/components/controls/StyledSwitch.qml
+@@ -18,6 +18,7 @@
+     }
+ 
+     indicator: StyledRect {
++        PrimaryControlFill {} // Capture primary material
+         radius: Tokens.rounding.full
+         color: !root.enabled ? Colours.disabledContainer : root.checked ? Colours.palette.m3primary : Colours.layer(Colours.palette.m3surfaceContainerHighest, root.cLayer)
+ 
+--- a/components/controls/ToggleButton.qml
++++ b/components/controls/ToggleButton.qml
+@@ -9,6 +9,7 @@
+ 
+ StyledRect {
+     id: root
++    PrimaryControlFill {} // Capture primary material
+ 
+     required property bool toggled
+     property string icon
+--- a/components/widgets/WeatherCards.qml
++++ b/components/widgets/WeatherCards.qml
+@@ -62,7 +62,7 @@
+ 
+             function formatHour(h: int): string {
+                 if (Units.twelveHourClock) {
+-                    const suffix = h >= 12 ? "PM" : "AM";
++                    const suffix = h >= 12 ? qsTranslate("Flausen", "PM") : qsTranslate("Flausen", "AM");
+                     const hr = h % 12 === 0 ? 12 : h % 12;
+                     return `${hr}${suffix}`;
+                 }
+@@ -73,7 +73,7 @@
+             function hourLabel(entry: var): string {
+                 if (entry.hour === 0) {
+                     const d = new Date(entry.timestamp.replace("T", " ").replace(/-/g, "/"));
+-                    return d.toLocaleDateString(Qt.locale(), "ddd");
++                    return d.toLocaleDateString(SystemLanguage.timeLocale, "ddd");
+                 }
+                 return formatHour(entry.hour);
+             }
+--- a/modules/Shortcuts.qml
++++ b/modules/Shortcuts.qml
+@@ -12,6 +12,31 @@
+ 
+ Scope {
+     id: root
++
++    function captureScreen(mode: string): void {
++        const now = new Date();
++        const pad = n => String(n).padStart(2, "0");
++        const file = `${GlobalConfig.paths.screenshotsDir}/screenshot-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}.png`;
++        Quickshell.execDetached(["spectacle", "-b", mode, "-o", file]);
++    }
++
++    CustomShortcut {
++        name: "captureFullscreen"
++        description: qsTr("Capture fullscreen")
++        onPressed: root.captureScreen("-f")
++    }
++
++    CustomShortcut {
++        name: "captureActiveWindow"
++        description: qsTr("Capture active window")
++        onPressed: root.captureScreen("-a")
++    }
++
++    CustomShortcut {
++        name: "captureSpectacle"
++        description: qsTr("Open Spectacle")
++        onPressed: Quickshell.execDetached(["spectacle"])
++    }
+ 
+     property bool launcherInterrupted
+     property string lastAction: ""
+--- a/modules/background/Background.qml
++++ b/modules/background/Background.qml
+@@ -176,7 +176,7 @@
+             }
+         }
+         WlrLayershell.exclusionMode: ExclusionMode.Ignore
+-        WlrLayershell.layer: WlrLayer.Bottom
++        WlrLayershell.layer: WlrLayer.Background
+         WlrLayershell.keyboardFocus: desktopIcons.renameActive ? WlrKeyboardFocus.Exclusive : desktopIcons.visible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+     }
+ }
+--- a/modules/background/Visualiser.qml
++++ b/modules/background/Visualiser.qml
+@@ -8,6 +8,7 @@
+ import Caelestia.Services
+ import qs.components
+ import qs.services
++import qs.modules.bar
+ 
+ Item {
+     id: root
+@@ -17,14 +18,11 @@
+     readonly property bool windowHidesVisualiser: Kwin.windowHidesDesktopWidgets(root.screen ? root.screen.name : "", Config.background.visualiser.hideOnAllMonitors)
+     readonly property bool shouldBeActive: Config.background.visualiser.enabled && !Audio.muted && !(GameMode.enabled && GlobalConfig.utilities.gameMode.disableVisualizer) && (!Config.background.visualiser.autoHide || !windowHidesVisualiser)
+     property real offset: shouldBeActive ? 0 : screen.height * 0.2
+-    readonly property var barWrapper: {
+-        let name = root.screen ? root.screen.name : undefined;
+-        let bar = name ? Visibilities.bars.get(name) : undefined;
+-        return bar;
+-    }
+-    readonly property int barExclusiveZone: barWrapper ? barWrapper.visualThickness : 0
+-    readonly property real visualiserSpacing: Tokens.spacing.small * Config.background.visualiser.spacing
+-    readonly property real fallbackMargin: Tokens.padding.large + Tokens.spacing.small
++
++    readonly property var dock: Visibilities.docks.get(root.screen.name)
++    // Use the actual lower dock, independently of the main taskbar's edge/scale.
++    readonly property real dockHeight: dock?.bar?.height ?? Math.round(Tokens.sizes.bar.innerWidth * SplitBarSettings.dockScale)
++    readonly property real maxBarHeight: Math.max(0, dockHeight)
+ 
+     opacity: shouldBeActive ? 1 : 0
+ 
+@@ -58,24 +56,55 @@
+                 ServiceRef {
+                     service: Audio.cava
+                 }
+-                VisualiserBars {
+-                    id: bars
++                // One shared analyser process for all visible screens.
++                Component.onCompleted: AppVisualiser.users++
++                Component.onDestruction: AppVisualiser.users--
+ 
+-                    readonly property real baseMargin: root.barExclusiveZone + root.visualiserSpacing
++                Item {
++                    id: barsArea
+ 
+-                    anchors.fill: parent
++                    anchors.left: parent.left
++                    anchors.right: parent.right
++                    anchors.bottom: parent.bottom
++                    // VisualiserBars uses 40% of its item height for full amplitude.
++                    height: Math.max(0, Math.min(parent.height - anchors.topMargin - anchors.bottomMargin,
++                        root.maxBarHeight / 0.4))
+                     anchors.margins: Config.border.thickness
+-                    anchors.leftMargin: Config.bar.position === "left" ? (root.barExclusiveZone + root.fallbackMargin) : root.fallbackMargin
+-                    anchors.rightMargin: Config.bar.position === "right" ? (root.barExclusiveZone + root.fallbackMargin) : root.fallbackMargin
+-                    anchors.topMargin: Config.bar.position === "top" ? root.barExclusiveZone : Config.border.thickness
+-                    anchors.bottomMargin: Config.bar.position === "bottom" ? root.barExclusiveZone : Config.border.thickness
+-                    values: Audio.cava?.values ?? []
+-                    sideWidth: Math.min(0.5, Math.max(0.05, 0.4 * Config.background.visualiser.size))
+-                    primaryColor: Qt.alpha(Colours.palette.m3primary, 0.7)
+-                    secondaryColor: Qt.alpha(Colours.palette.m3inversePrimary, 0.7)
+-                    rounding: Tokens.rounding.medium * Config.background.visualiser.rounding
+-                    spacing: Tokens.spacing.extraSmall * Config.background.visualiser.spacing
+-                    animationDuration: Tokens.anim.durations.expressiveDefaultEffects
++                    anchors.leftMargin: 0
++                    anchors.rightMargin: 0
++                    anchors.topMargin: Config.border.thickness
++                    anchors.bottomMargin: 0
++                    Repeater {
++                        model: AppVisualiser.split ? Math.min(5, AppVisualiser.apps.length) : 2
++                        delegate: Item {
++                            id: half
++                            required property int index
++                            x: index * width
++                            width: barsArea.width / (AppVisualiser.split ? Math.min(5, AppVisualiser.apps.length) : 2)
++                            height: barsArea.height
++                            clip: true
++
++                            VisualiserBars {
++                                id: bars
++                                x: AppVisualiser.split ? 0 : -half.index * half.width
++                                width: AppVisualiser.split ? half.width * 2 : barsArea.width
++                                height: barsArea.height
++                                values: AppVisualiser.split ? (AppVisualiser.apps[half.index]?.values ?? []) : (Audio.cava?.values ?? [])
++                                sideWidth: 0.5
++                                readonly property color appColor: AppVisualiser.split ? (AppVisualiser.apps[half.index]?.color ?? "#E56D2F") : "#E56D2F"
++                                primaryColor: Qt.alpha(appColor, 0.7)
++                                secondaryColor: Qt.alpha(appColor, 0.7)
++                                rounding: Tokens.rounding.medium * Config.background.visualiser.rounding
++                                spacing: Tokens.spacing.extraSmall * Config.background.visualiser.spacing
++                                animationDuration: Tokens.anim.durations.expressiveDefaultEffects
++
++                                FrameAnimation {
++                                    running: root.opacity > 0 && !bars.settled && bars.values.length > 0 && Tokens.anim.enabled
++                                    onTriggered: bars.advance(frameTime)
++                                }
++                            }
++                        }
++                    }
+ 
+                     Behavior on anchors.leftMargin {
+                         Anim {}
+@@ -90,10 +119,6 @@
+                         Anim {}
+                     }
+                 }
+-                FrameAnimation {
+-                    running: root.opacity > 0 && !bars.settled && (Audio.cava?.values?.length ?? 0) > 0 && Tokens.anim.enabled
+-                    onTriggered: bars.advance(frameTime)
+-                }
+             }
+         }
+     }
+--- a/modules/background/desktopicons/FileEntry.qml
++++ b/modules/background/desktopicons/FileEntry.qml
+@@ -131,7 +131,7 @@
+         onFileChanged: reload()
+         onLoaded: {
+             // Prefer Name[lang_COUNTRY], then Name[lang], then Name, as the spec says.
+-            const locale = Qt.locale().name;
++            const locale = SystemLanguage.locale.name;
+             const nameKeys = [`Name[${locale}]`, `Name[${locale.split("_")[0]}]`, "Name"];
+             const values = {};
+             let inDesktopEntry = false;
+--- a/modules/background/desktopicons/widgets/CalendarWidget.qml
++++ b/modules/background/desktopicons/widgets/CalendarWidget.qml
+@@ -18,7 +18,7 @@
+     readonly property date today: Time.date
+     property int year: today.getFullYear()
+     property int month: today.getMonth()
+-    readonly property int firstDay: Qt.locale().firstDayOfWeek
++    readonly property int firstDay: SystemLanguage.locale.firstDayOfWeek
+     // Index of the first cell: days of the previous month shown before the 1st.
+     readonly property int lead: (new Date(year, month, 1).getDay() - firstDay + 7) % 7
+ 
+@@ -46,7 +46,7 @@
+ 
+             StyledText {
+                 Layout.fillWidth: true
+-                text: Qt.locale().standaloneMonthName(root.month) + " " + root.year
++                text: SystemLanguage.locale.standaloneMonthName(root.month) + " " + root.year
+                 font: Tokens.font.title.small
+                 color: Colours.palette.m3primary
+ 
+@@ -88,7 +88,7 @@
+ 
+                     Layout.fillWidth: true
+                     horizontalAlignment: Text.AlignHCenter
+-                    text: Qt.locale().dayName((root.firstDay + index) % 7, Locale.NarrowFormat)
++                    text: SystemLanguage.locale.dayName((root.firstDay + index) % 7, Locale.NarrowFormat)
+                     color: Colours.palette.m3outline
+                     font: Tokens.font.label.small
+                 }
+--- a/modules/bar/Bar.qml
++++ b/modules/bar/Bar.qml
+@@ -25,21 +25,35 @@
+     required property bool fullscreen
+     property Item currentHoveredItem: null
+ 
++    // Ralleur: reuse the native bar delegates on a second, bottom surface.
++    property bool dockOnly: false
++    readonly property string position: dockOnly ? "bottom" : Config.bar.position
++
+     readonly property int vPadding: Tokens.padding.large
+ 
+-    readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
+-    readonly property real barScale: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
++    readonly property real rawScale: dockOnly ? SplitBarSettings.dockScale : (!isNaN(Config.bar.scale) ? Config.bar.scale : 1.0)
++    readonly property real barScale: dockOnly ? rawScale : rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
+     readonly property int thickness: Math.round(Tokens.sizes.bar.innerWidth * barScale)
+ 
+-    readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
++    readonly property bool isHorizontal: position === "top" || position === "bottom"
+ 
+     readonly property real leftZoneSize: isHorizontal ? leftLayout.implicitWidth : leftLayout.implicitHeight
+     readonly property real middleZoneSize: isHorizontal ? middleLayout.implicitWidth : middleLayout.implicitHeight
+     readonly property real rightZoneSize: isHorizontal ? rightLayout.implicitWidth : rightLayout.implicitHeight
+ 
+-    property var leftEntries: BarWidgets.zoneEntries(Config.bar.entries, "left")
+-    property var middleEntries: BarWidgets.zoneEntries(Config.bar.entries, "middle")
+-    property var rightEntries: BarWidgets.zoneEntries(Config.bar.entries, "right")
++    // Expose the actual loaded launcher so the glass follows reordering and scale.
++    readonly property Item launcherButton: {
++        for (let i = 0; i < leftRepeater.count; ++i) {
++            const entry = leftRepeater.itemAt(i);
++            if (entry?.enabled && entry.id === "logo")
++                return entry.item;
++        }
++        return null;
++    }
++
++    property var leftEntries: dockOnly ? [] : BarWidgets.zoneEntries(Config.bar.entries, "left")
++    property var middleEntries: dockOnly ? BarWidgets.zoneEntries(Config.bar.entries, "middle") : []
++    property var rightEntries: dockOnly ? [] : BarWidgets.zoneEntries(Config.bar.entries, "right")
+ 
+     function resetHover(): void {
+         if (currentHoveredItem) {
+@@ -83,9 +97,11 @@
+     }
+ 
+     function checkPopout(pos: real): void {
++        if (popouts.hasCurrent && popouts.currentName === "screencapture" && (popouts.current?.hoverLocked ?? false))
++            return;
+         // A context menu stays open while the pointer moves over the bar, so
+         // the hover routing below must not take it over or close it.
+-        if (popouts.hasCurrent && (popouts.currentName === "clockcontext" || popouts.currentName === "dockcontext" || popouts.currentName === "greetercontext" || popouts.currentName === "statusiconscontext" || popouts.currentName === "workspacescontext" || popouts.currentName === "traycontext" || popouts.currentName === "githubcontext" || popouts.currentName === "weathercontext" || popouts.currentName === "mediacontext" || popouts.currentName === "performancecontext" || popouts.currentName === "screencapturecontext" || popouts.currentName === "keepawakecontext" || popouts.currentName === "osiconcontext" || popouts.currentName === "dockbgcontext" || popouts.currentName === "elementscontext"))
++        if (popouts.hasCurrent && (popouts.currentName === "taskbarcontext" || popouts.currentName === "clockcontext" || popouts.currentName === "dockcontext" || popouts.currentName === "greetercontext" || popouts.currentName === "statusiconscontext" || popouts.currentName === "workspacescontext" || popouts.currentName === "traycontext" || popouts.currentName === "githubcontext" || popouts.currentName === "weathercontext" || popouts.currentName === "mediacontext" || popouts.currentName === "performancecontext" || popouts.currentName === "screencapturecontext" || popouts.currentName === "keepawakecontext" || popouts.currentName === "osiconcontext" || popouts.currentName === "dockbgcontext" || popouts.currentName === "elementscontext"))
+             return;
+ 
+         const ch = getLoaderAt(isHorizontal ? pos : width / 2, isHorizontal ? height / 2 : pos) as WrappedLoader;
+@@ -207,7 +223,7 @@
+             } else {
+                 popouts.hasCurrent = false;
+             }
+-        } else if (id === "notes" || id === "weather" || id === "performance" || id === "shortcuts" || id === "screencapture" || id === "keepawake") {
++        } else if (id === "notes" || id === "weather" || id === "performance" || id === "shortcuts" || id === "screencapture" || id === "clipboard" || id === "keepawake") {
+             const item = ch.item as Item;
+             if (item) {
+                 const relPos = pos - top;
+@@ -347,7 +363,7 @@
+ 
+     Component.onCompleted: Logger.mark("bar-ready")
+ 
+-    clip: true
++    clip: !dockOnly
+ 
+     GridLayout {
+         id: leftLayout
+@@ -357,7 +373,10 @@
+         anchors.verticalCenter: isHorizontal ? parent.verticalCenter : undefined
+         anchors.horizontalCenter: !isHorizontal ? parent.horizontalCenter : undefined
+ 
+-        anchors.leftMargin: isHorizontal ? root.vPadding : 0
++        // Match the launcher edge to the glass surface's screen inset.
++        anchors.leftMargin: position === "top"
++            ? Math.max(0, SplitBarSettings.edgeGap - Math.max(Tokens.padding.small, Config.border.thickness))
++            : (isHorizontal ? root.vPadding : 0)
+         anchors.topMargin: !isHorizontal ? root.vPadding : 0
+ 
+         columns: isHorizontal ? -1 : 1
+@@ -632,6 +651,15 @@
+                 }
+             }
+             DelegateChoice {
++                roleValue: "clipboard"
++                delegate: WrappedLoader {
++                    sourceComponent: ClipboardWidget {
++                        popouts: root.popouts
++                        visibilities: root.visibilities
++                    }
++                }
++            }
++            DelegateChoice {
+                 roleValue: "keepawake"
+                 delegate: WrappedLoader {
+                     sourceComponent: KeepAwakeWidget {
+--- a/modules/bar/BarWidgets.qml
++++ b/modules/bar/BarWidgets.qml
+@@ -32,6 +32,7 @@
+         { id: "weather", zone: "right" },
+         { id: "shortcuts", zone: "right" },
+         { id: "screencapture", zone: "right" },
++        { id: "clipboard", zone: "left" },
+         { id: "keepawake", zone: "right" }
+     ]
+ 
+--- a/modules/bar/BarWrapper.qml
++++ b/modules/bar/BarWrapper.qml
+@@ -19,8 +19,10 @@
+     required property DrawerVisibilities visibilities
+     required property BarPopouts.Wrapper popouts
+     required property bool fullscreen
++    readonly property Item launcherButton: (content.item as Bar)?.launcherButton ?? null
+     readonly property bool disabled: Strings.testRegexList(Config.bar.excludedScreens, screen.name)
+     readonly property string position: Config.bar.position
++    readonly property int topInset: position === "top" ? Math.max(0, SplitBarSettings.edgeGap - 4) : 0
+     readonly property real barScale: Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0)
+     readonly property int padding: Math.max(Tokens.padding.small, Config.border.thickness)
+     readonly property int contentWidth: Math.round(Tokens.sizes.bar.innerWidth * barScale) + padding * 2
+@@ -53,9 +55,10 @@
+     }
+ 
+     readonly property bool keptOpen: Config.bar.persistent && !dodging
+-    readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
++    readonly property int exclusiveZone: !disabled && !dodgeEnabled && (Config.bar.persistent || visibilities.bar) ? contentWidth + topInset : Config.border.thickness
+     readonly property int visualThickness: !disabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
+-    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || isHovered)
++    readonly property bool contextOpen: popouts.hasCurrent && (popouts.currentName === "taskbarcontext" || popouts.currentName === "workspacescontext")
++    readonly property bool shouldBeVisible: !fullscreen && !disabled && !visibilities.overview && (keptOpen || visibilities.bar || isHovered || contextOpen || SplitBarSettings.taskbarUnlocked)
+     property bool isHovered
+     readonly property bool isHorizontal: root.position === "top" || root.position === "bottom"
+     readonly property int clampedThickness: Math.max(Config.border.minThickness, isHorizontal ? implicitHeight : implicitWidth)
+@@ -111,6 +114,77 @@
+             }
+         }
+     ]
++
++    // Grab only the right button while locked; widget left-clicks stay native.
++    property bool moving: false
++    property string dropEdge: ""
++    function edgeAt(x: real, y: real): string {
++        const distances = [y, screen.height - y, x, screen.width - x];
++        const edges = ["top", "bottom", "left", "right"];
++        const closest = Math.min(...distances);
++        return closest <= Math.max(80, contentWidth * 1.5) ? edges[distances.indexOf(closest)] : "";
++    }
++    MouseArea {
++        id: taskbarPointer
++        anchors.fill: parent
++        z: 1000
++        acceptedButtons: Qt.RightButton | (SplitBarSettings.taskbarUnlocked ? Qt.LeftButton : Qt.NoButton)
++        cursorShape: SplitBarSettings.taskbarUnlocked ? Qt.SizeAllCursor : Qt.ArrowCursor
++        property point start
++        onPressed: event => {
++            if (event.button === Qt.RightButton) {
++                const bar = content.item;
++                const position = taskbarPointer.mapToItem(bar, event.x, event.y);
++                const widget = bar?.getLoaderAt(position.x, position.y);
++                if (widget?.id === "workspaces" && widget.item) {
++                    widget.item.openContext(taskbarPointer.mapToItem(widget.item, event.x, event.y));
++                    return;
++                }
++                root.popouts.currentCenter = root.isHorizontal ? root.x + event.x : root.y + event.y;
++                root.popouts.currentName = "taskbarcontext";
++                root.popouts.hasCurrent = true;
++            } else {
++                start = mapToItem(null, event.x, event.y);
++                root.popouts.hasCurrent = false;
++                root.dropEdge = "";
++            }
++        }
++        onPositionChanged: event => {
++            if (!(pressedButtons & Qt.LeftButton)) return;
++            const point = mapToItem(null, event.x, event.y);
++            if (!root.moving && Math.hypot(point.x - start.x, point.y - start.y) < 12) return;
++            root.moving = true;
++            root.dropEdge = root.edgeAt(point.x, point.y);
++        }
++        onReleased: event => {
++            if (event.button !== Qt.LeftButton) return;
++            const edge = root.dropEdge;
++            const commit = root.moving && edge !== "";
++            root.moving = false;
++            root.dropEdge = "";
++            if (commit) GlobalConfig.forScreen(root.screen.name).bar.position = edge;
++        }
++        onCanceled: {
++            root.moving = false;
++            root.dropEdge = "";
++        }
++        Keys.onEscapePressed: {
++            root.moving = false;
++            root.dropEdge = "";
++        }
++    }
++    Rectangle {
++        // Edge preview remains on the source screen during the pointer grab.
++        parent: root.parent
++        z: 1001
++        visible: root.moving && root.dropEdge !== ""
++        x: root.dropEdge === "right" ? root.screen.width - 6 : 0
++        y: root.dropEdge === "bottom" ? root.screen.height - 6 : 0
++        width: root.dropEdge === "left" || root.dropEdge === "right" ? 6 : root.screen.width
++        height: root.dropEdge === "top" || root.dropEdge === "bottom" ? 6 : root.screen.height
++        radius: 3
++        color: MenuStyle.accent
++    }
+ 
+     Component {
+         id: horizontalBar
+--- /dev/null
++++ b/modules/bar/components/ClipboardWidget.qml
+@@ -0,0 +1,58 @@
++pragma ComponentBehavior: Bound
++
++import QtQuick
++import QtQuick.Controls
++import Caelestia.Config
++import Caelestia.Services
++import qs.components
++import qs.components.controls
++import qs.services
++
++StyledRect {
++    id: root
++
++    required property var popouts
++    required property var visibilities
++
++    readonly property bool clipboardOpen: popouts.hasCurrent && popouts.currentName === "clipboard"
++    readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
++
++    implicitWidth: Tokens.sizes.bar.innerWidth
++    implicitHeight: Tokens.sizes.bar.innerWidth
++    color: clipboardOpen ? Colours.palette.m3secondaryContainer
++        : (clickArea.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
++    radius: Tokens.rounding.full
++    visible: enabled
++
++    Behavior on color { CAnim {} }
++
++    MaterialIcon {
++        anchors.centerIn: parent
++        text: "attach_file"
++        color: Colours.barForeground
++        fontStyle: Tokens.font.icon.builders.medium.weight(Font.Medium).build()
++        Behavior on color { CAnim {} }
++    }
++
++    ToolTip.visible: clickArea.containsMouse && !root.clipboardOpen
++    ToolTip.delay: 700
++    ToolTip.text: qsTr("Open clipboard")
++
++    MouseArea {
++        id: clickArea
++        anchors.fill: parent
++        hoverEnabled: true
++        cursorShape: Qt.PointingHandCursor
++        onClicked: {
++            if (root.clipboardOpen) {
++                root.popouts.hasCurrent = false;
++            } else {
++                root.popouts.currentName = "clipboard";
++                root.popouts.currentCenter = root.isHorizontal
++                    ? root.mapToItem(null, root.width / 2, 0).x
++                    : root.mapToItem(null, 0, root.height / 2).y;
++                root.popouts.hasCurrent = true;
++            }
++        }
++    }
++}
+--- a/modules/bar/components/Dock.qml
++++ b/modules/bar/components/Dock.qml
+@@ -14,6 +14,7 @@
+ import qs.components.effects
+ import qs.components.images
+ import qs.services
++import qs.modules.bar
+ import qs.utils
+ 
+ Item {
+@@ -21,22 +22,205 @@
+ 
+     required property var bar
+ 
++    // The top bar is monochrome; the separate bottom dock keeps its own icon setting.
++    readonly property bool monochromeTopBar: !bar.dockOnly && bar.position === "top"
++    readonly property bool recolourIcons: monochromeTopBar || (Config.bar.dock.recolourIcons ?? false)
++
++    // Keep running and recent apps within the native scrolling view.
++    readonly property int pinnedCount: modelDataArray.filter(app => app.isPinned).length
++    readonly property bool hasSections: bar.dockOnly && bar.isHorizontal
++        && pinnedCount > 0
++    readonly property bool emptyRightSection: hasSections && pinnedCount === modelDataArray.length
++    readonly property real sectionGap: hasSections ? Math.round(16 * scaleFactor) : 0
++
++    function itemOffset(index: int): real {
++        return index * (container.itemSize + spacing)
++            + (hasSections && index >= pinnedCount ? sectionGap : 0);
++    }
++
++    function inspectSections(): var {
++        return {
++            magnification: { enabled: zoomEnabled, active: zoomActive, amount: SplitBarSettings.dockMagnificationAmount, pointer: zoomPointer },
++            drag: { active: isDragging, id: draggedId, preview: dragPreview, pinned: previewPinnedCount },
++            launching: launchingApps,
++            resizing: isResizing,
++            scaleLimits: { min: SplitBarSettings.minDockScale, max: SplitBarSettings.maxDockScale },
++            separator: hasSections, gap: sectionGap,
++            recent: SplitBarSettings.recentApps(),
++            itemSize: container.itemSize,
++            actualSeparator: sectionDivider.mapToGlobal(sectionDivider.width / 2, sectionDivider.height / 2),
++            origin: listView.mapToGlobal(0, 0),
++            separatorPosition: listView.mapToGlobal(root.itemOffset(root.pinnedCount) - root.sectionGap / 2 - root.spacing / 2 - listView.contentX, container.itemSize / 2),
++            apps: modelDataArray.map((app, index) => ({
++                id: app.id, desktopId: app.entry?.id, pinned: app.isPinned, windows: app.toplevels.length,
++                actualCenter: listView.itemAtIndex(index)?.iconCenter(),
++                iconInset: listView.itemAtIndex(index)?.iconInset,
++                iconSource: listView.itemAtIndex(index)?.iconSource,
++                normalizedIconSource: listView.itemAtIndex(index)?.normalizedIconSource,
++                zoom: zoomAt(index), zoomShift: zoomShiftAt(index),
++                offset: itemOffset(index)
++            }))
++        };
++    }
++
+     property int modelUpdateTrigger: 0
+ 
+     property var launchingApps: ({})
++    readonly property int launchTimeoutMs: 15000
++
++    function launchKey(app: var): string {
++        return app.entry?.id || app.appClass || app.id;
++    }
++
++    function markLaunching(app: var): void {
++        const pending = Object.assign({}, launchingApps);
++        pending[launchKey(app)] = Date.now();
++        launchingApps = pending;
++    }
++
++    function clearFinishedLaunches(apps: var, now: real): void {
++        const pending = Object.assign({}, launchingApps);
++        let changed = false;
++        for (const key of Object.keys(pending)) {
++            if (now - pending[key] >= launchTimeoutMs
++                    || apps.some(app => app.toplevels.length > 0 && launchKey(app) === key)) {
++                delete pending[key];
++                changed = true;
++            }
++        }
++        if (changed) launchingApps = pending;
++    }
++
++    Timer {
++        interval: 500
++        repeat: true
++        running: Object.keys(root.launchingApps).length > 0
++        onTriggered: root.clearFinishedLaunches(root.modelDataArray, Date.now())
++    }
+ 
+     property bool isDragging: false
+-
+-    property real spacing: Tokens.spacing.medium
+-
+-    property real padding: Tokens.padding.medium
+-
+-    readonly property real rawScale: !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0
+-    readonly property real scaleFactor: rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
++    property bool isResizing: false
++    property string lastRecentFocus: ""
++    property var previousRunningIds: []
++    property bool recentReady: false
++
++    Timer {
++        interval: 2000
++        running: root.bar.dockOnly
++        onTriggered: {
++            if (SplitBarSettings.recentApps().length === 0)
++                root.previousRunningIds = [];
++            root.recentReady = true;
++            root.rebuildModel();
++        }
++    }
++
++    property string draggedId: ""
++    property var dragPreview: []
++    property int previewPinnedCount: pinnedCount
++    property bool dropInDock: false
++    property bool dropPinned: false
++
++    function updateIconDrag(entry: var, position: point): void {
++        if (!bar.dockOnly || !entry) return;
++        draggedId = entry.id;
++        const x = position.x + listView.contentX;
++        dropInDock = position.x >= -padding && position.x <= listView.width + padding
++            && position.y >= -padding && position.y <= listView.height + padding;
++        const boundary = pinnedCount * (container.itemSize + spacing) + sectionGap / 2 - spacing / 2;
++        dropPinned = !!entry.entry && (pinnedCount === 0 ? x <= container.itemSize / 2 : x < boundary);
++        if (!dropInDock) {
++            dragPreview = [];
++            return;
++        }
++        const remaining = modelDataArray.filter(app => app.id !== entry.id);
++        const section = remaining.filter(app => app.isPinned === dropPinned);
++        const left = remaining.filter(app => app.isPinned);
++        const right = remaining.filter(app => !app.isPinned);
++        const sectionStart = dropPinned ? 0 : left.length * (container.itemSize + spacing) + sectionGap;
++        const slot = Math.max(0, Math.min(section.length,
++            Math.round((x - sectionStart - container.itemSize / 2) / (container.itemSize + spacing))));
++        (dropPinned ? left : right).splice(slot, 0, entry);
++        previewPinnedCount = left.length;
++        dragPreview = left.concat(right).map(app => app.id);
++    }
++
++    function previewOffset(id: string, index: int): real {
++        if (!isDragging || !dragPreview.length || id === draggedId) return 0;
++        const target = dragPreview.indexOf(id);
++        if (target < 0) return 0;
++        return target * (container.itemSize + spacing)
++            + (previewPinnedCount > 0 && target >= previewPinnedCount ? sectionGap : 0)
++            - itemOffset(index);
++    }
++
++    function clearIconDrag(): void {
++        draggedId = "";
++        dragPreview = [];
++        dropInDock = false;
++    }
++
++    function finishIconDrag(entry: var, moved: bool): void {
++        if (moved && bar.dockOnly && entry && dropInDock && dragPreview.length) {
++            const desired = dragPreview.map(id => modelDataMap[id]).filter(app => !!app);
++            const pinned = desired.filter(app => app.id === entry.id ? dropPinned : app.isPinned)
++                .map(app => app.entry?.id || app.id);
++            if (entry.isPinned && !dropPinned)
++                SplitBarSettings.saveRecentApps([entry.entry?.id || entry.id,
++                    ...SplitBarSettings.recentApps().filter(id => id !== (entry.entry?.id || entry.id))]);
++            // One commit after the preview: no DelegateModel moves or identity changes under the pointer.
++            root.currentOrder = desired.map(app => app.id === entry.id
++                ? Object.assign({}, app, { isPinned: dropPinned, id: dropPinned ? app.entry.id : app.id }) : app);
++            GlobalConfig.bar.dock.pinnedApps = [...new Set(pinned)];
++        } else if (!bar.dockOnly) {
++            root.saveNewOrder();
++        }
++        root.clearIconDrag();
++    }
++
++    function updateRecentApps(apps: var): var {
++        const pinnedIds = GlobalConfig.bar.dock.pinnedApps || [];
++        const pinned = id => pinnedIds.some(pattern => Strings.testRegexList([pattern], id));
++        let recent = SplitBarSettings.recentApps().filter(id => !pinned(id));
++        const running = apps.filter(app => !app.isPinned && app.entry && app.toplevels.length > 0
++            && !pinned(app.entry.id));
++        // New applications enter the history once; focus changes then maintain MRU order.
++        for (const app of running) {
++            if (root.recentReady && !root.previousRunningIds.includes(app.entry.id) && !recent.includes(app.entry.id))
++                recent.unshift(app.entry.id);
++        }
++        root.previousRunningIds = running.map(app => app.entry.id);
++        const active = running.find(app => app.toplevels.some(top =>
++            root.activeTop && String(top.address) === String(root.activeTop.address)));
++        const activeId = active?.entry?.id || "";
++        if (root.recentReady && activeId && activeId !== root.lastRecentFocus)
++            recent = [activeId, ...recent.filter(id => id !== activeId)];
++        root.lastRecentFocus = activeId;
++        recent = recent.filter((id, index) => recent.indexOf(id) === index).slice(0, 3);
++        if (root.recentReady)
++            SplitBarSettings.saveRecentApps(recent);
++        for (const id of recent) {
++            if (apps.some(app => app.entry?.id === id))
++                continue;
++            const entry = DesktopEntries.byId(id);
++            if (!entry)
++                continue;
++            apps.push({id: id, isPinned: false, entry: entry, toplevels: [],
++                appClass: id.replace(".desktop", ""), iconName: id, pid: 0});
++        }
++        return apps;
++    }
++
++    property real spacing: Tokens.spacing.medium * (bar.dockOnly ? scaleFactor : 1.0)
++
++    property real padding: Tokens.padding.medium * (bar.dockOnly ? scaleFactor : 1.0)
++
++    readonly property real rawScale: bar.rawScale
++    readonly property real scaleFactor: bar.dockOnly ? rawScale : rawScale < 1.0 ? Math.sqrt(Math.max(0.1, rawScale)) : rawScale
+     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * scaleFactor)
+     readonly property int baseThickness: Tokens.sizes.bar.innerWidth
+     readonly property int effectiveThickness: rawScale < 1.0 ? baseThickness : barThickness
+-    readonly property real configuredItemSize: Math.max(16, Math.min(effectiveThickness, Config.bar.dock.iconSize || 32))
++    readonly property real configuredItemSize: Math.max(16, Math.min(effectiveThickness, (Config.bar.dock.iconSize || 32) * (bar.dockOnly ? scaleFactor : 1.0)))
+     // Icon size of a dock item. Derived from the configured item size rather than the
+     // delegate's laid-out width, which is still 0 while the delegate is being created.
+     readonly property real iconSize: Math.round(configuredItemSize * 0.7 / 2) * 2
+@@ -44,6 +228,37 @@
+     implicitWidth: bar.isHorizontal ? container.width : container.implicitWidth
+     implicitHeight: bar.isHorizontal ? container.implicitHeight : container.height
+ 
++    readonly property bool zoomEnabled: bar.dockOnly && bar.isHorizontal && SplitBarSettings.dockMagnification && Tokens.anim.enabled
++    readonly property real zoomPointer: {
++        if (!zoomEnabled || !bar.parent.containsMouse) return -1;
++        const p = listView.mapFromItem(bar.parent, bar.parent.mouseX, bar.parent.mouseY);
++        const extent = bar.thickness * SplitBarSettings.dockMagnificationAmount;
++        return p.y >= -extent && p.y <= listView.height + padding
++            && p.x >= -padding - extent && p.x <= listView.width + padding + extent ? p.x + listView.contentX : -1;
++    }
++    readonly property bool zoomActive: zoomEnabled && zoomPointer >= 0 && !isDragging && !isResizing
++        && !(bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext")
++    function zoomAt(index: int): real {
++        if (!zoomActive) return 1;
++        const distance = Math.abs(itemOffset(index) + container.itemSize / 2 - zoomPointer);
++        const radius = (container.itemSize + spacing) * 2.5;
++        return 1 + SplitBarSettings.dockMagnificationAmount * (distance < radius ? (1 + Math.cos(Math.PI * distance / radius)) / 2 : 0);
++    }
++    property real zoomSpread: {
++        let extra = 0;
++        for (let i = 0; i < modelDataArray.length; i++) extra += container.itemSize * (zoomAt(i) - 1);
++        return extra / 2;
++    }
++    Behavior on zoomSpread { NumberAnimation { duration: Tokens.anim.enabled ? 100 : 0; easing.type: Easing.OutCubic } }
++    function zoomShiftAt(index: int): real {
++        if (!zoomActive) return 0;
++        let shift = 0;
++        for (let i = 0; i < modelDataArray.length; i++) {
++            const extra = container.itemSize * (zoomAt(i) - 1);
++            shift += i < index ? extra / 2 : i > index ? -extra / 2 : 0;
++        }
++        return shift;
++    }
+     HoverHandler { id: dockHover }
+ 
+     Timer {
+@@ -63,7 +278,6 @@
+         const horizontal = bar.isHorizontal;
+         const origin = listView.mapToItem(null, 0, 0);
+         const size = Math.round(container.itemSize);
+-        const step = container.itemSize + root.spacing;
+         const span = horizontal ? listView.width : listView.height;
+         const scrolled = horizontal ? listView.contentX : listView.contentY;
+ 
+@@ -72,23 +286,23 @@
+             if (tops.length === 0)
+                 continue;
+ 
+-            const offset = Math.max(0, Math.min(i * step - scrolled, span - size));
++            const offset = Math.max(0, Math.min(root.itemOffset(i) - scrolled, span - size));
+ 
+             let x = Math.round(horizontal ? origin.x + offset : origin.x);
+             let y = Math.round(horizontal ? origin.y : origin.y + offset);
+             let w = size;
+             let h = size;
+ 
+-            if (Config.bar.position === "left") {
++            if (bar.position === "left") {
+                 w = x + size;
+                 x = 0;
+-            } else if (Config.bar.position === "right") {
++            } else if (bar.position === "right") {
+                 const winW = win ? win.width : 0;
+                 w = winW > 0 ? winW - x : size;
+-            } else if (Config.bar.position === "top") {
++            } else if (bar.position === "top") {
+                 h = y + size;
+                 y = 0;
+-            } else if (Config.bar.position === "bottom") {
++            } else if (bar.position === "bottom") {
+                 const winH = win ? win.height : 0;
+                 h = winH > 0 ? winH - y : size;
+             }
+@@ -150,9 +364,7 @@
+                 }
+             }
+         } else if (entry.entry) {
+-            let newLaunching = Object.assign({}, root.launchingApps);
+-            newLaunching[entry.appClass || entry.id] = true;
+-            root.launchingApps = newLaunching;
++            root.markLaunching(entry);
+ 
+             Launch.launchEntry(entry.entry);
+         }
+@@ -167,13 +379,45 @@
+     function activateNewIndex(idx: int): void {
+         if (idx < 0 || idx >= root.modelDataArray.length)
+             return;
+-        const entry = root.modelDataArray[idx];
++        root.activateNewEntry(root.modelDataArray[idx]);
++    }
++
++    // Arm Krohnkite before starting the app, so even fast windows are matched.
++    function activateTiledEntry(entry: var): void {
++        if (!entry?.entry)
++            return;
++        const aliases = [...new Set([entry.entry.id, entry.appClass, entry.id].filter(value => !!value))];
++        const request = tiledLaunchRequest.createObject(root, {
++            dockEntry: entry,
++            command: ["qdbus6", "org.kde.KWin", "/RalleurTilingLaunch",
++                "org.ralleur.TilingLaunch.arm", JSON.stringify(aliases)]
++        });
++        request.running = true;
++    }
++
++    Component {
++        id: tiledLaunchRequest
++        Process {
++            required property var dockEntry
++            stdout: StdioCollector {}
++            onExited: (exitCode, exitStatus) => {
++                if (exitCode === 0 && stdout.text.trim() === "true") {
++                    root.activateNewEntry(dockEntry);
++                } else {
++                    console.warn("Dock: Krohnkite tiling launch request failed");
++                    Quickshell.execDetached(["notify-send", "Tiling-Start fehlgeschlagen",
++                        "Krohnkite ist nicht erreichbar. Bitte erneut versuchen."]);
++                }
++                destroy();
++            }
++        }
++    }
++
++    function activateNewEntry(entry: var): void {
+         if (!entry)
+             return;
+         if (entry.entry) {
+-            let newLaunching = Object.assign({}, root.launchingApps);
+-            newLaunching[entry.appClass || entry.id] = true;
+-            root.launchingApps = newLaunching;
++            root.markLaunching(entry);
+ 
+             Launch.launchEntry(entry.entry);
+         } else if (entry.toplevels.length > 0) {
+@@ -280,12 +524,21 @@
+     StyledRect {
+         id: container
+ 
+-        color: dockModel.count > 0 ? Colours.tPalette.m3surfaceContainer : Qt.alpha(Colours.tPalette.m3surfaceContainer, 0)
++        GlassSurface {
++            smoke: true
++            anchors.fill: parent
++            anchors.leftMargin: -root.zoomSpread
++            anchors.rightMargin: -root.zoomSpread
++            visible: dockModel.count > 0
++        }
++
++        color: "transparent"
+         radius: Tokens.rounding.full
+ 
+         property int __itemCount: dockModel.count
+ 
+-        property real __computedContentWidth: __itemCount > 0 ? __itemCount * itemSize + (__itemCount - 1) * root.spacing : 0
++        property real __computedContentWidth: __itemCount > 0 ? __itemCount * itemSize + (__itemCount - 1) * root.spacing + root.sectionGap
++            + (root.emptyRightSection ? itemSize + root.spacing : 0) : 0
+ 
+         implicitWidth: bar.isHorizontal ? (__computedContentWidth + padding * 2) : bar.thickness
+         implicitHeight: bar.isHorizontal ? bar.thickness : (__computedContentWidth + padding * 2)
+@@ -417,7 +670,7 @@
+                 orientation: bar.isHorizontal ? ListView.Horizontal : ListView.Vertical
+                 spacing: root.spacing
+                 interactive: bar.isHorizontal ? contentWidth > width + 1 : contentHeight > height + 1
+-                clip: true
++                clip: !bar.dockOnly
+ 
+                 onContentWidthChanged: root.clampScroll()
+                 onWidthChanged: root.clampScroll()
+@@ -438,12 +691,75 @@
+                     Anim { properties: "x,y"; type: Anim.FastSpatial }
+                 }
+ 
++                footer: Item {
++                    width: root.emptyRightSection ? container.itemSize + root.sectionGap + root.spacing : 0
++                    height: container.itemSize
++                }
++
+                 model: DelegateModel {
+                     id: visualModel
+ 
+                     model: dockModel
+                     delegate: dockDelegate
+                 }
++            }
++
++            Item {
++                id: sectionDivider
++                parent: listView.contentItem
++                visible: root.hasSections
++                x: (root.dragPreview.length ? root.previewPinnedCount : root.pinnedCount) * (container.itemSize + root.spacing) - root.spacing / 2 + root.zoomShiftAt(root.pinnedCount)
++                Behavior on x { NumberAnimation { duration: Tokens.anim.enabled ? 150 : 0; easing.type: Easing.OutCubic } }
++                width: root.sectionGap
++                height: container.itemSize
++                z: 20
++
++                Rectangle {
++                    anchors.centerIn: parent
++                    width: Math.max(1, root.scaleFactor)
++                    height: container.itemSize * 0.65
++                    radius: width / 2
++                    color: Colours.palette.m3onSurface
++                    opacity: resizeHandle.containsMouse || root.isResizing ? 0.45 : 0.2
++                }
++
++                MouseArea {
++                    id: resizeHandle
++                    objectName: "dockSectionResize"
++                    anchors.fill: parent
++                    z: 10
++                    hoverEnabled: true
++                    cursorShape: Qt.SizeVerCursor
++                    preventStealing: true
++                    acceptedButtons: Qt.LeftButton
++                    property real startY: 0
++                    property real startScale: 1
++                    onPressed: mouse => {
++                        startY = mapToGlobal(mouse.x, mouse.y).y;
++                        startScale = SplitBarSettings.dockScale;
++                        root.isResizing = true;
++                        root.bar.popouts.hasCurrent = false;
++                    }
++                    onPositionChanged: mouse => {
++                        if (pressed) {
++                            const delta = startY - mapToGlobal(mouse.x, mouse.y).y;
++                            // The dock centre moves by half its height: follow the handle 1:1.
++                            SplitBarSettings.dockScale = Math.max(SplitBarSettings.minDockScale,
++                                Math.min(SplitBarSettings.maxDockScale, startScale + 2 * delta / root.baseThickness));
++                        }
++                    }
++                    onReleased: {
++                        root.isResizing = false;
++                        SplitBarSettings.setDockScale(SplitBarSettings.dockScale);
++                        root.rebuildModel();
++                    }
++                    onCanceled: {
++                        root.isResizing = false;
++                        SplitBarSettings.setDockScale(startScale);
++                        root.rebuildModel();
++                    }
++                }
++
+             }
+ 
+             StyledScrollBar {
+@@ -482,37 +798,61 @@
+                 required property int index
+                 required property string appId
+ 
+-                width: container.itemSize
++                readonly property real sectionInset: root.hasSections && index === root.pinnedCount ? root.sectionGap : 0
++                width: container.itemSize + sectionInset
+                 height: container.itemSize
+                 implicitWidth: width
+                 implicitHeight: height
+ 
+                 property var modelData: root.modelDataMap[appId] || root.modelDataArray[index]
++                readonly property url iconSource: icon.originalSource
++                readonly property url normalizedIconSource: icon.normalizedSource
++                readonly property real iconInset: delegateItem.x
++                function iconCenter(): point {
++                    return delegateItem.mapToGlobal(delegateItem.width / 2, delegateItem.height / 2);
++                }
++                transform: Translate {
++                    x: root.previewOffset(delegateContainer.appId, delegateContainer.index) + delegateContainer.zoomShift
++                    Behavior on x { NumberAnimation { duration: Tokens.anim.enabled ? 150 : 0; easing.type: Easing.OutCubic } }
++                }
++                readonly property real zoom: root.zoomAt(delegateContainer.index)
++                readonly property real zoomShift: root.zoomShiftAt(delegateContainer.index)
++                z: zoom > 1 ? 10 : 0
+ 
+                 DropArea {
+                     anchors.fill: parent
+                     anchors.margins: Tokens.padding.small
+                     onEntered: drag => {
++                        if (root.bar.dockOnly) return;
+                         const from = drag.source.delegateIndex;
+                         const to = delegateContainer.index;
+-                        if (from !== undefined && to !== undefined && from !== to) {
++                        if (from !== undefined && to !== undefined && from !== to
++                                && (!root.bar.dockOnly || root.currentOrder[from]?.isPinned === root.currentOrder[to]?.isPinned)) {
+                             dockModel.move(from, to, 1);
+                             const movedItem = root.currentOrder.splice(from, 1)[0];
+                             root.currentOrder.splice(to, 0, movedItem);
+                         }
+                     }
+                     onDropped: drag => {
+-                        root.saveNewOrder();
++                        if (!root.bar.dockOnly) root.saveNewOrder();
+                     }
+                 }
+ 
+                 Item {
+                     id: delegateItem
+ 
+-                    width: delegateContainer.width
++                    x: delegateContainer.sectionInset
++                    width: container.itemSize
+                     height: delegateContainer.height
+ 
+                     property int delegateIndex: delegateContainer.index
++                    transform: Scale {
++                        origin.x: delegateItem.width / 2
++                        origin.y: delegateItem.height
++                        xScale: delegateContainer.zoom
++                        yScale: xScale
++                        Behavior on xScale { NumberAnimation { duration: Tokens.anim.enabled ? 100 : 0; easing.type: Easing.OutCubic } }
++                    }
+ 
+                     Drag.active: dragArea.held
+                     Drag.source: delegateItem
+@@ -522,7 +862,7 @@
+                         anchors.fill: parent
+                         radius: Tokens.rounding.medium
+                         color: Colours.palette.m3onSurface
+-                        opacity: delegateItem.isActive ? 0.1 : 0
++                        opacity: !root.bar.dockOnly && delegateItem.isActive ? 0.1 : 0
+ 
+                         Behavior on opacity {
+                             Anim {
+@@ -535,7 +875,7 @@
+                         anchors.fill: parent
+                         radius: Tokens.rounding.medium
+                         color: Colours.palette.m3error
+-                        opacity: (delegateItem.badge?.urgent ?? false) ? 0.35 : 0
++                        opacity: !root.bar.dockOnly && (delegateItem.badge?.urgent ?? false) ? 0.35 : 0
+ 
+                         Behavior on opacity {
+                             Anim {
+@@ -547,12 +887,19 @@
+                     StateLayer {
+                         id: stateLayer
+ 
++                        // Keep pointer handling and previews without an icon backplate.
++                        color: root.bar.dockOnly ? "transparent" : Colours.palette.m3onSurface
+                         anchors.fill: parent
+                         radius: Tokens.rounding.medium
+                         acceptedButtons: Qt.NoButton
+ 
+                         onEntered: {
++                            if (root.isDragging || root.isResizing) return;
+                             if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
++                            if (!root.canPreviewEntry(modelData)) {
++                                bar.popouts.hasCurrent = false;
++                                return;
++                            }
+                             bar.popouts.currentName = "dockhover";
+                             bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
+                             bar.popouts.dockModel = modelData;
+@@ -564,6 +911,7 @@
+                         id: dragArea
+ 
+                         property bool held: false
++                        property bool moved: false
+ 
+                         anchors.fill: parent
+                         drag.target: held ? delegateItem : null
+@@ -572,18 +920,38 @@
+                         cursorShape: Qt.PointingHandCursor
+ 
+                         onPressed: mouse => {
+-                            held = true;
+-                            root.isDragging = true;
++                            held = mouse.button === Qt.LeftButton;
++                            moved = false;
++                            root.isDragging = held;
+                             stateLayer.press(mouse.x, mouse.y);
+                         }
+ 
++                        onPositionChanged: mouse => {
++                            if (drag.active) {
++                                moved = true;
++                                const position = mapToItem(listView, mouse.x, mouse.y);
++                                if (bar.dockOnly) {
++                                    delegateItem.x = position.x - delegateItem.width / 2;
++                                    delegateItem.y = 0;
++                                }
++                                root.updateIconDrag(delegateContainer.modelData, position);
++                                root.bar.popouts.hasCurrent = false;
++                            }
++                        }
++
+                         onClicked: mouse => {
++                            if (moved) return;
+                             if (mouse.button === Qt.LeftButton) {
+                                 if (modelData.isPinned && Tokens.anim.enabled) {
+                                     bounceAnim.start();
+                                 }
+ 
+-                                root.activateEntry(modelData);
++                                if (mouse.modifiers & Qt.MetaModifier)
++                                    root.activateTiledEntry(modelData);
++                                else if (mouse.modifiers & Qt.ShiftModifier)
++                                    root.activateNewEntry(modelData);
++                                else
++                                    root.activateEntry(modelData);
+                             } else if (mouse.button === Qt.RightButton) {
+                                 bar.popouts.currentName = "dockcontext";
+                                 bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
+@@ -592,19 +960,26 @@
+                             }
+                         }
+ 
+-                        onReleased: {
++                        onReleased: mouse => {
++                            // The last move already selected and displayed the insertion slot.
++                            // Reprojecting the release through the moving/scaled delegate can
++                            // select a different slot, especially with an off-centre grip.
++                            const entry = delegateContainer.modelData;
++                            root.finishIconDrag(entry, moved);
+                             held = false;
++                            delegateItem.x = Qt.binding(() => delegateContainer.sectionInset);
++                            delegateItem.y = 0;
+                             root.isDragging = false;
+-                            delegateItem.x = 0;
+-                            delegateItem.y = 0;
+-                            root.saveNewOrder();
++                            root.rebuildModel();
+                         }
+ 
+                         onCanceled: {
+                             held = false;
+                             root.isDragging = false;
+-                            delegateItem.x = 0;
++                            delegateItem.x = Qt.binding(() => delegateContainer.sectionInset);
+                             delegateItem.y = 0;
++                            root.clearIconDrag();
++                            root.rebuildModel();
+                         }
+                     }
+ 
+@@ -648,13 +1023,14 @@
+ 
+ 
+ 
+-                    CachingIconImage {
++                    DockIcon {
+                         id: icon
+ 
+                         anchors.centerIn: parent
+                         implicitSize: root.iconSize
+-                        source: modelData ? WinIcons.sourceFor(modelData.entry, modelData.appClass, modelData.iconName, modelData.pid ?? 0) : ""
+-                        visible: !(Config.bar.dock.recolourIcons ?? false)
++                        normalize: root.bar.dockOnly
++                        originalSource: modelData ? WinIcons.sourceFor(modelData.entry, modelData.appClass, modelData.iconName, modelData.pid ?? 0) : ""
++                        visible: !root.recolourIcons
+ 
+                         SequentialAnimation {
+                             id: bounceAnim
+@@ -668,14 +1044,14 @@
+                         anchors.centerIn: parent
+                         implicitSize: root.iconSize
+                         source: icon.source
+-                        colour: Colours.palette.m3secondary
++                        colour: root.monochromeTopBar ? Colours.barForeground : Colours.palette.m3secondary
+                         layer.enabled: true
+-                        visible: Config.bar.dock.recolourIcons ?? false
++                        visible: root.recolourIcons
+                     }
+ 
+                     Loader {
+                         anchors.fill: icon
+-                        active: modelData ? (root.launchingApps[modelData.appClass || modelData.id] || false) : false
++                        active: modelData ? (root.launchingApps[root.launchKey(modelData)] || false) : false
+                         sourceComponent: CircularIndicator {
+                             running: true
+                             strokeWidth: 2
+@@ -792,11 +1168,15 @@
+         }
+     }
+ 
++    function canPreviewEntry(entry: var): bool {
++        return !bar.dockOnly || (entry?.toplevels?.length ?? 0) > 0;
++    }
++
+     function handleHover(relPos: real, isHorizontal: bool): void {
++        if (root.isDragging || root.isResizing) return;
+         if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
+ 
+         const itemSize = container.itemSize;
+-        const itemWidthWithSpacing = itemSize + spacing;
+         const adjustedPos = isHorizontal ? relPos - container.x - padding : relPos - container.y - padding;
+         const scrolled = isHorizontal ? listView.contentX : listView.contentY;
+         const visibleSpan = isHorizontal ? listView.width : listView.height;
+@@ -806,11 +1186,14 @@
+             return;
+         }
+ 
+-        const index = Math.floor((adjustedPos + scrolled) / itemWidthWithSpacing);
+-
+-        if (index >= 0 && index < modelDataArray.length) {
++        const position = adjustedPos + scrolled;
++        const index = modelDataArray.findIndex((app, i) =>
++            position >= root.itemOffset(i) && position < root.itemOffset(i) + itemSize);
++
++        if (index >= 0 && index < modelDataArray.length
++                && root.canPreviewEntry(modelDataArray[index])) {
+             bar.popouts.currentName = "dockhover";
+-            const centerOffset = index * itemWidthWithSpacing + itemSize / 2 - scrolled;
++            const centerOffset = root.itemOffset(index) + itemSize / 2 - scrolled;
+             if (centerOffset < 0 || centerOffset > visibleSpan) {
+                 bar.popouts.hasCurrent = false;
+                 return;
+@@ -822,6 +1205,8 @@
+             bar.popouts.currentCenter = absoluteCenter;
+             bar.popouts.dockModel = modelDataArray[index];
+             bar.popouts.hasCurrent = true;
++        } else {
++            bar.popouts.hasCurrent = false;
+         }
+     }
+ 
+@@ -834,13 +1219,16 @@
+     onModelDataArrayChanged: currentOrder = [...modelDataArray]
+ 
+     function rebuildModel(): void {
+-        if (root.isDragging) return;
++        if (root.isDragging || root.isResizing) return;
+         let apps = [];
+ 
+         const pinnedIds = GlobalConfig.bar.dock.pinnedApps || [];
+ 
+         for (const pid of pinnedIds) {
+-            for (const entry of DesktopEntries.applications.values) {
++            // Explicit favourites may be NoDisplay apps, absent from applications.
++            const exact = DesktopEntries.byId(pid);
++            const candidates = exact ? [exact] : DesktopEntries.applications.values;
++            for (const entry of candidates) {
+                 if (Strings.testRegexList([pid], entry.id)) {
+                     if (!apps.some(a => a.id === entry.id)) {
+                         apps.push({
+@@ -893,7 +1281,10 @@
+                         if (isAppSteamGame) continue;
+ 
+                         const baseId = app.id.toLowerCase().replace(".desktop", "");
+-                        if (app.appClass.toLowerCase() === appClass.toLowerCase() ||
++                        const startupClass = (app.entry?.startupClass || "").toLowerCase();
++                        if ((startupClass && (startupClass === appClass.toLowerCase()
++                                || startupClass === (ipc.initialClass || "").toLowerCase())) ||
++                            app.appClass.toLowerCase() === appClass.toLowerCase() ||
+                             app.id.toLowerCase().includes(appClass.toLowerCase()) ||
+                             appClass.toLowerCase().includes(baseId)) {
+                             if (pinnedFirst && app.isPinned && app.toplevels.length > 0)
+@@ -947,25 +1338,10 @@
+             }
+         }
+ 
+-        let newLaunching = Object.assign({}, root.launchingApps);
+-        let launchingChanged = false;
+-
+-        for (const app of apps) {
+-            if (app.toplevels.length > 0) {
+-                if (newLaunching[app.appClass]) {
+-                    delete newLaunching[app.appClass];
+-                    launchingChanged = true;
+-                }
+-                if (newLaunching[app.id]) {
+-                    delete newLaunching[app.id];
+-                    launchingChanged = true;
+-                }
+-            }
+-        }
+-
+-        if (launchingChanged) {
+-            root.launchingApps = newLaunching;
+-        }
++        if (bar.dockOnly)
++            apps = root.updateRecentApps(apps);
++
++        root.clearFinishedLaunches(apps, Date.now());
+ 
+         const existingOrder = (root.currentOrder && root.currentOrder.length > 0) ? root.currentOrder : root.modelDataArray;
+         const existingPinnedOrder = existingOrder.filter(a => a && a.isPinned).map(a => a.id);
+@@ -991,6 +1367,10 @@
+ 
+             apps = orderedApps;
+         }
++
++        // Preserve user order within each section, including pin/unpin changes.
++        if (bar.dockOnly)
++            apps = apps.filter(app => app.isPinned).concat(apps.filter(app => !app.isPinned));
+ 
+         let changed = false;
+         if (apps.length !== dockModel.count) {
+@@ -1045,6 +1425,13 @@
+         }
+         root.modelDataMap = map;
+         root.modelDataArray = apps;
++        if (bar.dockOnly && bar.popouts.hasCurrent && bar.popouts.currentName === "dockhover") {
++            const hovered = apps.find(app => app.id === bar.popouts.dockModel?.id);
++            if (!root.canPreviewEntry(hovered))
++                bar.popouts.hasCurrent = false;
++            else
++                bar.popouts.dockModel = hovered;
++        }
+         root.modelUpdateTrigger += 1;
+     }
+ 
+@@ -1121,7 +1508,7 @@
+     }
+ 
+     Component.onDestruction: {
+-        if (root.bar && root.bar.screen)
++        if (root.bar && root.bar.screen && Visibilities.docks.get(root.bar.screen.name) === root)
+             Visibilities.unregisterDock(root.bar.screen);
+     }
+ }
+--- a/modules/bar/components/OsIcon.qml
++++ b/modules/bar/components/OsIcon.qml
+@@ -11,15 +11,27 @@
+ 
+     required property var bar
+ 
+-    implicitWidth: Math.round(Tokens.font.body.large.pointSize * 1.2)
+-    implicitHeight: Math.round(Tokens.font.body.large.pointSize * 1.2)
++    // Fit the circular launcher inside the existing bar; never change its height.
++    readonly property int buttonSize: Math.max(1, Math.round((bar.isHorizontal ? bar.height : bar.width) - 6))
++    readonly property int logoSize: Math.round(buttonSize * 0.82)
++
++    implicitWidth: buttonSize
++    implicitHeight: buttonSize
++
++    Rectangle {
++        anchors.fill: parent
++        radius: width / 2
++        color: Qt.alpha(Colours.barForeground, 0.09)
++        border.width: 1
++        border.color: Qt.alpha(Colours.barForeground, 0.16)
++    }
+ 
+     StateLayer {
+         anchors.fill: undefined
+         anchors.centerIn: parent
+-        implicitWidth: root.implicitWidth + Tokens.padding.medium
+-        implicitHeight: root.implicitHeight + Tokens.padding.medium
+-        radius: Tokens.rounding.full
++        implicitWidth: root.buttonSize
++        implicitHeight: root.buttonSize
++        radius: root.buttonSize / 2
+         acceptedButtons: Qt.LeftButton | Qt.RightButton
+         onClicked: mouse => {
+             if (mouse.button === Qt.RightButton) {
+@@ -58,6 +70,8 @@
+         id: caelestiaLogo
+ 
+         Logo {
++            topColour: Colours.barForeground
++            bottomColour: Colours.barForeground
+             implicitWidth: Math.round(Tokens.font.body.large.pointSize * 1.6)
+             implicitHeight: Math.round(Tokens.font.body.large.pointSize * 1.6)
+         }
+@@ -69,7 +83,7 @@
+         ColouredIcon {
+             source: SysInfo.osLogo
+             implicitSize: Math.round(Tokens.font.body.large.pointSize * 1.2)
+-            colour: Colours.palette.m3tertiary
++            colour: Colours.barForeground
+         }
+     }
+ 
+@@ -86,8 +100,8 @@
+ 
+         ColouredIcon {
+             source: SysInfo.osLogo
+-            implicitSize: Math.round(Tokens.font.body.large.pointSize * 1.2 * (SysInfo.customLogoSize / 100))
+-            colour: Colours.palette.m3tertiary
++            implicitSize: Math.min(root.buttonSize, Math.round(root.logoSize * (SysInfo.customLogoSize / 100)))
++            colour: Colours.barForeground
+         }
+     }
+ 
+@@ -96,8 +110,8 @@
+ 
+         IconImage {
+             source: SysInfo.osLogo
+-            implicitWidth: Math.round(Tokens.font.body.large.pointSize * 1.2 * (SysInfo.customLogoSize / 100))
+-            implicitHeight: Math.round(Tokens.font.body.large.pointSize * 1.2 * (SysInfo.customLogoSize / 100))
++            implicitWidth: Math.min(root.buttonSize, Math.round(root.logoSize * (SysInfo.customLogoSize / 100)))
++            implicitHeight: Math.min(root.buttonSize, Math.round(root.logoSize * (SysInfo.customLogoSize / 100)))
+         }
+     }
+ }
+--- a/modules/bar/components/Power.qml
++++ b/modules/bar/components/Power.qml
+@@ -44,7 +44,7 @@
+         anchors.horizontalCenterOffset: Centering.pixelAlign(parent.width, width)
+ 
+         text: "power_settings_new"
+-        color: Colours.palette.m3error
++        color: Colours.barForeground
+         fontStyle: Tokens.font.icon.builders.small.weight(Font.Bold).build()
+     }
+ }
+--- a/modules/bar/components/ScreenCaptureWidget.qml
++++ b/modules/bar/components/ScreenCaptureWidget.qml
+@@ -32,9 +32,7 @@
+     MaterialIcon {
+         anchors.centerIn: parent
+         text: Recorder.running ? "screen_record" : "photo_camera"
+-        color: (root.popouts.hasCurrent && (root.popouts.currentName === "screencapture" || root.popouts.currentName === "rearrangecontext"))
+-            ? Colours.palette.m3onSecondaryContainer
+-            : Colours.palette.m3primary
++        color: Colours.barForeground
+         fontStyle: Tokens.font.icon.builders.medium.weight(Font.Medium).build()
+ 
+         Behavior on color {
+--- a/modules/bar/components/ShowDesktop.qml
++++ b/modules/bar/components/ShowDesktop.qml
+@@ -45,7 +45,7 @@
+         anchors.horizontalCenterOffset: Centering.pixelAlign(parent.width, width)
+ 
+         text: "keyboard_double_arrow_down"
+-        color: Colours.palette.m3onSurfaceVariant
++        color: Colours.barForeground
+         fontStyle: Tokens.font.icon.builders.small.weight(Font.Bold).build()
+ 
+         rotation: (Kwin.showingDesktop) ? 180 : 0
+--- a/modules/bar/components/StatusIcons.qml
++++ b/modules/bar/components/StatusIcons.qml
+@@ -14,7 +14,7 @@
+ StyledRect {
+     id: root
+ 
+-    property color colour: Colours.palette.m3secondary
++    property color colour: Colours.barForeground
+     readonly property alias items: iconColumn
+ 
+     property var bar: null
+@@ -34,7 +34,8 @@
+     property real hoverSpacing: Tokens.spacing.small
+ 
+     readonly property bool isHovering: hoverPos !== -1
+-    property real currentHoverSpacing: isHovering ? hoverSpacing : 0
++    // Keep the expanded spacing so hovering never shifts the status icons.
++    readonly property real currentHoverSpacing: hoverSpacing
+ 
+     readonly property var activeEntries: Config.bar.statusIcons.values.filter(entry => entry.enabled && root.entryActive(entry.id))
+ 
+@@ -98,13 +99,11 @@
+         }
+     }
+ 
+-    color: Colours.tPalette.m3surfaceContainer
++    color: Qt.alpha(Colours.palette.m3surfaceContainer, 0.18)
+     radius: Tokens.rounding.full
+     clip: true
+     implicitWidth: isHorizontal ? (iconColumn.implicitWidth + Tokens.padding.medium * 2) : barThickness
+     implicitHeight: isHorizontal ? barThickness : (iconColumn.implicitHeight + Tokens.padding.medium * 2)
+-
+-    Behavior on currentHoverSpacing { Anim { type: Anim.DefaultEffects } }
+ 
+     MouseArea {
+         anchors.fill: parent
+--- a/modules/bar/components/TrayItem.qml
++++ b/modules/bar/components/TrayItem.qml
+@@ -59,7 +59,7 @@
+ 
+         anchors.fill: parent
+         source: Icons.getTrayIcon(root.modelData.id, root.modelData.icon)
+-        colour: Colours.palette.m3secondary
++        colour: Colours.barForeground
+         layer.enabled: Config.bar.tray.recolour
+     }
+ }
+--- a/modules/bar/components/UpdateIndicator.qml
++++ b/modules/bar/components/UpdateIndicator.qml
+@@ -14,9 +14,9 @@
+ 
+     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
+ 
+-    readonly property bool hasUpdate: UpdateChecker.hasUpdate
++    readonly property bool hasUpdate: (UpdateChecker.hasUpdate || UpdateHub.pendingCount > 0)
+ 
+-    readonly property bool checking: UpdateChecker.checkingUpdates
++    readonly property bool checking: (UpdateChecker.checkingUpdates || UpdateHub.checking)
+ 
+     // Index of the Nexus "Updates" page, resolved by page key so this
+     // indicator can't drift out of sync if the page registry is reordered.
+@@ -33,8 +33,8 @@
+ 
+         anchors.centerIn: parent
+         anchors.horizontalCenterOffset: Centering.pixelAlign(parent.width, width)
+-        text: root.checking ? "sync" : root.hasUpdate ? "update" : "check_circle"
+-        color: root.hasUpdate ? Colours.palette.m3primary : Colours.palette.m3secondary
++        text: root.checking ? "sync" : root.hasUpdate ? "arrow_upward" : UpdateHub.hasErrors ? "question_mark" : "check"
++        color: Colours.barForeground
+     }
+ 
+     StateLayer {
+@@ -44,13 +44,13 @@
+         implicitHeight: root.implicitHeight
+         radius: Tokens.rounding.full
+         acceptedButtons: Qt.LeftButton | Qt.RightButton
+-        Accessible.name: qsTr("Caelestia updates")
++        Accessible.name: qsTr("Update hub")
+         Accessible.role: Accessible.Button
+         Accessible.description: qsTr("Left-click to open the Updates page. Right-click to check for updates")
+ 
+         onClicked: mouse => {
+             if (mouse.button === Qt.RightButton) {
+-                UpdateChecker.checkUpdates();
++                UpdateChecker.checkUpdates(); UpdateHub.refresh();
+             } else {
+                 WindowFactory.create(null, { initialPageIdx: root.updatesPageIdx });
+             }
+--- a/modules/bar/components/WeatherWidget.qml
++++ b/modules/bar/components/WeatherWidget.qml
+@@ -39,8 +39,16 @@
+         StyledText {
+             visible: root.isHorizontal
+             text: Weather.temp
+-            font: Tokens.font.body.medium
+-            color: Colours.palette.m3onSurface
++            font: {
++                // Use the same size, weight and family as the horizontal clock.
++                const rawScale = !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0;
++                const thickness = rawScale < 1.0 ? Tokens.sizes.bar.innerWidth
++                    : Math.round(Tokens.sizes.bar.innerWidth * rawScale);
++                const value = Tokens.font.body.builders.small.size(Math.round(thickness * 0.32)).build();
++                value.family = MenuStyle.fontFamily;
++                return value;
++            }
++            color: Colours.barForeground
+         }
+     }
+ 
+--- a/modules/bar/components/workspaces/ActiveIndicator.qml
++++ b/modules/bar/components/workspaces/ActiveIndicator.qml
+@@ -94,7 +94,7 @@
+     implicitWidth: isHorizontal ? size + expandAmt : barThickness - Tokens.padding.small + expandAmt
+     implicitHeight: isHorizontal ? barThickness - Tokens.padding.small + expandAmt : size + expandAmt
+     radius: Tokens.rounding.full
+-    color: Colours.palette.m3primary
++    color: Colours.palette.m3surfaceContainerHighest
+ 
+     Timer {
+         id: swipeSettleTimer
+@@ -103,10 +103,10 @@
+         repeat: false
+         onTriggered: root.isSwiping = false
+     }
+-    Colouriser {
+-        source: root.mask
+-        sourceColor: Colours.palette.m3onSurface
+-        colorizationColor: Colours.palette.m3onPrimary
++    ShaderEffectSource {
++        sourceItem: root.mask
++        live: true
++        hideSource: false
+ 
+         x: isHorizontal ? -parent.offset + offsetAmt : 0
+         y: isHorizontal ? 0 : -parent.offset + offsetAmt
+--- a/modules/bar/components/workspaces/SpecialWorkspaces.qml
++++ b/modules/bar/components/workspaces/SpecialWorkspaces.qml
+@@ -206,13 +206,13 @@
+                 implicitWidth: isHorizontal ? ((view.currentItem as SpecialWsDelegate)?.size ?? 0) : view.width
+                 implicitHeight: isHorizontal ? view.height : ((view.currentItem as SpecialWsDelegate)?.size ?? 0)
+ 
+-                color: Colours.palette.m3tertiary
++                color: Colours.palette.m3surfaceContainerHighest
+                 radius: Tokens.rounding.full
+ 
+                 Colouriser {
+                     source: view
+-                    sourceColor: Colours.palette.m3onSurface
+-                    colorizationColor: Colours.palette.m3onTertiary
++                    sourceColor: Colours.barForeground
++                    colorizationColor: Colours.barForeground
+ 
+                     anchors.horizontalCenter: isHorizontal ? undefined : parent.horizontalCenter
+                     anchors.verticalCenter: isHorizontal ? parent.verticalCenter : undefined
+@@ -442,7 +442,7 @@
+ 
+                         grade: 0
+                         text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
+-                        color: Colours.palette.m3onSurfaceVariant
++                        color: Colours.barForeground
+                     }
+                 }
+             }
+@@ -486,7 +486,7 @@
+ 
+                         grade: 0
+                         text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
+-                        color: Colours.palette.m3onSurfaceVariant
++                        color: Colours.barForeground
+                     }
+                 }
+             }
+--- a/modules/bar/components/workspaces/Workspace.qml
++++ b/modules/bar/components/workspaces/Workspace.qml
+@@ -3,7 +3,6 @@
+ import QtQuick
+ import QtQuick.Layouts
+ import Quickshell
+-import M3Shapes
+ import Caelestia.Config
+ import qs.components
+ import qs.services
+@@ -89,7 +88,7 @@
+                 const activeLabel = Config.bar.workspaces.activeLabel || (root.isOccupied ? occupiedLabel : label);
+                 return root.activeWsId === root.ws ? activeLabel : root.isOccupied ? occupiedLabel : label;
+             }
+-            color: Config.bar.workspaces.occupiedBg || root.isOccupied || root.activeWsId === root.ws ? Colours.palette.m3onSurface : Colours.layer(Colours.palette.m3outlineVariant, 2)
++            color: Colours.barForeground
+             horizontalAlignment: Qt.AlignHCenter
+             verticalAlignment: Qt.AlignVCenter
+             font.family: Tokens.font.workspaces
+@@ -99,188 +98,13 @@
+     Component {
+         id: iconComponent
+ 
+-        Item {
+-            id: iconRoot
+-
+-            readonly property bool active: root.activeWsId === root.ws
+-            readonly property list<int> focusShapes: [MaterialShape.Slanted, MaterialShape.Arch, MaterialShape.Oval, MaterialShape.Pill, MaterialShape.Triangle, MaterialShape.Arrow, MaterialShape.Diamond, MaterialShape.Pentagon, MaterialShape.Gem, MaterialShape.VerySunny, MaterialShape.Sunny]
+-
+-            property int randShape: MaterialShape.Slanted
+-            property bool wasPositionActive: false
+-            property int lastKnownWs: -1
+-            property int prevActiveWsId: -1
+-            property bool hasRandomShape: false
+-
+-            property int prevWs: -1
+-
+-            property int watchedWs: root.ws
+-
+-            property int lastWatchedWs: -1
+-
+-            property int swipeStartWsId: -1
+-            property bool generatedShapeThisSwipe: false
+-
+-            property real rawSwipeOffset: Kwin.swipeOffsetByOutput?.[root.screenName] ?? Kwin.swipeOffset
+-            property real lastRawSwipeOffset: 0.0
+-            property bool isSwiping: false
+-
+-            readonly property real swipeWeight: {
+-                if (!isSwiping || rawSwipeOffset === 0.0) return active ? 1.0 : 0.0;
+-
+-                // Use swipeStartWsId to prevent KWin desyncs when activeWsId changes before rawSwipeOffset resets
+-                const startId = swipeStartWsId !== -1 ? swipeStartWsId : root.activeWsId;
+-                const activeIdx = startId - 1;
+-                const targetIdx = rawSwipeOffset > 0 ? activeIdx + 1 : activeIdx - 1;
+-                const t = Math.abs(rawSwipeOffset);
+-                const myIdx = root.ws - 1;
+-                if (myIdx === activeIdx) return 1.0 - t;
+-                if (myIdx === targetIdx) return t;
+-                return 0.0;
+-            }
+-
+-            property real smoothSwipeWeight: swipeWeight
+-
+-            function handleActivation() {
+-                const wsChanged = lastKnownWs !== root.ws;
+-                if (active && (!wasPositionActive || wsChanged)) {
+-                    if (!hasRandomShape) {
+-                        randShape = focusShapes[Math.floor(Math.random() * focusShapes.length)];
+-                        wsShape.shape = randShape;
+-                        hasRandomShape = true;
+-                    }
+-                } else if (!active && (wasPositionActive || wsChanged)) {
+-                    if (!isSwiping) {
+-                        const targetShape = root.isOccupied ? MaterialShape.Square : MaterialShape.Circle;
+-                        wsShape.shape = targetShape;
+-                        hasRandomShape = false;
+-                    }
+-                }
+-                wasPositionActive = active;
+-                prevWs = lastKnownWs;
+-                lastKnownWs = root.ws;
+-                prevActiveWsId = root.activeWsId;
+-            }
+-
++        FlausenWorkspaceIcon {
++            workspaceId: root.ws
++            activeWorkspaceId: root.activeWsId
++            occupied: root.isOccupied
++            screenName: root.screenName
+             implicitWidth: barThickness - Tokens.padding.small
+             implicitHeight: barThickness - Tokens.padding.small
+-
+-            onRawSwipeOffsetChanged: {
+-                if (rawSwipeOffset !== 0.0) {
+-                    if (lastRawSwipeOffset === 0.0) {
+-                        swipeStartWsId = root.activeWsId;
+-                    }
+-                    isSwiping = true;
+-                    swipeSettleTimer.stop();
+-                } else {
+-                    swipeSettleTimer.restart();
+-                }
+-                lastRawSwipeOffset = rawSwipeOffset;
+-            }
+-
+-            onIsSwipingChanged: {
+-                if (!isSwiping) {
+-                    generatedShapeThisSwipe = false;
+-                }
+-            }
+-
+-            onSmoothSwipeWeightChanged: {
+-                if (isSwiping) {
+-                    if (smoothSwipeWeight >= 0.05 && !hasRandomShape) {
+-                        if (!generatedShapeThisSwipe && !active) {
+-                            randShape = focusShapes[Math.floor(Math.random() * focusShapes.length)];
+-                            generatedShapeThisSwipe = true;
+-                        }
+-                        wsShape.shape = randShape;
+-                        hasRandomShape = true;
+-                    } else if (smoothSwipeWeight < 0.05 && hasRandomShape) {
+-                        wsShape.shape = root.isOccupied ? MaterialShape.Square : MaterialShape.Circle;
+-                        hasRandomShape = false;
+-                    }
+-                }
+-            }
+-
+-            onWatchedWsChanged: {
+-                if (lastWatchedWs !== -1 && watchedWs !== lastWatchedWs && !active) {
+-                    if (!isSwiping) {
+-                        wsShape.shape = root.isOccupied ? MaterialShape.Square : MaterialShape.Circle;
+-                        hasRandomShape = false;
+-                    }
+-                }
+-                lastWatchedWs = watchedWs;
+-            }
+-
+-            onPrevActiveWsIdChanged: {
+-                if (prevActiveWsId !== -1 && prevActiveWsId !== root.activeWsId && active) {
+-                    handleActivation();
+-                }
+-            }
+-
+-            onActiveChanged: handleActivation()
+-
+-            Component.onCompleted: {
+-                if (active) {
+-                    handleActivation();
+-                } else {
+-                    wsShape.shape = root.isOccupied ? MaterialShape.Square : MaterialShape.Circle;
+-                    hasRandomShape = false;
+-                }
+-                wasPositionActive = active;
+-                prevWs = -1;
+-                lastKnownWs = root.ws;
+-                prevActiveWsId = root.activeWsId;
+-                lastWatchedWs = root.ws;
+-            }
+-
+-            Timer {
+-                id: swipeSettleTimer
+-
+-                interval: 120
+-                repeat: false
+-                onTriggered: {
+-                    iconRoot.isSwiping = false;
+-                    if (!iconRoot.active) {
+-                        wsShape.shape = root.isOccupied ? MaterialShape.Square : MaterialShape.Circle;
+-                        hasRandomShape = false;
+-                    }
+-                }
+-            }
+-
+-            Behavior on smoothSwipeWeight {
+-                enabled: iconRoot.isSwiping
+-
+-                SmoothedAnimation { velocity: -1; duration: 60; easing.type: Easing.Linear }
+-            }
+-
+-            MaterialShape {
+-                id: wsShape
+-
+-                anchors.centerIn: parent
+-                implicitSize: iconRoot.width
+-                width: implicitWidth
+-                height: implicitHeight
+-                scale: {
+-                    if (iconRoot.isSwiping) {
+-                        return (1 / 3) + (iconRoot.smoothSwipeWeight * (1 / 3));
+-                    }
+-                    return iconRoot.active ? 2 / 3 : 1 / 3;
+-                }
+-                color: {
+-                    const isActiveVisual = iconRoot.isSwiping ? (iconRoot.smoothSwipeWeight >= 0.8) : iconRoot.active;
+-                    return Config.bar.workspaces.occupiedBg || root.isOccupied || isActiveVisual ? Colours.palette.m3onSurface : Colours.layer(Colours.palette.m3outlineVariant, 2);
+-                }
+-
+-                Behavior on color {
+-                    CAnim {}
+-                }
+-
+-                Behavior on scale {
+-                    enabled: !iconRoot.isSwiping
+-
+-                    Anim {
+-                        type: Anim.FastSpatial
+-                    }
+-                }
+-            }
+         }
+     }
+ 
+@@ -348,7 +172,7 @@
+ 
+                     grade: 0
+                     text: Icons.getAppCategoryIcon(modelData.lastIpcObject ? modelData.lastIpcObject["class"] : modelData["class"], "terminal")
+-                    color: Colours.palette.m3onSurfaceVariant
++                    color: Colours.barForeground
+                 }
+             }
+         }
+@@ -401,7 +225,7 @@
+ 
+                     grade: 0
+                     text: Icons.getAppCategoryIcon(modelData.lastIpcObject ? modelData.lastIpcObject["class"] : modelData["class"], "terminal")
+-                    color: Colours.palette.m3onSurfaceVariant
++                    color: Colours.barForeground
+                 }
+             }
+         }
+--- a/modules/bar/components/workspaces/Workspaces.qml
++++ b/modules/bar/components/workspaces/Workspaces.qml
+@@ -21,6 +21,21 @@
+     implicitWidth: container.implicitWidth
+     implicitHeight: container.implicitHeight
+ 
++    function openContext(position: point): void {
++        const popouts = bar?.popouts;
++        if (!popouts)
++            return;
++        const local = root.mapToItem(layout, position);
++        const pill = container.pills.find(p => container.isHorizontal
++            ? local.x >= p.x && local.x <= p.x + p.width
++            : local.y >= p.y && local.y <= p.y + p.height);
++        popouts.selectedWorkspaceId = Kwin.uuidForIndex(pill?.ws ?? container.activeWsId);
++        popouts.currentName = "workspacescontext";
++        const center = root.mapToItem(null, width / 2, height / 2);
++        popouts.currentCenter = bar.isHorizontal ? center.x : center.y;
++        popouts.hasCurrent = true;
++    }
++
+     StyledClippingRect {
+         id: container
+ 
+@@ -79,7 +94,7 @@
+ 
+         implicitWidth: isHorizontal ? (layout.implicitWidth + Tokens.padding.small) : barThickness
+         implicitHeight: isHorizontal ? barThickness : (layout.implicitHeight + Tokens.padding.small)
+-        color: Colours.tPalette.m3surfaceContainer
++        color: Qt.alpha(Colours.palette.m3surfaceContainer, 0.18)
+         radius: Tokens.rounding.full
+ 
+         Connections {
+@@ -170,12 +185,7 @@
+                 acceptedButtons: Qt.LeftButton | Qt.RightButton
+                 onClicked: event => {
+                     if (event.button === Qt.RightButton) {
+-                        const popouts = root.bar?.popouts;
+-                        if (!popouts)
+-                            return;
+-                        popouts.currentName = "workspacescontext";
+-                        popouts.currentCenter = root.bar.isHorizontal ? root.mapToItem(null, root.implicitWidth / 2, 0).x : (root.mapToItem(null, 0, root.implicitHeight / 2).y ?? 0);
+-                        popouts.hasCurrent = true;
++                        root.openContext(layout.mapToItem(root, event.x, event.y));
+                         return;
+                     }
+                     const pill = container.pills.find(p => container.isHorizontal ? event.x >= p.x && event.x <= p.x + p.width : event.y >= p.y && event.y <= p.y + p.height);
+--- a/modules/bar/popouts/BarComponentContext.qml
++++ b/modules/bar/popouts/BarComponentContext.qml
+@@ -38,7 +38,7 @@
+         implicitWidth: cardLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
+         implicitHeight: cardLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+         radius: Tokens.rounding.medium * root.scaleOffset
+-        color: Colours.tPalette.m3surfaceContainer
++        color: MenuStyle.cardFill
+         clip: true
+ 
+         ColumnLayout {
+--- a/modules/bar/popouts/ClipWrapper.qml
++++ b/modules/bar/popouts/ClipWrapper.qml
+@@ -13,11 +13,19 @@
+     required property ShellScreen screen
+     Config.screen: screen.name
+     required property var bar
++    property real dockHeight: bar.contentWidth
++    property real dockBottomInset: 12
+     required property real borderThickness
+     required property DrawerVisibilities visibilities
+ 
++    // Dock previews and context menus belong above the bottom capsule.
++    readonly property bool fromBottomDock: content.currentName.startsWith("dock")
++    readonly property string popoutPosition: fromBottomDock ? "bottom" : bar.position
++    readonly property bool fromFloatingTopBar: popoutPosition === "top" && !content.isDetached
++    readonly property bool framelessDockPreview: (fromBottomDock || bar.position === "bottom") && content.currentName === "dockhover"
++    readonly property bool fromFloatingBar: !content.isDetached && (fromFloatingTopBar || fromBottomDock || content.currentName === "taskbarcontext")
+     readonly property alias content: content
+-    readonly property bool isHorizontal: bar.isHorizontal
++    readonly property bool isHorizontal: fromBottomDock || bar.isHorizontal
+     property real offsetScale: content.isDetached || content.hasCurrent ? 0 : 1
+     // Where x is heading; x itself animates towards it.
+     readonly property real targetX: {
+@@ -36,7 +44,7 @@
+                 return Math.max(off + diff, 0);
+             return Math.max(off, 0);
+         }
+-        if (bar.position === "right")
++        if (root.popoutPosition === "right")
+             return parent.width - implicitWidth;
+         return 0;
+     }
+@@ -52,9 +60,11 @@
+         if (content.isDetached)
+             return (parent.height - content.nonAnimHeight) / 2;
+         if (isHorizontal) {
+-            if (bar.position === "bottom")
+-                return parent.height - implicitHeight;
+-            return 0;
++            if (root.popoutPosition === "bottom")
++                return parent.height - implicitHeight - (root.fromBottomDock ? root.dockHeight + root.dockBottomInset + 8 - parent.bottomMargin : 0);
++            // Panels begins at the bar wrapper's bottom; the glass ends 4 px earlier.
++            // Reveal content from the visible capsule rather than from the screen edge.
++            return root.popoutPosition === "top" ? -4 : 0;
+         }
+ 
+         const off = content.currentCenter - parent.topMargin - content.nonAnimHeight / 2;
+@@ -86,23 +96,53 @@
+         }
+     }
+ 
++    // Grow from the relevant floating bar: downward at the top, upward at the
++    // bottom dock. Background and content share the same clipped reveal, without
++    // sliding behind either bar or morphing out of the screen frame.
++    Rectangle {
++        id: glassBackground
++        anchors.fill: parent
++        visible: root.fromFloatingBar && !root.framelessDockPreview
++        // Approved calendar smoke; preserve each popover radius.
++        radius: ["updateIndicator", "network", "ethernet", "wirelesspassword", "bluetooth", "audio", "battery", "clock", "screencapture", "clipboard"].includes(content.currentName) ? 28 : 24
++        color: MenuStyle.taskbarSurface
++        border.width: 1
++        border.color: MenuStyle.border
++    }
++
++    TaskbarGlass {
++        id: popoutSmoke
++        prewarm: true
++        suspended: root.bar.fullscreen
++        minimumSize: Qt.size(640, 1024)
++        centered: false
++        bottomAnchored: root.popoutPosition === "bottom"
++        reserveGeometry: Qt.rect(0, 0, content.nonAnimWidth, content.nonAnimHeight)
++        screen: root.screen
++        geometry: Qt.rect(root.x + root.parent.leftMargin, root.y + root.parent.topMargin, root.width, root.height)
++        cornerRadius: glassBackground.radius
++        active: root.fromFloatingBar && !root.framelessDockPreview && content.hasCurrent && root.width > 0 && root.height > 0
++    }
++
+     Wrapper {
+         id: content
++
++        opacity: root.fromFloatingBar ? Math.max(0, 1 - root.offsetScale) : 1
+ 
+         screen: root.screen
+         offsetScale: root.offsetScale
+         visibilities: root.visibilities
+         underSidebar: !root.isHorizontal || content.currentCenter - root.parent.leftMargin >= root.parent.width - Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width)
+ 
+-        anchors.leftMargin: bar.position === "left" ? (-implicitWidth - 5) * root.offsetScale : 0
+-        anchors.rightMargin: bar.position === "right" ? (-implicitWidth - 5) * root.offsetScale : 0
+-        anchors.topMargin: bar.position === "top" ? (-implicitHeight - 5) * root.offsetScale : 0
+-        anchors.bottomMargin: bar.position === "bottom" ? (-implicitHeight - 5) * root.offsetScale : 0
++        anchors.leftMargin: root.popoutPosition === "left" && !root.fromFloatingBar ? (-implicitWidth - 5) * root.offsetScale : 0
++        anchors.rightMargin: root.popoutPosition === "right" && !root.fromFloatingBar ? (-implicitWidth - 5) * root.offsetScale : 0
++        anchors.topMargin: 0
++        anchors.bottomMargin: root.popoutPosition === "bottom" && !root.fromFloatingBar ? (-implicitHeight - 5) * root.offsetScale : 0
+ 
+         states: [
+             State {
+                 name: "left"
+-                when: bar.position === "left"
++                when: root.popoutPosition === "left"
+ 
+                 AnchorChanges {
+                     target: content
+@@ -116,7 +156,7 @@
+             },
+             State {
+                 name: "right"
+-                when: bar.position === "right"
++                when: root.popoutPosition === "right"
+ 
+                 AnchorChanges {
+                     target: content
+@@ -130,7 +170,7 @@
+             },
+             State {
+                 name: "top"
+-                when: bar.position === "top"
++                when: root.popoutPosition === "top"
+ 
+                 AnchorChanges {
+                     target: content
+@@ -144,7 +184,7 @@
+             },
+             State {
+                 name: "bottom"
+-                when: bar.position === "bottom"
++                when: root.popoutPosition === "bottom"
+ 
+                 AnchorChanges {
+                     target: content
+--- a/modules/bar/popouts/Content.qml
++++ b/modules/bar/popouts/Content.qml
+@@ -5,6 +5,7 @@
+ import Quickshell
+ import Quickshell.Services.SystemTray
+ import Caelestia.Config
++import qs.modules.bar as BarSettings
+ import qs.components
+ import qs.services as QsServices
+ 
+@@ -25,7 +26,9 @@
+         return acc;
+     }, {})
+ 
+-    readonly property real contentMargin: Tokens.padding.large * (currentPopout?.item?.scaleOffset ?? 1.0)
++    readonly property bool compactContext: popouts.currentName === "dockcontext"
++        || popouts.currentName === "taskbarcontext" || popouts.currentName === "workspacescontext"
++    readonly property real contentMargin: (compactContext ? 8 : Tokens.padding.large) * (currentPopout?.item?.scaleOffset ?? 1.0)
+     readonly property real availableWidth: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.width ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+     readonly property real availableHeight: Math.max(0, ((QsWindow.window as QsWindow)?.screen?.height ?? 0) - contentMargin * 2 - Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0))
+ 
+@@ -46,8 +49,8 @@
+                 popout[name] = context[name];
+     }
+ 
+-    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
+-    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + Tokens.padding.extraLargeIncreased * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
++    implicitWidth: Math.min(((currentPopout?.item?.width || currentPopout?.implicitWidth) ?? 0) + (compactContext ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableWidth)
++    implicitHeight: Math.min(((currentPopout?.item?.height || currentPopout?.implicitHeight) ?? 0) + (compactContext ? 16 : Tokens.padding.extraLargeIncreased) * (currentPopout?.item?.scaleOffset ?? 1.0), availableHeight)
+ 
+     Flickable {
+         id: viewport
+@@ -99,6 +102,7 @@
+             id: networkPopout
+ 
+             name: "network"
++            minScale: 1.15
+             sourceComponent: Network {
+                 popouts: root.popouts
+                 view: "wireless"
+@@ -107,6 +111,7 @@
+ 
+         Popout {
+             name: "ethernet"
++            minScale: 1.15
+             previewKey: "network"
+             sourceComponent: Network {
+                 popouts: root.popouts
+@@ -118,6 +123,7 @@
+             id: passwordPopout
+ 
+             name: "wirelesspassword"
++            minScale: 1.15
+             previewKey: "network"
+             sourceComponent: WirelessPassword {
+                 id: passwordComponent
+@@ -128,6 +134,7 @@
+ 
+         Popout {
+             name: "bluetooth"
++            minScale: 1.15
+             sourceComponent: Bluetooth {
+                 popouts: root.popouts
+             }
+@@ -135,6 +142,8 @@
+ 
+         Popout {
+             name: "clock"
++            // Keep the calendar readable even when the topbar is scaled down.
++            minScale: 1.15
+             sourceComponent: CalendarPopout {
+                 popouts: root.popouts
+             }
+@@ -176,6 +185,7 @@
+ 
+         Popout {
+             name: "battery"
++            minScale: 1.15
+             sourceComponent: Battery {
+                 popouts: root.popouts
+             }
+@@ -196,6 +206,7 @@
+ 
+         Popout {
+             name: "media"
++            minScale: 1.15
+             sourceComponent: Media {
+                 popouts: root.popouts
+             }
+@@ -210,6 +221,7 @@
+ 
+         Popout {
+             name: "weather"
++            minScale: 1.15
+             sourceComponent: Weather {
+                 popouts: root.popouts
+             }
+@@ -232,9 +244,19 @@
+ 
+         Popout {
+             name: "screencapture"
++            minScale: 1.15
+             sourceComponent: ScreenCapture {
+                 popouts: root.popouts
+                 visibilities: root.visibilities
++            }
++        }
++
++        Popout {
++            name: "clipboard"
++            minScale: 1.15
++            previewKey: "screencapture"
++            sourceComponent: ClipboardHistory {
++                popouts: root.popouts
+             }
+         }
+ 
+@@ -247,6 +269,7 @@
+ 
+         Popout {
+             name: "updateIndicator"
++            minScale: 1.15
+             sourceComponent: Updates {
+                 popouts: root.popouts
+             }
+@@ -254,7 +277,7 @@
+ 
+         Popout {
+             name: "audio"
+-            minScale: 0.9
++            minScale: 1.15
+             sourceComponent: Audio {
+                 popouts: root.popouts
+             }
+@@ -299,7 +322,8 @@
+ 
+         Popout {
+             name: "dockcontext"
+-            previewKey: "dock"
++            previewKey: "network"
++            minScale: 1.15
+             sourceComponent: DockContext {
+                 popouts: root.popouts
+             }
+@@ -307,12 +331,11 @@
+ 
+         Popout {
+             name: "workspacescontext"
+-            sourceComponent: BarComponentContext {
+-                popouts: root.popouts
+-                label: qsTr("Workspaces settings")
+-                subPageIdx: 7
+-                secondLabel: qsTr("Elements & Modules")
+-                secondSubPageIdx: 15
++            previewKey: "network"
++            minScale: 1.15
++            sourceComponent: TaskbarContext {
++                popouts: root.popouts
++                workspaceMenu: true
+             }
+         }
+ 
+@@ -387,6 +410,15 @@
+                 subPageIdx: 23
+                 secondLabel: qsTr("Elements & Modules")
+                 secondSubPageIdx: 15
++            }
++        }
++
++        Popout {
++            name: "taskbarcontext"
++            previewKey: "network"
++            minScale: 1.15
++            sourceComponent: TaskbarContext {
++                popouts: root.popouts
+             }
+         }
+ 
+@@ -477,7 +509,8 @@
+ 
+         readonly property real masterScale: !isNaN(GlobalConfig.bar.previewScale) ? GlobalConfig.bar.previewScale : 1.0
+         readonly property real elementOffset: GlobalConfig.bar.perElementPreviewScale ? (!isNaN(GlobalConfig.bar.previewScales[previewKey]) ? GlobalConfig.bar.previewScales[previewKey] : 0.0) : 0.0
+-        readonly property real barScaleOffset: GlobalConfig.bar.previewScaleWithBar ? (!isNaN(GlobalConfig.bar.scale) ? GlobalConfig.bar.scale : 1.0) : 1.0
++        readonly property real surfaceScale: (name.startsWith("dock") && name !== "dockcontext") ? BarSettings.SplitBarSettings.dockScale : GlobalConfig.bar.scale
++        readonly property real barScaleOffset: GlobalConfig.bar.previewScaleWithBar ? (!isNaN(surfaceScale) ? surfaceScale : 1.0) : 1.0
+         readonly property real scaleOffset: Math.max(minScale, (masterScale + elementOffset) * barScaleOffset)
+         readonly property real elementFontOffset: GlobalConfig.bar.perElementFontScale ? (!isNaN(GlobalConfig.bar.previewFontScales[previewKey]) ? GlobalConfig.bar.previewFontScales[previewKey] : 0.0) : 0.0
+         readonly property real fontScale: Math.max(0.1, scaleOffset + (!isNaN(GlobalConfig.bar.fontScaleOffset) ? GlobalConfig.bar.fontScaleOffset : 0.0) + elementFontOffset)
+@@ -529,6 +562,16 @@
+             }
+         ]
+ 
++        // The shared glass is the outer surface; avoid a second opaque card
++        // covering it. Keep each popout's controls and nested cards intact.
++        Binding {
++            when: GlobalConfig.bar.position === "top" && popout.item !== null && popout.item.hasOwnProperty("color")
++            target: popout.item
++            property: "color"
++            value: "transparent"
++            restoreMode: Binding.RestoreBindingOrValue
++        }
++
+         Binding {
+             when: popout.item !== null
+             target: popout.item
+--- a/modules/bar/popouts/Github.qml
++++ b/modules/bar/popouts/Github.qml
+@@ -38,7 +38,7 @@
+         implicitWidth: cardLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
+         implicitHeight: cardLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+         radius: Tokens.rounding.medium * root.scaleOffset
+-        color: Services.Colours.tPalette.m3surfaceContainer
++        color: Services.MenuStyle.cardFill
+         clip: true
+ 
+         ColumnLayout {
+--- a/modules/bar/popouts/LockStatus.qml
++++ b/modules/bar/popouts/LockStatus.qml
+@@ -28,7 +28,7 @@
+         implicitWidth: cardLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
+         implicitHeight: cardLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+         radius: Tokens.rounding.medium * root.scaleOffset
+-        color: Colours.tPalette.m3surfaceContainer
++        color: MenuStyle.cardFill
+         clip: true
+ 
+         ColumnLayout {
+--- a/modules/bar/popouts/Notes.qml
++++ b/modules/bar/popouts/Notes.qml
+@@ -752,7 +752,7 @@
+             Layout.alignment: Qt.AlignRight
+             visible: root.selectedNote !== null
+             radius: Tokens.rounding.full
+-            color: Colours.tPalette.m3surfaceContainerHigh
++            color: MenuStyle.cardFill
+             implicitWidth: editedLabel.implicitWidth + Tokens.padding.medium * 2
+             implicitHeight: editedLabel.implicitHeight + Tokens.padding.small * 2
+ 
+@@ -760,7 +760,7 @@
+                 id: editedLabel
+ 
+                 anchors.centerIn: parent
+-                text: root.selectedNote ? qsTr("Edited %1").arg(new Date(root.selectedNote.updated).toLocaleTimeString(Qt.locale(), "hh:mm")) : ""
++                text: root.selectedNote ? qsTr("Edited %1").arg(new Date(root.selectedNote.updated).toLocaleTimeString(SystemLanguage.timeLocale, "hh:mm")) : ""
+                 font: Tokens.font.body.small
+                 opacity: 0.7
+                 color: Colours.palette.m3onSurfaceVariant
+--- a/modules/bar/popouts/Notifications.qml
++++ b/modules/bar/popouts/Notifications.qml
+@@ -33,7 +33,7 @@
+         implicitWidth: cardLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
+         implicitHeight: cardLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+         radius: Tokens.rounding.medium * root.scaleOffset
+-        color: Colours.tPalette.m3surfaceContainer
++        color: MenuStyle.cardFill
+         clip: true
+ 
+         ColumnLayout {
+--- a/modules/bar/popouts/TrayMenu.qml
++++ b/modules/bar/popouts/TrayMenu.qml
+@@ -164,7 +164,7 @@
+                 implicitHeight: groupLayout.implicitHeight + Tokens.padding.medium * 2 * menu.scaleOffset
+ 
+                 radius: Tokens.rounding.medium * menu.scaleOffset
+-                color: Colours.tPalette.m3surfaceContainer
++                color: MenuStyle.cardFill
+                 clip: true
+ 
+                 Column {
+--- a/modules/bar/popouts/Updates.qml
++++ b/modules/bar/popouts/Updates.qml
+@@ -37,8 +37,8 @@
+         const oldest = Math.min(...checks);
+         const minutes = Math.floor((root.nowMs / 1000 - oldest) / 60);
+         if (minutes < 1) return qsTranslate("Flausen", "Just checked");
+-        if (minutes < 60) return qsTranslate("Flausen", "Checked %1 min ago").arg(minutes);
+-        return qsTranslate("Flausen", "Checked %1").arg(UpdateHub.stamp(oldest));
++        if (minutes < 60) return qsTranslate("Flausen", "Checked ") + minutes + qsTranslate("Flausen", " min ago");
++        return qsTranslate("Flausen", "Checked ") + UpdateHub.stamp(oldest);
+     }
+ 
+     width: 420 * scaleOffset
+@@ -108,7 +108,7 @@
+                 label: "Caelestia"
+                 symbol: "desktop_windows"
+                 statusIcon: root.shellIcon
+-                detail: UpdateChecker.hasUpdate ? qsTranslate("Flausen", "Shell update available") : "Installed: " + UpdateChecker.currentVersion
++                detail: UpdateChecker.hasUpdate ? qsTranslate("Flausen", "Shell update available") : qsTranslate("Flausen", "Installed: ") + UpdateChecker.currentVersion
+                 showUpdateLabel: true
+                 onClicked: root.openSettings()
+             }
+--- a/modules/bar/popouts/PopoutState.qml
++++ b/modules/bar/popouts/PopoutState.qml
+@@ -5,6 +5,7 @@
+     property bool hasCurrent
+     property var dockModel: null
+     property var tasksModel: null
++    property string selectedWorkspaceId
+     property string selectedClientAddress: ""
+     property bool sidebarOpen: false
+     property bool isHorizontal: true
+--- a/modules/bar/popouts/Wrapper.qml
++++ b/modules/bar/popouts/Wrapper.qml
+@@ -29,11 +29,12 @@
+     // hover previews and context menus are transient, so shoving panels around for
+     // them feels jittery. The clock popout is deliberately NOT here — the calendar
+     // is a real panel-sized popout and displaces notifications like audio/network do.
+-    readonly property bool isDockPopout: currentName === "dockhover" || currentName === "dockcontext" || currentName === "dockbgcontext" || currentName === "greeter" || currentName === "greetercontext" || currentName === "activewindow" || currentName === "github" || currentName === "clockcontext" || currentName === "statusiconscontext" || currentName === "workspacescontext" || currentName === "traycontext" || currentName === "githubcontext"
++    readonly property bool isDockPopout: currentName === "taskbarcontext" || currentName === "dockhover" || currentName === "dockcontext" || currentName === "dockbgcontext" || currentName === "greeter" || currentName === "greetercontext" || currentName === "activewindow" || currentName === "github" || currentName === "clockcontext" || currentName === "statusiconscontext" || currentName === "workspacescontext" || currentName === "traycontext" || currentName === "githubcontext"
+     property alias currentName: popoutState.currentName
+     property alias hasCurrent: popoutState.hasCurrent
+     property alias dockModel: popoutState.dockModel
+     property alias tasksModel: popoutState.tasksModel
++    property alias selectedWorkspaceId: popoutState.selectedWorkspaceId
+     property real currentCenter
+     // Set by ClipWrapper: whether the current bar item sits under the sidebar,
+     // which can be narrower than the bar's right side now that it is resizable.
+@@ -90,7 +91,7 @@
+         // Only attach to the sidebar when the popout would open below it anyway;
+         // otherwise it would end up away from the item that opened it.
+         sidebarOpen: root.visibilities.sidebar && root.underSidebar
+-        isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
++        isHorizontal: root.currentName.startsWith("dock") || Config.bar.position === "top" || Config.bar.position === "bottom"
+         onDetachRequested: mode => root.detach(mode)
+     }
+     HyprlandFocusGrab {
+--- a/modules/drawers/ContentWindow.qml
++++ b/modules/drawers/ContentWindow.qml
+@@ -24,6 +24,32 @@
+     id: root
+ 
+     readonly property bool launcherBackdropActive: visibilities.launcher && Config.launcher.enabled
++    // Share Dolphin's fullscreen backdrop; the launcher stays sharp above it.
++    function syncLauncherBackdrop(): void {
++        if (launcherBackdropSocket.connected) {
++            launcherBackdropSocket.write(JSON.stringify({
++                owner: "launcher:" + screen.name,
++                shown: launcherBackdropActive,
++                cutouts: []
++            }) + "\n");
++            launcherBackdropSocket.flush();
++        }
++    }
++    onLauncherBackdropActiveChanged: syncLauncherBackdrop()
++    Socket {
++        id: launcherBackdropSocket
++        path: Quickshell.env("XDG_RUNTIME_DIR") + "/ralleur-start-backdrop.sock"
++        connected: true
++        onConnectionStateChanged: {
++            if (connected) root.syncLauncherBackdrop();
++            else reconnectLauncherBackdrop.restart();
++        }
++    }
++    Timer {
++        id: reconnectLauncherBackdrop
++        interval: 250
++        onTriggered: launcherBackdropSocket.connected = true
++    }
+     property real blurOffsetTop: 0
+     property real blurOffsetBottom: 0
+     property real blurOffsetLeft: 0
+@@ -96,6 +122,7 @@
+ 
+     WlrLayershell.namespace: "dock"
+     mask: {
++        if (bar.moving) return fullRegion;
+         if (hasOpenOverlay && !sidebarPassthrough) return fullRegion;
+         if (hasFullscreen) return emptyRegion;
+         return regions;
+@@ -384,8 +411,8 @@
+             Config.screen: root.screen.name
+         }
+         BlobRect {
+-            visible: GlobalConfig.appearance.islands && bar.position !== "top"
+-            group: GlobalConfig.appearance.islands && bar.position !== "top" ? blobGroup : null
++            visible: false // The shared floating glass covers all four taskbar edges.
++            group: null
+             x: bar.x
+             y: bar.y
+             implicitWidth: bar.width
+@@ -395,6 +422,7 @@
+         }
+         PanelBg {
+             id: dashBg
++            group: null // Dashboard draws the shared menu glass itself.
+ 
+             panel: panels.dashboard
+             deformAmount: 0.1
+@@ -445,6 +473,7 @@
+         }
+         PanelBg {
+             id: notifsBg
++            group: null // Each notification paints its own smoke card.
+ 
+             panel: panels.notifications
+         }
+@@ -529,12 +558,12 @@
+         id: topBarGlass
+         smoke: true
+         // The launcher and both glass edges share the same screen inset.
+-        x: SplitBarSettings.edgeGap
+-        y: bar.y + 4
+-        width: Math.max(0, root.width - SplitBarSettings.edgeGap - x)
+-        height: Math.max(0, bar.height - 8)
++        x: bar.isHorizontal ? SplitBarSettings.edgeGap : bar.x + 4
++        y: bar.isHorizontal ? bar.y + 4 : SplitBarSettings.edgeGap
++        width: Math.max(0, bar.isHorizontal ? root.width - SplitBarSettings.edgeGap * 2 : bar.width - 8)
++        height: Math.max(0, bar.isHorizontal ? bar.height - 8 : root.height - SplitBarSettings.edgeGap * 2)
+         rounded: true
+-        visible: bar.position === "top" && bar.visible
++        visible: bar.visible
+ 
+         // Remove the glass tint AND its border behind the translucent launcher.
+         // Map the real button rather than assuming it is the first bar widget.
+@@ -565,6 +594,44 @@
+             }
+         }
+     }
++    // Slots survive notification arrival/removal; reuse the common stable blur pool.
++    Variants {
++        id: notificationSmoke
++        model: Array.from({length: Math.max(0, Math.floor(GlobalConfig.notifs.maxPopups))}, (_, i) => i)
++        Scope {
++            id: slot
++            required property var modelData
++            readonly property rect cardGeometry: panels.notifications.cardGeometry(modelData, root.contentItem)
++            property Region poolRegion: Region {
++                x: slot.cardGeometry.x - notificationPool.windowX
++                y: slot.cardGeometry.y - notificationPool.windowY
++                width: notificationPool.showing ? slot.cardGeometry.width : 0
++                height: notificationPool.showing ? slot.cardGeometry.height : 0
++                radius: 20
++                intersection: Intersection.Combine
++            }
++            property Region cardRegion: Region {
++                x: slot.cardGeometry.x; y: slot.cardGeometry.y
++                width: slot.cardGeometry.width; height: slot.cardGeometry.height
++                radius: 20
++                intersection: Intersection.Combine
++            }
++        }
++    }
++    TaskbarGlass {
++        id: notificationPool
++        screen: root.screen
++        prewarm: true
++        minimumSize: Qt.size(512, 768)
++        active: panels.notifications.visible && panels.notifications.height > 0
++        geometry: Qt.rect(panels.notifications.x + panels.leftMargin,
++            panels.notifications.y + panels.topMargin,
++            panels.notifications.width, panels.notifications.height)
++        customShape: Region {
++            regions: [sentinel, ...notificationSmoke.instances.map(slot => slot.poolRegion)]
++            property Region sentinel: Region { x: -10; y: -10; width: 1; height: 1 }
++        }
++    }
+     // Bar glass uses the same local native passes as the approved calendar.
+     TaskbarGlass {
+         id: topBarSmoke
+@@ -784,6 +851,7 @@
+                 matrix: popoutBg.deformMatrix
+             }
+             popoutsWrapper.dockHeight: bottomDock.height
++            popoutsWrapper.dockBottomInset: bottomDock.anchors.bottomMargin
+             cursorPos: Qt.point(interactions.mouseX, interactions.mouseY)
+         }
+         BarWrapper {
+@@ -804,12 +872,12 @@
+             anchors.left: parent.left
+             anchors.right: parent.right
+             anchors.bottom: parent.bottom
+-            anchors.bottomMargin: SplitBarSettings.edgeGap
++            anchors.bottomMargin: SplitBarSettings.edgeGap + (bar.position === "bottom" ? bar.height + 8 : 0)
+             screen: root.screen
+             visibilities: visibilities
+             popouts: panels.popouts
+             fullscreen: root.hasFullscreen
+-            visible: bar.position === "top" && middleEntries.length > 0 && !bar.disabled && bar.shouldBeVisible && !root.hasFullscreen
++            visible: middleEntries.length > 0 && !bar.disabled && !root.hasFullscreen && !visibilities.overview
+         }
+         Connections {
+             function onOpenDesktopContextMenu(x, y, screenName) {
+@@ -908,6 +976,15 @@
+             width: panels.launcher.visible ? panels.launcher.width : 0
+             height: panels.launcher.visible ? panels.launcher.height : 0
+             radius: 24
++            intersection: Intersection.Combine
++        }
++        // Dashboard glass shares the existing KWin effect.
++        Region {
++            x: panels.dashboard.x + panels.leftMargin
++            y: panels.dashboard.y + panels.topMargin
++            width: panels.dashboard.visible ? panels.dashboard.width : 0
++            height: panels.dashboard.visible ? panels.dashboard.height : 0
++            radius: Tokens.rounding.extraLarge
+             intersection: Intersection.Combine
+         }
+         // Floating taskbar popouts use the start menu's independent rounded blur.
+@@ -1024,16 +1101,8 @@
+             offsetScale: panels.sidebar.offsetScale
+             deformMatrix: sidebarBg.deformMatrix
+         }
+-        BlurMask {
+-            target: panels.notifications
+-            contentItem: root.contentItem
+-            blurOffsetTop: root.blurOffsetTop
+-            blurOffsetBottom: root.blurOffsetBottom
+-            blurOffsetLeft: root.blurOffsetLeft
+-            blurOffsetRight: root.blurOffsetRight
+-            vAnchor: panels.notifications.vAnchor
+-            hAnchor: panels.notifications.hAnchor
+-            deformMatrix: notifsBg.deformMatrix
++        Region {
++            regions: notificationSmoke.instances.map(slot => slot.cardRegion)
+         }
+         BlurMask {
+             target: panels.osdWrapper
+--- a/modules/drawers/Drawers.qml
++++ b/modules/drawers/Drawers.qml
+@@ -15,6 +15,7 @@
+         Exclusions {
+             screen: scope.modelData
+             bar: content.bar
++            dock: content.bottomDock
+             visibilities: content.visibilities
+         }
+ 
+--- a/modules/drawers/Exclusions.qml
++++ b/modules/drawers/Exclusions.qml
+@@ -13,6 +13,7 @@
+ 
+     required property ShellScreen screen
+     required property Bar.BarWrapper bar
++    required property Bar.SplitDock dock
+     required property DrawerVisibilities visibilities
+     // A pinned sidebar reserves its width so maximised windows sit beside it
+     // rather than under it. It stays reserved while hidden for a fullscreen window
+@@ -52,7 +53,7 @@
+ 
+     ExclusionZone {
+         anchors.bottom: true
+-        exclusiveZone: root.bar.position === "bottom" ? root.bar.exclusiveZone : Config.border.thickness
++        exclusiveZone: root.bar.position === "top" && !root.bar.disabled && root.dock.middleEntries.length > 0 && (Config.bar.persistent || root.visibilities.bar) ? root.dock.height + 12 : (root.bar.position === "bottom" ? root.bar.exclusiveZone : Config.border.thickness)
+         Config.screen: root.screen.name
+     }
+ 
+--- a/modules/drawers/Interactions.qml
++++ b/modules/drawers/Interactions.qml
+@@ -16,6 +16,7 @@
+     required property DrawerVisibilities visibilities
+     required property Panels panels
+     required property Bar.BarWrapper bar
++    required property Bar.SplitDock bottomDock
+     required property real borderThickness
+     required property bool fullscreen
+     property var focusGrab: null
+@@ -27,6 +28,10 @@
+     // Uses clampedThickness rather than the raw implicit size so the bar stays
+     // reachable when the border thickness is set to 0 (the collapsed bar is 0px wide).
+ 
++    function inBottomDock(x: real, y: real): bool {
++        return bottomDock.visible && y >= bottomDock.y - bottomDock.zoomExtent && y <= bottomDock.y + bottomDock.height + 12
++            && Math.abs(x - screen.width / 2) <= bottomDock.footprintWidth / 2 + bottomDock.zoomExtent;
++    }
+     function inBarArea(x: real, y: real): bool {
+         if (bar.position === "left")
+             return x < bar.x + bar.clampedThickness;
+@@ -58,6 +63,22 @@
+         return x >= b.x && x <= b.y;
+     }
+     function inLeftPanel(panel: Item, x: real, y: real): bool {
++        if (panel === panels.popoutsWrapper && popouts.currentName === "screencapture" && popouts.hasCurrent) {
++            if (popouts.current?.hoverLocked ?? false)
++                return true;
++            const left = panels.leftMargin + panel.x;
++            const top = panels.topMargin + panel.y;
++            const inCard = x >= left - 48 && x <= left + panel.width + 48
++                && y >= top - 32 && y <= top + panel.height + 32;
++            const inBridge = Math.abs(x - popouts.currentCenter) <= 80
++                && (bar.position === "top" ? y <= top + 32 : bar.position === "bottom" ? y >= top + panel.height - 32 : false);
++            if (inCard || inBridge)
++                return true;
++        }
++        if (panel === panels.popoutsWrapper && panel.fromBottomDock) {
++            const top = panels.topMargin + panel.y;
++            return y >= top && (withinPanelWidth(panel, x, y) || abovePopoutItem(panel, x));
++        }
+         const panelWidth = panel.content ? panel.content.nonAnimWidth : panel.width;
+         const panelHeight = panel.content ? panel.content.nonAnimHeight : panel.height;
+ 
+@@ -108,7 +129,9 @@
+     function onWheel(event: WheelEvent): void {
+         if (fullscreen)
+             return;
+-        if (inBarArea(event.x, event.y)) {
++        if (inBottomDock(event.x, event.y)) {
++            bottomDock.handleWheel(event.x, event.angleDelta);
++        } else if (inBarArea(event.x, event.y)) {
+             bar.handleWheel(isBarHorizontal ? event.x : event.y, event.angleDelta);
+         }
+     }
+@@ -122,8 +145,8 @@
+         if (root.focusGrab && (root.focusGrab.active || popouts.isDetached)) {
+             let inside = false;
+ 
+-            if (inBarArea(event.x, event.y)) inside = true;
+-            else if (visibilities.launcher && inBottomPanel(panels.launcher, event.x, event.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) inside = true;
++            if (inBarArea(event.x, event.y) || inBottomDock(event.x, event.y)) inside = true;
++            else if (visibilities.launcher && inTopPanel(panels.launcher, event.x, event.y, panels.topMargin + Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, event.x, event.y)) inside = true;
+             else if (visibilities.session && inRightPanel(panels.sessionWrapper, event.x, event.y)) inside = true;
+             else if (visibilities.sidebar && inRightPanel(panels.sidebar, event.x, event.y)) inside = true;
+             else if (visibilities.dashboard && inTopPanel(panels.dashboard, event.x, event.y, Config.dashboard.hoverThickness, Config.dashboard.hoverWidth) && withinPanelWidth(panels.dashboard, event.x, event.y)) inside = true;
+@@ -158,7 +181,7 @@
+         }
+     }
+     onPositionChanged: event => {
+-        if (popouts.isDetached)
++        if (bar.moving || popouts.isDetached)
+             return;
+ 
+         const x = event.x;
+@@ -171,8 +194,14 @@
+             return;
+         }
+ 
+-        if (!visibilities.bar && Config.bar.showOnHover && inBarArea(x, y))
+-            bar.isHovered = true;
++        if (inBottomDock(x, y)) {
++            bottomDock.checkPopout(x);
++            popoutHideTimer.stop();
++            return;
++        }
++
++        if (Config.bar.showOnHover)
++            bar.isHovered = inBarArea(x, y) || (popouts.hasCurrent && inLeftPanel(panels.popoutsWrapper, x, y));
+ 
+         if (pressed && inBarArea(dragStart.x, dragStart.y)) {
+             if (bar.position === "left") {
+@@ -253,12 +282,12 @@
+         }
+ 
+         if (Config.launcher.showOnHover) {
+-            if (!visibilities.launcher && inBottomPanel(panels.launcher, x, y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth))
++            if (!visibilities.launcher && inTopPanel(panels.launcher, x, y, panels.topMargin + Config.launcher.hoverThickness, Config.launcher.hoverWidth))
+                 visibilities.launcher = true;
+-        } else if (pressed && inBottomPanel(panels.launcher, dragStart.x, dragStart.y, false, Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, x, y)) {
+-            if (dragY < -Config.launcher.dragThreshold)
++        } else if (pressed && inTopPanel(panels.launcher, dragStart.x, dragStart.y, panels.topMargin + Config.launcher.hoverThickness, Config.launcher.hoverWidth) && withinPanelWidth(panels.launcher, x, y)) {
++            if (dragY > Config.launcher.dragThreshold)
+                 visibilities.launcher = true;
+-            else if (dragY > Config.launcher.dragThreshold)
++            else if (dragY < -Config.launcher.dragThreshold)
+                 visibilities.launcher = false;
+         }
+ 
+@@ -280,6 +309,8 @@
+         }
+ 
+         if (inBarArea(x, y)) {
++            // Route every bar item, including neighbours inside the capture bridge.
++            // The bridge below the bar is still handled by inLeftPanel().
+             bar.checkPopout(isBarHorizontal ? x : y);
+             popoutHideTimer.stop();
+         } else {
+@@ -353,8 +384,11 @@
+     Timer {
+         id: popoutHideTimer
+ 
+-        interval: 150
++        interval: popouts.currentName === "screencapture" ? 650 : 150
+         onTriggered: {
++            if (popouts.currentName === "screencapture" && popouts.hasCurrent
++                    && (popouts.current?.hoverLocked ?? false))
++                return;
+             if (!popouts.currentName.startsWith("traymenu") || ((popouts.current as StackView)?.depth ?? 0) <= 1) {
+                 popouts.hasCurrent = false;
+                 bar.closeTray();
+--- a/modules/drawers/Regions.qml
++++ b/modules/drawers/Regions.qml
+@@ -30,6 +30,14 @@
+     height: win.height - barTopHeight - barBottomHeight - win.dragMaskPadding * 2
+     intersection: Intersection.Xor
+ 
++    // Only the visible capsule takes input; the rest of the bottom stays usable.
++    Region {
++        x: (root.win.width - root.win.bottomDock.footprintWidth) / 2 - root.win.bottomDock.zoomExtent
++        y: root.win.bottomDock.y - root.win.bottomDock.zoomExtent
++        width: root.win.bottomDock.visible ? root.win.bottomDock.footprintWidth + root.win.bottomDock.zoomExtent * 2 : 0
++        height: root.win.bottomDock.visible ? root.win.bottomDock.height + root.win.bottomDock.zoomExtent + 12 : 0
++        intersection: Intersection.Subtract
++    }
+     R {
+         panel: root.panels.dashboard
+         y: 0
+@@ -37,8 +45,8 @@
+     }
+     R {
+         panel: root.panels.launcher
+-        y: root.win.height - height
+-        height: panel.height * (1 - root.panels.launcher.offsetScale) + root.edgeExtent(root.Config.launcher.hoverThickness)
++        y: 0
++        height: panel.height + root.panels.topMargin + root.edgeExtent(root.Config.launcher.hoverThickness)
+     }
+     R {
+         id: sessionRegion
+--- a/modules/launcher/HermesChat.qml
++++ b/modules/launcher/HermesChat.qml
+@@ -44,7 +44,7 @@
+     z: 20
+     focus: expanded
+ 
+-    // Shared smoke tint and rim; retain the chat geometry.
++    // Keep the bars' glass tint and rim, with a denser reading surface.
+     Bar.GlassSurface {
+         anchors.fill: parent
+         radius: root.radius
+@@ -453,7 +453,7 @@
+                         text: qsTr("Run once")
+                         enabled: !root.approvalSent
+                         implicitHeight: 34
+-                        background: Rectangle { radius: 9; color: root.accent; opacity: allowButton.enabled ? 1 : 0.5 ; PrimaryControlFill {} }
++                        background: Rectangle { radius: 9; color: root.accent; opacity: allowButton.enabled ? 1 : 0.5; PrimaryControlFill {} }
+                         contentItem: Text { text: allowButton.text; color: Colours.palette.m3onPrimary; font.pixelSize: 12; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                         onClicked: {
+                             root.approvalSent = true;
+@@ -539,7 +539,7 @@
+                 implicitWidth: 36; implicitHeight: 36
+                 enabled: !root.busy && composer.text.trim().length > 0
+                 ToolTip.visible: hovered; ToolTip.text: qsTr("Send · Enter")
+-                background: Rectangle { radius: 11; color: sendButton.enabled ? root.accent : Qt.alpha(root.foreground, 0.07); opacity: sendButton.hovered ? 0.85 : 1 ; PrimaryControlFill {} }
++                background: Rectangle { radius: 11; color: sendButton.enabled ? root.accent : Qt.alpha(root.foreground, 0.07); opacity: sendButton.hovered ? 0.85 : 1; PrimaryControlFill {} }
+                 contentItem: MaterialIcon { text: "arrow_upward"; color: sendButton.enabled ? Colours.palette.m3onPrimary : root.muted; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                 onClicked: root.send(composer.text)
+             }
+--- a/modules/launcher/services/HermesDesktop.qml
++++ b/modules/launcher/services/HermesDesktop.qml
+@@ -15,7 +15,7 @@
+                 audio_output: Audio.sink?.description ?? qsTranslate("Flausen", "Unavailable")});
+         }
+         function launch(app: string): string {
+-            const ids = {files: ["org.kde.dolphin"], settings: ["flausen-settings", "org.kde.systemsettings"], dateien: ["org.kde.dolphin"], einstellungen: ["systemsettings", "org.kde.systemsettings"],
++            const ids = {files: ["org.kde.dolphin"], settings: ["flausen-settings", "org.kde.systemsettings"], dateien: ["org.kde.dolphin"], einstellungen: ["flausen-settings", "systemsettings", "org.kde.systemsettings"],
+                 browser: ["chromium"], terminal: ["org.kde.konsole"], steam: ["steam"],
+                 battlenet: ["lab-battlenet"], discord: ["lab-discord"], wowup: ["lab-wowup"]};
+             const candidates = ids[app];
+--- a/modules/notifications/Content.qml
++++ b/modules/notifications/Content.qml
+@@ -38,7 +38,7 @@
+         return h === "right" ? parent.right : undefined;
+     }
+ 
+-    implicitWidth: Tokens.sizes.notifs.width
++    implicitWidth: Math.max(Tokens.sizes.notifs.width, Math.min(460, ((QsWindow.window as QsWindow)?.screen?.width ?? 460) - 24))
+     implicitHeight: {
+         const count = list.count;
+         if (count === 0)
+@@ -67,6 +67,25 @@
+         }
+ 
+         return Math.min(((QsWindow.window as QsWindow)?.screen?.height ?? 0) + padding - clampedPadding * 2 - Config.border.thickness, height + padding + clampedPadding);
++    }
++
++    // Read the actual delegate coordinates, including swipe and list movement.
++    function cardGeometry(index: int, target: Item): rect {
++        void list.count; void list.contentY;
++        const wrapper = list.itemAtIndex(index);
++        if (!wrapper || !root.visible || !target) return Qt.rect(0, 0, 0, 0);
++        const card = wrapper.card;
++        void card.x; void card.y; void card.width; void card.height;
++        for (let node = card.parent; node; node = node.parent) {
++            void node.x; void node.y;
++        }
++        const point = card.mapToItem(target, 0, 0);
++        const viewport = list.mapToItem(target, 0, 0);
++        const x = Math.max(point.x, viewport.x);
++        const y = Math.max(point.y, viewport.y);
++        const right = Math.min(point.x + card.width, viewport.x + list.width);
++        const bottom = Math.min(point.y + card.height, viewport.y + list.height);
++        return Qt.rect(x, y, Math.max(0, right - x), Math.max(0, bottom - y));
+     }
+ 
+     ClippingWrapperRectangle {
+@@ -159,6 +178,7 @@
+         required property NotifData modelData
+         required property int index
+         readonly property alias nonAnimHeight: notif.nonAnimHeight
++        readonly property alias card: notif
+         property int idx
+ 
+         onIndexChanged: {
+--- a/modules/notifications/Wrapper.qml
++++ b/modules/notifications/Wrapper.qml
+@@ -32,7 +32,11 @@
+     visible: height > 0 && !visibilities.overview && isTargetScreen && isAllowedByFullscreen
+     anchors.topMargin: baseTopMargin
+     implicitWidth: (isTargetScreen && isAllowedByFullscreen) ? Math.max(sidebarPanel.width, content.implicitWidth) : 0
+-    implicitHeight: (isTargetScreen && isAllowedByFullscreen) ? content.implicitHeight : 0
++    implicitHeight: (isTargetScreen && isAllowedByFullscreen && content.implicitHeight > 0) ? content.implicitHeight - baseTopMargin : 0
++
++    function cardGeometry(index: int, target: Item): rect {
++        return visible ? content.cardGeometry(index, target) : Qt.rect(0, 0, 0, 0);
++    }
+ 
+     Content {
+         id: content
+--- a/modules/sidebar/AiAssistant.qml
++++ b/modules/sidebar/AiAssistant.qml
+@@ -335,7 +335,7 @@
+             var lt = (lm.text || "").trim();
+             if (lt === "")
+                 continue;
+-            lines.push((lm.isUser ? "User" : "Assistant") + ": " + lt);
++            lines.push((lm.isUser ? qsTranslate("Flausen", "User") : "Assistant") + ": " + lt);
+         }
+         if (lines.length > 6)
+             lines = lines.slice(lines.length - 6);
+--- a/modules/utilities/cards/CaptureCard.qml
++++ b/modules/utilities/cards/CaptureCard.qml
+@@ -4,6 +4,8 @@
+ import QtQuick.Layouts
+ import Quickshell
+ import Caelestia.Components
++import Caelestia.Services
++import qs.modules.nexus.common
+ import Caelestia.Config
+ import qs.components
+ import qs.components.controls
+@@ -17,6 +19,35 @@
+     required property DrawerVisibilities visibilities
+     readonly property bool shotMode: root.props.captureMode === "shot"
+     readonly property real nonAnimHeight: btnLayout.implicitHeight + modeRow.implicitHeight + listOrControls.implicitHeight + layout.spacing * 2 + layout.anchors.margins * 2
++
++    readonly property bool hoverLocked: captureButton.expanded || shortcutDialog.visible
++    property int shortcutRevision: 0
++
++    function shortcutText(name: string): string {
++        root.shortcutRevision;
++        return KeybindsModel.getKey(name);
++    }
++
++    function editShortcut(name: string, target: Item): void {
++        shortcutDialog.shortcutName = name;
++        shortcutDialog.currentKey = KeybindsModel.getKey(name);
++        shortcutDialog.targetItem = target;
++        shortcutDialog.open();
++        captureButton.expanded = false;
++    }
++
++    Connections {
++        target: KeybindsModel
++        function onKeybindsChanged(): void { root.shortcutRevision++; }
++    }
++
++    KeyCaptureDialog {
++        id: shortcutDialog
++        appendKey: false
++        allowClear: true
++        onConfirm: (name, newKey) => KeybindsModel.setKey(name, newKey)
++        onClear: name => KeybindsModel.setKey(name, "")
++    }
+ 
+     Layout.fillWidth: true
+     implicitHeight: layout.implicitHeight + layout.anchors.margins * 2
+@@ -142,6 +173,9 @@
+             }
+ 
+             SplitButton {
++                id: captureButton
++                menu.constrainToWindow: true
++                menu.maxHeight: 480
+                 visible: root.shotMode
+                 disabled: Recorder.running
+ 
+@@ -153,6 +187,9 @@
+ 
+                         icon: "screenshot_region"
+                         text: qsTr("Capture region")
++                        shortcutName: "screenshot"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Capture")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -164,6 +201,9 @@
+                     MenuItem {
+                         icon: "fullscreen"
+                         text: qsTr("Capture fullscreen")
++                        shortcutName: "captureFullscreen"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Fullscreen")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -178,6 +218,9 @@
+                     MenuItem {
+                         icon: "select_window"
+                         text: qsTr("Capture active window")
++                        shortcutName: "captureActiveWindow"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Window")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -192,6 +235,9 @@
+                     MenuItem {
+                         icon: "text_fields"
+                         text: qsTr("Recognize text")
++                        shortcutName: "ocr"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Recognize")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -203,6 +249,9 @@
+                     MenuItem {
+                         icon: "image_search"
+                         text: qsTr("Search image")
++                        shortcutName: "googleLens"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Search")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+@@ -214,6 +263,9 @@
+                     MenuItem {
+                         icon: "screenshot_monitor"
+                         text: qsTr("Use Spectacle")
++                        shortcutName: "captureSpectacle"
++                        shortcutText: root.shortcutText(shortcutName)
++                        onEditShortcut: target => root.editShortcut(shortcutName, target)
+                         activeText: qsTr("Spectacle")
+                         onClicked: {
+                             root.visibilities.utilities = false;
+--- a/modules/utilities/cards/QuickShareList.qml
++++ b/modules/utilities/cards/QuickShareList.qml
+@@ -191,7 +191,7 @@
+                     StyledText {
+                         Layout.fillWidth: true
+                         Layout.rightMargin: Tokens.spacing.extraSmall
+-                        text: qsTr("%1 at %2").arg(modelData.fileName).arg(Qt.formatDateTime(new Date(modelData.timestamp * 1000), Qt.locale()))
++                        text: qsTr("%1 at %2").arg(modelData.fileName).arg(Qt.formatDateTime(new Date(modelData.timestamp * 1000), SystemLanguage.locale))
+                         color: Colours.palette.m3onSurfaceVariant
+                         elide: Text.ElideRight
+                     }
+--- a/modules/utilities/cards/RecordingList.qml
++++ b/modules/utilities/cards/RecordingList.qml
+@@ -95,7 +95,7 @@
+                         return time;
+                     const date = new Date(...matches.slice(1));
+                     date.setMonth(date.getMonth() - 1);
+-                    return qsTr("Recording at %1").arg(Qt.formatDateTime(date, Qt.locale()));
++                    return qsTr("Recording at %1").arg(Qt.formatDateTime(date, SystemLanguage.timeLocale));
+                 }
+                 color: Colours.palette.m3onSurfaceVariant
+                 elide: Text.ElideRight
+--- a/modules/utilities/cards/ScreenshotList.qml
++++ b/modules/utilities/cards/ScreenshotList.qml
+@@ -1,18 +1,16 @@
+ pragma ComponentBehavior: Bound
+ 
+ import QtQuick
++import QtQuick.Controls
+ import QtQuick.Layouts
+ import Qt.labs.folderlistmodel
+ import Quickshell
+-import Quickshell.Widgets
++import Quickshell.Io
+ import Caelestia
+ import Caelestia.Config
+-import Caelestia.Models
+ import qs.components
+-import qs.components.containers
+ import qs.components.controls
+ import qs.services
+-import qs.utils
+ 
+ ColumnLayout {
+     id: root
+@@ -21,256 +19,234 @@
+     required property DrawerVisibilities visibilities
+ 
+     property string confirmDelete: ""
++    property string pendingCopy: ""
++    property string feedback: ""
+     readonly property string shotsdir: GlobalConfig.paths.screenshotsDir
+-
+-    spacing: 0
+-
+-    WrapperMouseArea {
++    spacing: Tokens.spacing.small
++
++    function openImage(path: string): void {
++        clickTimer.stop();
++        root.pendingCopy = "";
++        root.visibilities.utilities = false;
++        if (!Visibilities.sidebarPinned)
++            root.visibilities.sidebar = false;
++        Quickshell.execDetached(["xdg-open", path]);
++    }
++
++    function queueCopy(path: string): void {
++        root.pendingCopy = path;
++        clickTimer.restart();
++    }
++
++    Timer {
++        id: clickTimer
++        // Wait for the double-click window so opening does not also copy.
++        interval: Qt.styleHints.mouseDoubleClickInterval
++        onTriggered: {
++            if (!copyProcess.running) {
++                copyProcess.command = ["bash", "-c", 'wl-copy --type image/png < "$1"', "screenshot-gallery", root.pendingCopy];
++                copyProcess.running = true;
++            }
++        }
++    }
++
++    Process {
++        id: copyProcess
++        onExited: (exitCode, exitStatus) => {
++            root.feedback = exitCode === 0 ? qsTr("Image copied") : qsTr("Could not copy image");
++            feedbackTimer.restart();
++        }
++    }
++
++    Timer {
++        id: feedbackTimer
++        interval: 2200
++        onTriggered: root.feedback = ""
++    }
++
++    RowLayout {
+         Layout.fillWidth: true
+-
+-        cursorShape: Qt.PointingHandCursor
+-        onClicked: root.props.screenshotListExpanded = !root.props.screenshotListExpanded
+-
+-        RowLayout {
+-            spacing: Tokens.spacing.medium
+-
+-            MaterialIcon {
+-                Layout.alignment: Qt.AlignVCenter
+-                text: "list"
+-                fontStyle: Tokens.font.icon.large
+-            }
+-
+-            StyledText {
+-                Layout.alignment: Qt.AlignVCenter
+-                Layout.fillWidth: true
+-                text: qsTr("Screenshots")
+-                font: Tokens.font.body.medium
+-            }
+-
+-            IconButton {
+-                icon: root.props.screenshotListExpanded ? "unfold_less" : "unfold_more"
+-                type: IconButton.Text
+-                label.animate: true
+-                onClicked: root.props.screenshotListExpanded = !root.props.screenshotListExpanded
+-            }
+-        }
+-    }
+-
+-    StyledListView {
+-        id: list
+-
++        spacing: Tokens.spacing.small
++
++        MaterialIcon {
++            text: root.feedback ? "check_circle" : "photo_library"
++            color: root.feedback ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
++        }
++
++        StyledText {
++            Layout.fillWidth: true
++            text: root.feedback || qsTr("Screenshots")
++            font: Tokens.font.body.medium
++            color: root.feedback ? Colours.palette.m3primary : Colours.palette.m3onSurface
++            elide: Text.ElideRight
++        }
++
++        IconButton {
++            icon: "folder_open"
++            type: IconButton.Text
++            ToolTip.visible: hovered
++            ToolTip.text: qsTr("Open screenshots folder")
++            onClicked: Quickshell.execDetached(["xdg-open", root.shotsdir])
++        }
++
++        IconButton {
++            icon: root.props.screenshotListExpanded ? "unfold_less" : "unfold_more"
++            type: IconButton.Text
++            label.animate: true
++            onClicked: root.props.screenshotListExpanded = !root.props.screenshotListExpanded
++        }
++    }
++
++    GridView {
++        id: gallery
++
++        readonly property int columns: width >= 460 ? 3 : 2
++        readonly property real tileHeight: cellWidth * 0.62 + 32
+         model: FolderListModel {
+             folder: "file://" + root.shotsdir
+-            nameFilters: ["screenshot-*.png"]
++            nameFilters: ["*.png"]
++            showDirs: false
+             sortField: FolderListModel.Time
+             sortReversed: false
+         }
+ 
+         Layout.fillWidth: true
+-        Layout.rightMargin: -Tokens.spacing.small
+-        implicitHeight: (Tokens.font.body.large.pointSize + Tokens.padding.small) * (root.props.screenshotListExpanded ? 10 : 3)
++        implicitHeight: Math.max(64, Math.min(Math.ceil(count / columns), root.props.screenshotListExpanded ? 4 : 2) * cellHeight)
++        cellWidth: width / columns
++        cellHeight: tileHeight + Tokens.spacing.small
+         clip: true
+-
+-        StyledScrollBar.vertical: StyledScrollBar {
+-            flickable: list
+-        }
+-
+-        delegate: RowLayout {
++        boundsBehavior: Flickable.StopAtBounds
++        cacheBuffer: cellHeight
++
++        ScrollBar.vertical: StyledScrollBar { flickable: gallery }
++
++        delegate: Item {
+             id: shot
+-
+-            required property string fileBaseName
++            required property string fileName
+             required property string filePath
+-
+-            property string baseName: fileBaseName
+-            property string path: filePath
+-            property bool confirming: root.confirmDelete === path
+-
+-            anchors.left: list.contentItem.left
+-            anchors.right: list.contentItem.right
+-            anchors.rightMargin: Tokens.spacing.small
+-            spacing: Tokens.spacing.extraSmall
+-
+-            StyledText {
+-                Layout.fillWidth: true
+-                Layout.rightMargin: Tokens.spacing.extraSmall
+-                visible: !shot.confirming
+-                text: {
+-                    const time = shot.baseName;
+-                    const matches = time.match(/^screenshot-(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})/);
+-                    if (!matches)
+-                        return time;
+-                    const date = new Date(matches[1], matches[2] - 1, matches[3], matches[4], matches[5], matches[6]);
+-                    return qsTr("Screenshot at %1").arg(Qt.formatDateTime(date, Qt.locale()));
+-                }
+-                color: Colours.palette.m3onSurfaceVariant
+-                elide: Text.ElideRight
++            required property url fileUrl
++            readonly property bool confirming: root.confirmDelete === filePath
++            width: gallery.cellWidth
++            height: gallery.cellHeight
++
++            StyledRect {
++                anchors.fill: parent
++                anchors.rightMargin: Tokens.spacing.small
++                anchors.bottomMargin: Tokens.spacing.small
++                radius: Tokens.rounding.small
++                color: pointer.containsMouse ? Colours.palette.m3surfaceContainerHigh : Colours.palette.m3surfaceContainerLow
++                clip: true
++
++                Image {
++                    id: preview
++                    anchors.left: parent.left
++                    anchors.right: parent.right
++                    anchors.top: parent.top
++                    anchors.margins: Tokens.padding.extraSmall
++                    height: parent.height - 32 - Tokens.padding.extraSmall
++                    source: shot.fileUrl
++                    sourceSize.width: 420
++                    sourceSize.height: 260
++                    asynchronous: true
++                    fillMode: Image.PreserveAspectFit
++                }
++
++                MaterialIcon {
++                    anchors.centerIn: preview
++                    visible: preview.status !== Image.Ready
++                    text: preview.status === Image.Error ? "broken_image" : "image"
++                    color: Colours.palette.m3outline
++                }
++
++                MouseArea {
++                    id: pointer
++                    anchors.fill: parent
++                    hoverEnabled: true
++                    cursorShape: Qt.PointingHandCursor
++                    enabled: !shot.confirming
++                    onClicked: root.queueCopy(shot.filePath)
++                    onDoubleClicked: root.openImage(shot.filePath)
++                    ToolTip.visible: containsMouse
++                    ToolTip.delay: 900
++                    ToolTip.text: qsTr("Click to copy · Double-click to open") + "\n" + shot.fileName
++                }
++
++                RowLayout {
++                    anchors.left: parent.left
++                    anchors.right: parent.right
++                    anchors.bottom: parent.bottom
++                    anchors.leftMargin: Tokens.padding.small
++                    height: 32
++                    spacing: 0
++
++                    StyledText {
++                        Layout.fillWidth: true
++                        text: {
++                            const match = shot.fileName.match(/^screenshot-(\d{4})-(\d{2})-(\d{2})_(\d{2})\.(\d{2})\.(\d{2})/);
++                            return match ? `${match[3]}.${match[2]}. ${match[4]}:${match[5]}` : shot.fileName;
++                        }
++                        font: Tokens.font.label.small
++                        color: Colours.palette.m3onSurfaceVariant
++                        elide: Text.ElideRight
++                    }
++
++                    IconButton {
++                        icon: "delete_outline"
++                        type: IconButton.Text
++                        font: Tokens.font.icon.small
++                        onClicked: {
++                            clickTimer.stop();
++                            root.confirmDelete = shot.filePath;
++                        }
++                    }
++                }
++
++                StyledRect {
++                    anchors.fill: parent
++                    visible: shot.confirming
++                    color: Colours.palette.m3surfaceContainerHigh
++                    radius: parent.radius
++                    MouseArea { anchors.fill: parent }
++                    ColumnLayout {
++                        anchors.centerIn: parent
++                        width: parent.width - Tokens.padding.small * 2
++                        spacing: Tokens.spacing.small
++                        StyledText {
++                            Layout.fillWidth: true
++                            text: qsTr("Delete this screenshot?")
++                            font: Tokens.font.label.small
++                            wrapMode: Text.Wrap
++                            horizontalAlignment: Text.AlignHCenter
++                        }
++                        RowLayout {
++                            Layout.alignment: Qt.AlignHCenter
++                            IconButton {
++                                icon: "close"
++                                type: IconButton.Text
++                                onClicked: root.confirmDelete = ""
++                            }
++                            IconButton {
++                                icon: "delete_forever"
++                                type: IconButton.Text
++                                label.color: Colours.palette.m3error
++                                onClicked: {
++                                    CUtils.deleteFile(shot.fileUrl);
++                                    root.confirmDelete = "";
++                                }
++                            }
++                        }
++                    }
++                }
+             }
+-
+-            IconButton {
+-                visible: !shot.confirming
+-                icon: "play_arrow"
+-                type: IconButton.Text
+-                onClicked: {
+-                    root.visibilities.utilities = false;
+-                    if (!Visibilities.sidebarPinned)
+-                        root.visibilities.sidebar = false;
+-                    Quickshell.execDetached(["xdg-open", shot.path]);
+-                }
+-            }
+-
+-            IconButton {
+-                visible: !shot.confirming
+-                icon: "folder"
+-                type: IconButton.Text
+-                onClicked: {
+-                    root.visibilities.utilities = false;
+-                    if (!Visibilities.sidebarPinned)
+-                        root.visibilities.sidebar = false;
+-                    Quickshell.execDetached(["xdg-open", root.shotsdir]);
+-                }
+-            }
+-
+-            IconButton {
+-                visible: !shot.confirming
+-                icon: "delete_forever"
+-                type: IconButton.Text
+-                label.color: Colours.palette.m3error
+-                stateLayer.color: Colours.palette.m3error
+-                onClicked: root.confirmDelete = shot.path
+-            }
+-
+-            StyledText {
+-                Layout.fillWidth: true
+-                visible: shot.confirming
+-                text: qsTr("Delete this screenshot?")
+-                color: Colours.palette.m3onSurfaceVariant
+-                elide: Text.ElideRight
+-            }
+-
+-            TextButton {
+-                visible: shot.confirming
+-                text: qsTr("Cancel")
+-                type: TextButton.Text
+-                onClicked: root.confirmDelete = ""
+-            }
+-
+-            TextButton {
+-                visible: shot.confirming
+-                text: qsTr("Delete")
+-                type: TextButton.Text
+-                onClicked: {
+-                    CUtils.deleteFile(Qt.resolvedUrl(shot.path));
+-                    root.confirmDelete = "";
+-                }
+-            }
+-        }
+-
+-        add: Transition {
+-            Anim {
+-                type: Anim.DefaultEffects
+-                property: "opacity"
+-                from: 0
+-                to: 1
+-            }
+-        }
+-
+-        remove: Transition {
+-            Anim {
+-                type: Anim.DefaultEffects
+-                property: "opacity"
+-                to: 0
+-            }
+-        }
+-
+-        displaced: Transition {
+-            Anim {
+-                type: Anim.DefaultEffects
+-                property: "opacity"
+-                to: 1
+-            }
+-            Anim {
+-                property: "y"
+-            }
+-        }
+-
+-        Loader {
+-            asynchronous: true
++        }
++
++        StyledText {
+             anchors.centerIn: parent
+-
+-            opacity: list.count === 0 ? 1 : 0
+-            active: opacity > 0
+-
+-            sourceComponent: ColumnLayout {
+-                spacing: Tokens.spacing.small
+-
+-                MaterialIcon {
+-                    Layout.alignment: Qt.AlignHCenter
+-                    text: "scan_delete"
+-                    color: Colours.palette.m3outline
+-                    fontStyle: Tokens.font.icon.extraLarge
+-
+-                    opacity: root.props.screenshotListExpanded ? 1 : 0
+-                    scale: root.props.screenshotListExpanded ? 1 : 0
+-                    Layout.preferredHeight: root.props.screenshotListExpanded ? implicitHeight : 0
+-
+-                    Behavior on opacity {
+-                        Anim {
+-                            type: Anim.DefaultEffects
+-                        }
+-                    }
+-
+-                    Behavior on scale {
+-                        Anim {}
+-                    }
+-
+-                    Behavior on Layout.preferredHeight {
+-                        Anim {}
+-                    }
+-                }
+-
+-                RowLayout {
+-                    spacing: Tokens.spacing.medium
+-
+-                    MaterialIcon {
+-                        Layout.alignment: Qt.AlignHCenter
+-                        text: "scan_delete"
+-                        color: Colours.palette.m3outline
+-
+-                        opacity: !root.props.screenshotListExpanded ? 1 : 0
+-                        scale: !root.props.screenshotListExpanded ? 1 : 0
+-                        Layout.preferredWidth: !root.props.screenshotListExpanded ? implicitWidth : 0
+-
+-                        Behavior on opacity {
+-                            Anim {
+-                                type: Anim.DefaultEffects
+-                            }
+-                        }
+-
+-                        Behavior on scale {
+-                            Anim {}
+-                        }
+-
+-                        Behavior on Layout.preferredWidth {
+-                            Anim {}
+-                        }
+-                    }
+-
+-                    StyledText {
+-                        text: qsTr("No screenshots found")
+-                        color: Colours.palette.m3outline
+-                    }
+-                }
+-            }
+-
+-            Behavior on opacity {
+-                Anim {
+-                    type: Anim.DefaultEffects
+-                }
+-            }
+-        }
+-
+-        Behavior on implicitHeight {
+-            Anim {}
+-        }
++            visible: gallery.count === 0
++            text: qsTr("No screenshots found")
++            color: Colours.palette.m3outline
++        }
++
++        Behavior on implicitHeight { Anim {} }
+     }
+ }
+--- a/modules/windowinfo/Details.qml
++++ b/modules/windowinfo/Details.qml
+@@ -35,7 +35,7 @@
+     }
+     Detail {
+         icon: "location_on"
+-        text: qsTr("Address: %1").arg(root.client?.address ?? "unknown")
++        text: qsTr("Address: %1").arg(root.client?.address ?? qsTranslate("Flausen", "unknown"))
+         color: Colours.palette.m3primary
+     }
+     Detail {
+@@ -62,7 +62,7 @@
+         text: {
+             const fs = root.client?.fullscreen;
+             if (fs !== undefined)
+-                return qsTr("Fullscreen state: %1").arg(fs ? "on" : "off");
++                return qsTr("Fullscreen state: %1").arg(fs ? qsTranslate("Flausen", "on") : qsTranslate("Flausen", "off"));
+             return qsTr("Fullscreen state: unknown");
+         }
+         color: Colours.palette.m3tertiary
+--- a/services/Audio.qml
++++ b/services/Audio.qml
+@@ -262,7 +262,7 @@
+                 newStreams.push(node);
+ 
+                 const name = getStreamName(node);
+-                if (name === root.selfAppName)
++                if (name === root.selfAppName || name === "flausen-app-visualiser")
+                     continue;
+                 if (!seenApps.has(name)) {
+                     seenApps.add(name);
+--- a/services/Colours.qml
++++ b/services/Colours.qml
+@@ -29,6 +29,8 @@
+     property bool currentLight
+     property bool previewLight
+     readonly property M3Palette palette: showPreview ? preview : current
++    // Shared bar foreground, matching the network and status icons.
++    readonly property color barForeground: palette.m3secondary
+     readonly property M3TPalette tPalette: M3TPalette {}
+     readonly property M3Palette current: M3Palette {}
+     readonly property M3Palette preview: M3Palette {}
+--- a/services/Nmcli.qml
++++ b/services/Nmcli.qml
+@@ -3,6 +3,7 @@
+ 
+ import QtQuick
+ import Quickshell
++import Quickshell.Io
+ import Caelestia
+ import Caelestia.Config
+ import Caelestia.Services
+@@ -29,9 +30,45 @@
+     property string ethernetSpeed: ""
+     property string ethernetDataUsage: ""
+ 
+-    readonly property var vpnConnections: NmQt.vpnConnections
+-    readonly property var activeVpn: NmQt.activeVpn
+-    property string vpnPendingConnection: NmQt.vpnPendingConnection
++    readonly property var vpnConnections: [...NmQt.vpnConnections, ...(root.tailscaleStatus.installed ? [{name: "Tailscale", connectionId: "@tailscale", type: "tailscale", connected: root.tailscaleStatus.connected, detail: root.tailscaleStatus.detail}] : [])]
++    property var tailscaleStatus: ({installed: false, connected: false, detail: ""})
++    property var tailscaleCallback: null
++    readonly property string tailscaleHelper: Quickshell.env("HOME") + "/.config/quickshell/caelestia/scripts/tailscale-vpn.py"
++    function refreshTailscale(): void {
++        if (!tailscaleProbe.running && !tailscaleAction.running) tailscaleProbe.running = true;
++    }
++    function runTailscale(action: string, callback: var): void {
++        if (tailscaleAction.running) return;
++        root.tailscaleCallback = callback;
++        tailscaleAction.command = ["python3", root.tailscaleHelper, action];
++        tailscaleAction.running = true;
++    }
++    Timer { interval: 10000; running: true; repeat: true; triggeredOnStart: true; onTriggered: root.refreshTailscale() }
++    Process {
++        id: tailscaleProbe
++        command: ["python3", root.tailscaleHelper, "status"]
++        stdout: StdioCollector {
++            onStreamFinished: {
++                try { root.tailscaleStatus = JSON.parse(text); }
++                catch (e) { root.tailscaleStatus = {installed: root.tailscaleStatus.installed, connected: false, detail: qsTranslate("Flausen", "Status unavailable")}; }
++            }
++        }
++    }
++    Process {
++        id: tailscaleAction
++        property var result: ({success: false, error: qsTranslate("Flausen", "Could not run Tailscale")})
++        onStarted: result = {success: false, error: qsTranslate("Flausen", "Could not run Tailscale")}
++        stdout: StdioCollector { onStreamFinished: { try { tailscaleAction.result = JSON.parse(text); } catch (e) {} } }
++        onExited: {
++            const result = tailscaleAction.result;
++            if (!result.success) Toaster.toast("Tailscale", result.error || qsTranslate("Flausen", "Action failed"), "vpn_key_alert");
++            if (typeof root.tailscaleCallback === "function") root.tailscaleCallback(result);
++            root.tailscaleCallback = null;
++            Qt.callLater(root.refreshTailscale);
++        }
++    }
++    readonly property var activeVpn: root.vpnConnections.find(vpn => vpn.connected) ?? ({})
++    readonly property string vpnPendingConnection: tailscaleAction.running ? "Tailscale" : NmQt.vpnPendingConnection
+ 
+     /// Wi-Fi access point. Exposed as the service itself rather than as three
+     /// copied properties: supported, enabled, the name and whether an enable is
+@@ -76,7 +113,7 @@
+                 immediateCheckTimer.checkCount = 0;
+                 root.connectionSuccessful(pending.ssid);
+                 if (pending.callback && typeof pending.callback === "function") {
+-                    pending.callback({ success: true, output: "Connected", error: "", exitCode: 0 });
++                    pending.callback({ success: true, output: qsTranslate("Flausen", "Connected"), error: "", exitCode: 0 });
+                 }
+             }
+         } else if (root.active !== null) {
+@@ -180,8 +217,14 @@
+ 
+     function loadSavedConnections(callback: var): void { NmQt.loadSavedConnections(callback); }
+ 
+-    function connectVpn(connectionName: string, callback: var): void { NmQt.connectVpn(connectionName, callback); }
+-    function disconnectVpn(connectionName: string, callback: var): void { NmQt.disconnectVpn(connectionName, callback); }
++    function connectVpn(connectionName: string, callback: var): void {
++        if (connectionName === "@tailscale") runTailscale("connect", callback);
++        else NmQt.connectVpn(connectionName, callback);
++    }
++    function disconnectVpn(connectionName: string, callback: var): void {
++        if (connectionName === "@tailscale") runTailscale("disconnect", callback);
++        else NmQt.disconnectVpn(connectionName, callback);
++    }
+ 
+     function hasSavedProfile(ssid: string): bool { return NmQt.hasSavedProfile(ssid); }
+     function forgetNetwork(ssid: string, callback: var): void { NmQt.forgetNetwork(ssid, callback); }
+@@ -330,7 +373,7 @@
+             root.wifiEnabled = NmQt.wifiEnabled;
+         }
+         function onVpnPendingConnectionChanged(): void {
+-            root.vpnPendingConnection = NmQt.vpnPendingConnection;
++            // vpnPendingConnection is derived from NM and Tailscale actions.
+         }
+         function onSavedConnectionsChanged(): void {
+             root.savedConnections = NmQt.savedConnections;
+@@ -381,7 +424,7 @@
+                     root.connectionSuccessful(pending.ssid);
+                     if (pending.callback && typeof pending.callback === "function") {
+                         pending.callback({
+-                            success: true, output: "Connected", error: "", exitCode: 0
++                            success: true, output: qsTranslate("Flausen", "Connected"), error: "", exitCode: 0
+                         });
+                     }
+                 }
+@@ -410,7 +453,7 @@
+                     root.connectionSuccessful(pending.ssid);
+                     if (pending.callback && typeof pending.callback === "function") {
+                         pending.callback({
+-                            success: true, output: "Connected", error: "", exitCode: 0
++                            success: true, output: qsTranslate("Flausen", "Connected"), error: "", exitCode: 0
+                         });
+                     }
+                 } else if (checkCount >= 6) {
+@@ -489,7 +532,7 @@
+             const names = ["unknown", "unmanaged", "unavailable", "disconnected", "prepare", "config", "need-auth", "ip-config", "ip-check", "secondaries", "activated", "deactivating", "failed"];
+             if (typeof state === "number" && state >= 0 && state < names.length)
+                 return names[state];
+-            return state ?? "unknown";
++            return state ?? qsTranslate("Flausen", "unknown");
+         }
+     }
+ }
+--- a/services/Time.qml
++++ b/services/Time.qml
+@@ -20,7 +20,7 @@
+     readonly property string amPmStr: timeComponents[2] ?? ""
+ 
+     function format(fmt: string): string {
+-        return clock.date.toLocaleString(Qt.locale(), fmt);
++        return clock.date.toLocaleString(SystemLanguage.timeLocale, fmt);
+     }
+ 
+     SystemClock {
+--- a/services/Uninstaller.qml
++++ b/services/Uninstaller.qml
+@@ -31,7 +31,7 @@
+             return "script";
+         if (root.manualCommand !== "")
+             return "package";
+-        return "unknown";
++        return qsTranslate("Flausen", "unknown");
+     }
+ 
+     readonly property bool scriptFound: root.state === "script"
+--- a/services/UpdateChecker.qml
++++ b/services/UpdateChecker.qml
+@@ -19,8 +19,8 @@
+     property var availableVersions: []
+     property int pendingCount: 0
+     property bool versionSummaryMode: false
+-    property string currentVersion: "unknown"
+-    property string previousVersion: "unknown"
++    property string currentVersion: qsTranslate("Flausen", "unknown")
++    property string previousVersion: qsTranslate("Flausen", "unknown")
+     property string installedCommitHash: ""
+ 
+     property string _localCommit: ""
+@@ -532,7 +532,7 @@
+                                     hash: qsTr("Release"),
+                                     subject: tag,
+                                     author: qsTr("GitHub release"),
+-                                    date: published ? new Date(published).toLocaleString(Qt.locale(), Locale.ShortFormat) : "",
++                                    date: published ? new Date(published).toLocaleString(SystemLanguage.timeLocale, Locale.ShortFormat) : "",
+                                     details: body
+                                 });
+                                 parsedVersions.push(tag);
+@@ -553,7 +553,7 @@
+                                 hash: qsTr("Release"),
+                                 subject: tag,
+                                 author: qsTr("Tag"),
+-                                date: created ? new Date(created).toLocaleString(Qt.locale(), Locale.ShortFormat) : "",
++                                date: created ? new Date(created).toLocaleString(SystemLanguage.timeLocale, Locale.ShortFormat) : "",
+                                 details: ""
+                             });
+                             parsedVersions.push(tag);
+@@ -569,7 +569,7 @@
+                                 fullHash: parts[1] || "",
+                                 subject: parts[3] || "",
+                                 author: parts[4] || "",
+-                                date: new Date(parts[5]).toLocaleString(Qt.locale(), Locale.ShortFormat),
++                                date: new Date(parts[5]).toLocaleString(SystemLanguage.timeLocale, Locale.ShortFormat),
+                                 isMerge: parentCount > 1
+                             });
+                             parsedCommitCount++;
+@@ -597,7 +597,7 @@
+                                 hash: parts[0],
+                                 subject: parts[1],
+                                 author: parts[2],
+-                                date: new Date(parts[3]).toLocaleString(Qt.locale(), Locale.ShortFormat)
++                                date: new Date(parts[3]).toLocaleString(SystemLanguage.timeLocale, Locale.ShortFormat)
+                             });
+                         }
+                     }
+@@ -674,7 +674,7 @@
+                                 fullHash: parts[1] || "",
+                                 subject: parts[3] || "",
+                                 author: parts[4] || "",
+-                                date: new Date(parts[5]).toLocaleString(Qt.locale(), Locale.ShortFormat),
++                                date: new Date(parts[5]).toLocaleString(SystemLanguage.timeLocale, Locale.ShortFormat),
+                                 isMerge: parentCount > 1
+                             });
+                         } else if (line.startsWith("MORE|")) {
+--- a/services/UpdateHub.qml
++++ b/services/UpdateHub.qml
+@@ -48,7 +48,7 @@
+     function itemState(item: var): string {
+         if (item.downloading) {
+             const percent = item.bytesTotal > 0 ? Math.min(100, Math.floor(item.bytesDownloaded * 100 / item.bytesTotal)) + " %" : "";
+-            return qsTranslate("Flausen", "Downloading %1").arg(percent);
++            return qsTranslate("Flausen", "Downloading ") + percent;
+         }
+         if (item.state === "update") return qsTranslate("Flausen", "Update available");
+         if (item.state === "current") return qsTranslate("Flausen", "Up to date");
+@@ -99,7 +99,7 @@
+             value.addons.filter(item => item.state === "update").slice(0, 8).forEach(item => lines.push(item.name + ": " + item.installedVersion + " → " + item.latestVersion));
+         }
+         if (key === "artcraft" && value.feedTimestamp) lines.push(qsTranslate("Flausen", "ArtCraft feed dated ") + new Date(value.feedTimestamp).toLocaleString(SystemLanguage.timeLocale, SystemLanguage.timeLocale.dateTimeFormat(Locale.ShortFormat)));
+-        if (key === "artcraft" && value.autoUpdate !== undefined) lines.push(qsTranslate("Flausen", "Automatic suite updates: ") + (value.autoUpdate === null ? "unknown" : value.autoUpdate ? "on" : "off"));
++        if (key === "artcraft" && value.autoUpdate !== undefined) lines.push(qsTranslate("Flausen", "Automatic suite updates: ") + (value.autoUpdate === null ? qsTranslate("Flausen", "unknown") : value.autoUpdate ? qsTranslate("Flausen", "on") : qsTranslate("Flausen", "off")));
+         return lines.join("\n");
+     }
+     function compact(key: string): string {
+--- a/services/Wallpapers.qml
++++ b/services/Wallpapers.qml
+@@ -26,7 +26,10 @@
+     property string currentMediaFilter: "All"
+ 
+     property var filteredList: {
+-        const res = wallpapers.entries || [];
++        // Drop entries from the previous root immediately during an asynchronous
++        // folder reload. Random and slideshow must never sample the old set.
++        const base = Paths.wallsdir.replace(/\/+$/, "") + "/";
++        const res = (wallpapers.entries || []).filter(entry => entry.path.startsWith(base));
+         if (currentMediaFilter === "Image") {
+             return res.filter(w => !Images.isVideo(w.relativePath) && !Images.isAnimated(w.relativePath));
+         } else if (currentMediaFilter === "Video") {
+--- a/shell.qml
++++ b/shell.qml
+@@ -60,7 +60,7 @@
+     Binding {
+         target: Translations
+         property: "language"
+-        value: GlobalConfig.general.language
++        value: GlobalConfig.general.language === "system" ? SystemLanguage.language : GlobalConfig.general.language
+     }
+ 
+     GSFLoader {}

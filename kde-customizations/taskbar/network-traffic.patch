@@ -1,0 +1,166 @@
+--- modules/dashboard/Performance.qml
++++ modules/dashboard/Performance.qml
+@@ -21,7 +21,7 @@
+         id: placeholder
+ 
+         anchors.centerIn: parent
+-        active: !Config.dashboard.performance.showCpu && !(Config.dashboard.performance.showGpu && Gpu.type !== Gpu.None) && !Config.dashboard.performance.showMemory && !Config.dashboard.performance.showStorage && !Config.dashboard.performance.showNetwork && !(UPower.displayDevice.isLaptopBattery && Config.dashboard.performance.showBattery)
++        active: !Config.dashboard.performance.showCpu && !(Config.dashboard.performance.showGpu && Gpu.type !== Gpu.None) && !Config.dashboard.performance.showMemory && !Config.dashboard.performance.showStorage && !(UPower.displayDevice.isLaptopBattery && Config.dashboard.performance.showBattery)
+         asynchronous: true
+ 
+         sourceComponent: ColumnLayout {
+@@ -112,22 +112,13 @@
+ 
+             RowLayout {
+                 spacing: Tokens.spacing.medium
+-                visible: storageCard.active || networkCard.active || memoryCard.active
++                visible: storageCard.active || memoryCard.active
+ 
+                 WrappedLoader {
+                     id: storageCard
+ 
+                     active: Config.dashboard.performance.showStorage
+                     sourceComponent: StorageCard {}
+-                }
+-
+-                WrappedLoader {
+-                    id: networkCard
+-
+-                    active: Config.dashboard.performance.showNetwork
+-                    sourceComponent: NetworkCard {
+-                        cardWidth: root.compact ? 300 : Tokens.sizes.dashboard.perfNetworkCardWidth
+-                    }
+                 }
+ 
+                 WrappedLoader {
+--- modules/bar/popouts/Network.qml
++++ modules/bar/popouts/Network.qml
+@@ -4,6 +4,8 @@
+ import QtQuick.Controls as QQC
+ import QtQuick.Layouts
+ import Quickshell
++import Caelestia.Components
++import Caelestia.Services
+ import Caelestia.Config
+ import qs.components
+ import qs.components.controls
+@@ -349,6 +351,119 @@
+         ]
+     }
+ 
++    // Share the dashboard's live sampler and history, including its totals.
++    ServiceRef { service: NetworkUsage }
++
++    GroupCard {
++        content: [
++            ColumnLayout {
++                Layout.fillWidth: true
++                Layout.margins: 16 * root.scaleOffset
++                spacing: 5 * root.scaleOffset
++
++                RowLayout {
++                    spacing: 10 * root.scaleOffset
++                    MaterialIcon {
++                        text: "swap_vert"
++                        color: root.accent
++                        fontStyle.pointSize: 18 * root.scaleOffset
++                    }
++                    MenuText {
++                        text: qsTr("Datenverkehr")
++                        font.pointSize: root.bodyPointSize
++                        font.weight: 600
++                    }
++                }
++
++                Item {
++                    Layout.fillWidth: true
++                    Layout.preferredHeight: 52 * root.scaleOffset
++                    Layout.topMargin: 4 * root.scaleOffset
++                    Layout.bottomMargin: 5 * root.scaleOffset
++                    SparklineItem {
++                        id: trafficGraph
++                        property real targetMax: Math.max(NetworkUsage.downloadBuffer.maximum, NetworkUsage.uploadBuffer.maximum, 1024)
++                        property real smoothMax: targetMax
++                        anchors.fill: parent
++                        line1: NetworkUsage.uploadBuffer
++                        line1Color: Colours.palette.m3secondary
++                        line1FillAlpha: 0.15
++                        line2: NetworkUsage.downloadBuffer
++                        line2Color: Colours.palette.m3tertiary
++                        line2FillAlpha: 0.2
++                        maxValue: smoothMax
++                        historyLength: NetworkUsage.historyLength
++                        Connections {
++                            target: NetworkUsage.downloadBuffer
++                            function onValuesChanged(): void { trafficSlide.restart(); }
++                        }
++                        NumberAnimation {
++                            id: trafficSlide
++                            target: trafficGraph
++                            property: "slideProgress"
++                            from: 0
++                            to: 1
++                            easing.type: Easing.Linear
++                            duration: GlobalConfig.dashboard.resourceUpdateInterval
++                        }
++                        Behavior on smoothMax { Anim {} }
++                    }
++                    MenuText {
++                        anchors.centerIn: parent
++                        visible: NetworkUsage.downloadBuffer.count < 2
++                        text: qsTr("Daten werden gesammelt …")
++                        font.pointSize: root.bodyPointSize * 0.79
++                        color: root.muted
++                    }
++                }
++
++                TrafficRow {
++                    symbol: "download"
++                    label: qsTr("Download")
++                    value: Units.formatBytes(NetworkUsage.downloadSpeed ?? 0, true)
++                    valueColor: Colours.palette.m3tertiary
++                }
++                TrafficRow {
++                    symbol: "upload"
++                    label: qsTr("Hochladen")
++                    value: Units.formatBytes(NetworkUsage.uploadSpeed ?? 0, true)
++                    valueColor: Colours.palette.m3secondary
++                }
++                TrafficRow {
++                    symbol: "history"
++                    label: qsTr("Gesamt")
++                    value: `↓${Units.formatBytes(NetworkUsage.downloadTotal ?? 0)} ↑${Units.formatBytes(NetworkUsage.uploadTotal ?? 0)}`
++                }
++            }
++        ]
++    }
++
++    component TrafficRow: RowLayout {
++        required property string symbol
++        required property string label
++        required property string value
++        property color valueColor: root.muted
++        Layout.fillWidth: true
++        spacing: 10 * root.scaleOffset
++        MaterialIcon {
++            text: parent.symbol
++            color: parent.valueColor
++            fontStyle.pointSize: 14 * root.scaleOffset
++        }
++        MenuText {
++            text: parent.label
++            color: root.muted
++            font.pointSize: root.bodyPointSize
++        }
++        MenuText {
++            Layout.fillWidth: true
++            text: parent.value
++            color: parent.valueColor
++            horizontalAlignment: Text.AlignRight
++            font.pointSize: root.bodyPointSize
++        }
++    }
++
+     component GroupCard: StyledRect {
+         property alias content: rows.data
+         Layout.fillWidth: true

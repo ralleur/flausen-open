@@ -1,0 +1,99 @@
+--- services/Nmcli.qml
++++ services/Nmcli.qml
+@@ -3,6 +3,7 @@
+ 
+ import QtQuick
+ import Quickshell
++import Quickshell.Io
+ import Caelestia
+ import Caelestia.Config
+ import Caelestia.Services
+@@ -29,9 +30,45 @@
+     property string ethernetSpeed: ""
+     property string ethernetDataUsage: ""
+ 
+-    readonly property var vpnConnections: NmQt.vpnConnections
+-    readonly property var activeVpn: NmQt.activeVpn
+-    property string vpnPendingConnection: NmQt.vpnPendingConnection
++    readonly property var vpnConnections: [...NmQt.vpnConnections, ...(root.tailscaleStatus.installed ? [{name: "Tailscale", connectionId: "@tailscale", type: "tailscale", connected: root.tailscaleStatus.connected, detail: root.tailscaleStatus.detail}] : [])]
++    property var tailscaleStatus: ({installed: false, connected: false, detail: ""})
++    property var tailscaleCallback: null
++    readonly property string tailscaleHelper: Quickshell.env("HOME") + "/.config/quickshell/caelestia/scripts/tailscale-vpn.py"
++    function refreshTailscale(): void {
++        if (!tailscaleProbe.running && !tailscaleAction.running) tailscaleProbe.running = true;
++    }
++    function runTailscale(action: string, callback: var): void {
++        if (tailscaleAction.running) return;
++        root.tailscaleCallback = callback;
++        tailscaleAction.command = ["python3", root.tailscaleHelper, action];
++        tailscaleAction.running = true;
++    }
++    Timer { interval: 10000; running: true; repeat: true; triggeredOnStart: true; onTriggered: root.refreshTailscale() }
++    Process {
++        id: tailscaleProbe
++        command: ["python3", root.tailscaleHelper, "status"]
++        stdout: StdioCollector {
++            onStreamFinished: {
++                try { root.tailscaleStatus = JSON.parse(text); }
++                catch (e) { root.tailscaleStatus = {installed: root.tailscaleStatus.installed, connected: false, detail: "Status nicht verfügbar"}; }
++            }
++        }
++    }
++    Process {
++        id: tailscaleAction
++        property var result: ({success: false, error: "Tailscale konnte nicht ausgeführt werden"})
++        onStarted: result = {success: false, error: "Tailscale konnte nicht ausgeführt werden"}
++        stdout: StdioCollector { onStreamFinished: { try { tailscaleAction.result = JSON.parse(text); } catch (e) {} } }
++        onExited: {
++            const result = tailscaleAction.result;
++            if (!result.success) Toaster.toast("Tailscale", result.error || "Aktion fehlgeschlagen", "vpn_key_alert");
++            if (typeof root.tailscaleCallback === "function") root.tailscaleCallback(result);
++            root.tailscaleCallback = null;
++            Qt.callLater(root.refreshTailscale);
++        }
++    }
++    readonly property var activeVpn: root.vpnConnections.find(vpn => vpn.connected) ?? ({})
++    readonly property string vpnPendingConnection: tailscaleAction.running ? "Tailscale" : NmQt.vpnPendingConnection
+ 
+     /// Wi-Fi access point. Exposed as the service itself rather than as three
+     /// copied properties: supported, enabled, the name and whether an enable is
+@@ -180,8 +217,14 @@
+ 
+     function loadSavedConnections(callback: var): void { NmQt.loadSavedConnections(callback); }
+ 
+-    function connectVpn(connectionName: string, callback: var): void { NmQt.connectVpn(connectionName, callback); }
+-    function disconnectVpn(connectionName: string, callback: var): void { NmQt.disconnectVpn(connectionName, callback); }
++    function connectVpn(connectionName: string, callback: var): void {
++        if (connectionName === "@tailscale") runTailscale("connect", callback);
++        else NmQt.connectVpn(connectionName, callback);
++    }
++    function disconnectVpn(connectionName: string, callback: var): void {
++        if (connectionName === "@tailscale") runTailscale("disconnect", callback);
++        else NmQt.disconnectVpn(connectionName, callback);
++    }
+ 
+     function hasSavedProfile(ssid: string): bool { return NmQt.hasSavedProfile(ssid); }
+     function forgetNetwork(ssid: string, callback: var): void { NmQt.forgetNetwork(ssid, callback); }
+@@ -330,7 +373,7 @@
+             root.wifiEnabled = NmQt.wifiEnabled;
+         }
+         function onVpnPendingConnectionChanged(): void {
+-            root.vpnPendingConnection = NmQt.vpnPendingConnection;
++            // vpnPendingConnection is derived from NM and Tailscale actions.
+         }
+         function onSavedConnectionsChanged(): void {
+             root.savedConnections = NmQt.savedConnections;
+--- modules/nexus/pages/NetworkPage.qml
++++ modules/nexus/pages/NetworkPage.qml
+@@ -161,9 +161,9 @@
+                             return;
+ 
+                         if (vpn.connected) {
+-                            Nmcli.disconnectVpn(vpn.modelData.name, () => {});
++                            Nmcli.disconnectVpn(vpn.modelData.connectionId || vpn.modelData.name, () => {});
+                         } else {
+-                            Nmcli.connectVpn(vpn.modelData.name, () => {});
++                            Nmcli.connectVpn(vpn.modelData.connectionId || vpn.modelData.name, () => {});
+                         }
+                     }
+                 }

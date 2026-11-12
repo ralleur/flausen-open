@@ -1,0 +1,11 @@
+--- modules/bar/popouts/DockContext.qml
++++ modules/bar/popouts/DockContext.qml
+@@ -243,7 +243,7 @@
+         inactiveColour: Colours.palette.m3primaryContainer
+         inactiveOnColour: Colours.palette.m3onPrimaryContainer
+         verticalPadding: Tokens.padding.small * root.scaleOffset
+-        text: qsTr("End task")
++        text: qsTr("App beenden")
+         icon: "close"
+         visible: {
+             if (!model || !model.toplevels || model.toplevels.length === 0) return false;

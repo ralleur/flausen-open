@@ -1,0 +1,287 @@
+--- components/TaskbarGlass.qml
++++ components/TaskbarGlass.qml
+@@ -3,45 +3,129 @@
+ import Quickshell
+ import Quickshell.Wayland
+ 
+-// Reuse the approved calendar's eight local native blur passes. No global setting.
++// Persistent local blur surfaces. Animate regions, never native buffer sizes.
+ Scope {
+     id: root
+     required property var screen
+     required property rect geometry
+     required property bool active
++    property rect reserveGeometry: geometry
++    property bool prewarm: false
++    property bool suspended: false
++    property bool centered: false
++    property bool bottomAnchored: false
+     property real cornerRadius: 28
+     property rect cutout: Qt.rect(0, 0, 0, 0)
+-    readonly property int activePassCount: passes.instances.length
++    property size minimumSize: Qt.size(64, 64)
++    property bool ready: false
++    property bool initialized: false
++    property int capacityWidth: minimumSize.width
++    property int capacityHeight: minimumSize.height
++    property int extentWidth: 16
++    property int extentHeight: 16
++    readonly property bool showing: active && !suspended
++    readonly property int activePassCount: root.showing ? passes.instances.length : 0
++    readonly property int pooledPassCount: passes.instances.length
++    readonly property int mappedPassCount: passes.instances.filter(pass => pass.visible).length
++    readonly property int windowX: Math.max(0, Math.min(screen.width - capacityWidth,
++        Math.round(centered ? geometry.x + geometry.width / 2 - capacityWidth / 2 : geometry.x)))
++    readonly property int windowY: Math.max(0, Math.min(screen.height - capacityHeight,
++        Math.round(bottomAnchored ? geometry.y + geometry.height - capacityHeight : geometry.y)))
++    readonly property int regionX: Math.round(geometry.x - windowX)
++    readonly property int regionY: Math.round(geometry.y - windowY)
++
++    readonly property int extentX: Math.max(0, Math.min(capacityWidth - extentWidth,
++        centered ? Math.floor((capacityWidth - extentWidth) / 2) : regionX))
++    readonly property int extentY: Math.max(0, Math.min(capacityHeight - extentHeight,
++        bottomAnchored ? regionY + Math.round(geometry.height) - extentHeight : regionY))
++
++    function prepare(resetExtent: bool): void {
++        if (!ready || (!active && !prewarm) || !screen || screen.width <= 0 || screen.height <= 0 || !reserveGeometry || !minimumSize) return;
++        // Bucket growth only when content/settings exceed the warmed capacity.
++        const w = Math.ceil(Math.max(minimumSize.width, reserveGeometry.width, geometry.width) / 64) * 64;
++        const h = Math.ceil(Math.max(minimumSize.height, reserveGeometry.height, geometry.height) / 64) * 64;
++        capacityWidth = Math.min(screen.width, Math.max(capacityWidth, w));
++        capacityHeight = Math.min(screen.height, Math.max(capacityHeight, h));
++        // Keep KWin's texture extent stable while the visible rounded region grows.
++        // Small 16-pixel buckets leave room for subpixel animation overshoot.
++        const ew = Math.ceil(Math.max(1, geometry.width, reserveGeometry.width) / 16) * 16;
++        const eh = Math.ceil(Math.max(1, geometry.height, reserveGeometry.height) / 16) * 16;
++        extentWidth = Math.min(capacityWidth, (resetExtent ? ew : Math.max(extentWidth, ew)));
++        extentHeight = Math.min(capacityHeight, (resetExtent ? eh : Math.max(extentHeight, eh)));
++        initialized = true;
++    }
++    onActiveChanged: prepare(active)
++    onGeometryChanged: if (active && (geometry.width > extentWidth || geometry.height > extentHeight)) prepare(false)
++    onPrewarmChanged: prepare(false)
++    onReserveGeometryChanged: prepare(false)
++    onMinimumSizeChanged: prepare(false)
++    onScreenChanged: prepare(true)
++    Component.onCompleted: { ready = true; prepare(true); }
++    Connections {
++        target: root.screen
++        function onGeometryChanged(): void { root.prepare(true); }
++    }
++
++    // Shared QRegion avoids building the same rounded shape eight times.
++    property Region blurShape: Region {
++        // An offscreen sentinel prevents an empty region from meaning "whole window".
++        Region { x: -10; y: -10; width: 1; height: 1 }
++        // Two single-pixel edge anchors stabilize KWin's blur texture extent.
++        // They carry no tint; the actual rounded visible region remains below.
++        Region {
++            x: root.extentX; y: root.extentY
++            width: root.showing ? 1 : 0; height: root.showing ? 1 : 0
++            intersection: Intersection.Combine
++        }
++        Region {
++            x: root.extentX + root.extentWidth - 1
++            y: root.extentY + root.extentHeight - 1
++            width: root.showing ? 1 : 0; height: root.showing ? 1 : 0
++            intersection: Intersection.Combine
++        }
++        Region {
++            x: root.regionX; y: root.regionY
++            width: root.showing ? Math.round(root.geometry.width) : 0
++            height: root.showing ? Math.round(root.geometry.height) : 0
++            radius: root.cornerRadius
++            intersection: Intersection.Combine
++        }
++        Region {
++            x: root.regionX + root.cutout.x; y: root.regionY + root.cutout.y
++            width: root.cutout.width; height: root.cutout.height
++            radius: Math.min(width, height) / 2
++            intersection: Intersection.Subtract
++        }
++    }
+     Variants {
+         id: passes
+-        model: root.active && root.geometry.width > 0 && root.geometry.height > 0 ? [0, 1, 2, 3, 4, 5, 6, 7] : []
++        model: root.initialized ? [0, 1, 2, 3, 4, 5, 6, 7] : []
+         PanelWindow {
+-            id: pass
+             required property var modelData
+             screen: root.screen
+-            visible: root.active
++            visible: true
+             anchors { top: true; left: true }
+-            margins { top: Math.round(root.geometry.y); left: Math.round(root.geometry.x) }
+-            implicitWidth: Math.max(1, Math.min(Math.ceil(root.geometry.width), root.screen.width - Math.round(root.geometry.x)))
+-            implicitHeight: Math.max(1, Math.min(Math.ceil(root.geometry.height), root.screen.height - Math.round(root.geometry.y)))
++            margins { top: root.windowY; left: root.windowX }
++            implicitWidth: root.capacityWidth
++            implicitHeight: root.capacityHeight
+             exclusionMode: ExclusionMode.Ignore
+-            WlrLayershell.layer: WlrLayer.Top
++            // Keep native surfaces alive below applications while inactive. Hiding
++            // them would tear down Qt/Wayland resources and reintroduce the hitch.
++            WlrLayershell.layer: root.showing ? WlrLayer.Top : WlrLayer.Bottom
+             WlrLayershell.namespace: "ralleur-taskbar-glass"
+             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+             mask: Region {}
+             color: "transparent"
+             surfaceFormat.opaque: false
+-            Rectangle { anchors.fill: parent; radius: root.cornerRadius; color: "#01000000" }
+-            BackgroundEffect.blurRegion: Region {
+-                item: pass.contentItem
+-                radius: root.cornerRadius
+-                Region {
+-                    x: root.cutout.x; y: root.cutout.y
+-                    width: root.cutout.width; height: root.cutout.height
+-                    radius: Math.min(width, height) / 2
+-                    intersection: Intersection.Subtract
+-                }
++            // A minimal paint node keeps transparent Wayland surfaces in KWin's
++            // blur stack without repainting a full translucent card each frame.
++            Rectangle {
++                x: root.extentX; y: root.extentY
++                width: 1; height: 1
++                color: "#01000000"
++                visible: root.showing
+             }
++            BackgroundEffect.blurRegion: root.blurShape
+         }
+     }
+ }
+--- /dev/null
++++ components/TaskbarDropdownGlass.qml
+@@ -0,0 +1,33 @@
++pragma ComponentBehavior: Bound
++import QtQuick
++import Quickshell
++import qs.services
++
++Scope {
++    id: root
++    required property var screen
++    required property rect geometry
++    required property bool active
++    property rect reserveGeometry: geometry
++    property real cornerRadius: 14
++    property bool bottomAnchored: false
++    property int owner: 0
++    property string registeredScreen: ""
++    function publish(): void {
++        if (!owner) return;
++        const name = screen?.name ?? "";
++        if (registeredScreen && registeredScreen !== name)
++            TaskbarGlassState.release(registeredScreen, owner);
++        registeredScreen = name;
++        if (name) TaskbarGlassState.request(name, owner, geometry, reserveGeometry,
++            cornerRadius, bottomAnchored, active);
++    }
++    onActiveChanged: publish()
++    onGeometryChanged: Qt.callLater(root.publish)
++    onReserveGeometryChanged: Qt.callLater(root.publish)
++    onCornerRadiusChanged: publish()
++    onBottomAnchoredChanged: publish()
++    onScreenChanged: publish()
++    Component.onCompleted: { owner = TaskbarGlassState.acquire(); publish(); }
++    Component.onDestruction: if (registeredScreen) TaskbarGlassState.release(registeredScreen, owner)
++}
+--- /dev/null
++++ services/TaskbarGlassState.qml
+@@ -0,0 +1,27 @@
++pragma Singleton
++import QtQuick
++
++// A single dropdown pool per screen survives short-lived popover/Menu objects.
++QtObject {
++    id: root
++    property var dropdowns: ({})
++    property int nextOwner: 0
++    function acquire(): int { return ++nextOwner; }
++    function request(screen: string, owner: int, geometry: rect, reserve: rect,
++                     radius: real, bottomAnchored: bool, active: bool): void {
++        if (!active) {
++            release(screen, owner);
++            return;
++        }
++        const next = Object.assign({}, dropdowns);
++        next[screen] = { owner: owner, geometry: geometry, reserve: reserve,
++            radius: radius, bottomAnchored: bottomAnchored };
++        dropdowns = next;
++    }
++    function release(screen: string, owner: int): void {
++        if (dropdowns[screen]?.owner !== owner) return;
++        const next = Object.assign({}, dropdowns);
++        delete next[screen];
++        dropdowns = next;
++    }
++}
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -624,6 +624,8 @@
+     // Bar glass uses the same local native passes as the approved calendar.
+     TaskbarGlass {
+         id: topBarSmoke
++        prewarm: true
++        suspended: root.hasFullscreen
+         screen: root.screen
+         active: topBarGlass.visible && !root.hasFullscreen
+         geometry: Qt.rect(topBarGlass.x, topBarGlass.y, topBarGlass.width, topBarGlass.height)
+@@ -641,10 +643,27 @@
+     }
+     TaskbarGlass {
+         id: bottomDockSmoke
++        prewarm: true
++        suspended: root.hasFullscreen
++        centered: true
++        reserveGeometry: Qt.rect(0, 0, bottomDock.middleZoneSize + bottomDock.thickness * SplitBarSettings.dockMagnificationAmount * 6, bottomDock.height)
+         screen: root.screen
+         active: bottomDock.visible && !root.hasFullscreen
+         geometry: Qt.rect((root.width - bottomDock.footprintWidth) / 2, bottomDock.y, bottomDock.footprintWidth, bottomDock.height)
+         cornerRadius: bottomDock.height / 2
++    }
++    TaskbarGlass {
++        id: dropdownSmoke
++        screen: root.screen
++        prewarm: true
++        suspended: root.hasFullscreen
++        minimumSize: Qt.size(448, 512)
++        readonly property var request: TaskbarGlassState.dropdowns[root.screen.name]
++        active: request !== undefined
++        geometry: request?.geometry ?? Qt.rect(0, 0, 0, 0)
++        reserveGeometry: request?.reserve ?? Qt.rect(0, 0, 0, 0)
++        cornerRadius: request?.radius ?? 14
++        bottomAnchored: request?.bottomAnchored ?? false
+     }
+     DrawerVisibilities {
+         id: visibilities
+--- modules/bar/popouts/ClipWrapper.qml
++++ modules/bar/popouts/ClipWrapper.qml
+@@ -111,6 +111,12 @@
+ 
+     TaskbarGlass {
+         id: popoutSmoke
++        prewarm: true
++        suspended: root.bar.fullscreen
++        minimumSize: Qt.size(640, 1024)
++        centered: false
++        bottomAnchored: root.popoutPosition === "bottom"
++        reserveGeometry: Qt.rect(0, 0, content.nonAnimWidth, content.nonAnimHeight)
+         screen: root.screen
+         geometry: Qt.rect(root.x + root.parent.leftMargin, root.y + root.parent.topMargin, root.width, root.height)
+         cornerRadius: glassBackground.radius
+--- components/controls/Menu.qml
++++ components/controls/Menu.qml
+@@ -146,10 +146,12 @@
+     }
+ 
+     // Native smoke for taskbar dropdowns only.
+-    TaskbarGlass {
++    TaskbarDropdownGlass {
+         screen: root.QsWindow.window?.screen ?? Quickshell.screens[0]
+         active: root.sharedPopoverStyle && root.expanded && root.visible
+         geometry: Qt.rect(menu.x, menu.y, menu.width, menu.height)
++        reserveGeometry: Qt.rect(menu.x, menu.y, menu.implicitWidth, menu.implicitHeight)
++        bottomAnchored: root.thisSideY === Menu.Bottom
+         cornerRadius: menu.radius
+     }
+ 

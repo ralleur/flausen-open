@@ -1,0 +1,293 @@
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -214,7 +214,7 @@
+             } else {
+                 popouts.hasCurrent = false;
+             }
+-        } else if (id === "notes" || id === "weather" || id === "performance" || id === "shortcuts" || id === "screencapture" || id === "keepawake") {
++        } else if (id === "notes" || id === "weather" || id === "performance" || id === "shortcuts" || id === "screencapture" || id === "clipboard" || id === "keepawake") {
+             const item = ch.item as Item;
+             if (item) {
+                 const relPos = pos - top;
+@@ -642,6 +642,15 @@
+                 }
+             }
+             DelegateChoice {
++                roleValue: "clipboard"
++                delegate: WrappedLoader {
++                    sourceComponent: ClipboardWidget {
++                        popouts: root.popouts
++                        visibilities: root.visibilities
++                    }
++                }
++            }
++            DelegateChoice {
+                 roleValue: "keepawake"
+                 delegate: WrappedLoader {
+                     sourceComponent: KeepAwakeWidget {
+--- modules/bar/BarWidgets.qml
++++ modules/bar/BarWidgets.qml
+@@ -32,6 +32,7 @@
+         { id: "weather", zone: "right" },
+         { id: "shortcuts", zone: "right" },
+         { id: "screencapture", zone: "right" },
++        { id: "clipboard", zone: "left" },
+         { id: "keepawake", zone: "right" }
+     ]
+ 
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -236,6 +236,14 @@
+             sourceComponent: ScreenCapture {
+                 popouts: root.popouts
+                 visibilities: root.visibilities
++            }
++        }
++
++        Popout {
++            name: "clipboard"
++            previewKey: "screencapture"
++            sourceComponent: ClipboardHistory {
++                popouts: root.popouts
+             }
+         }
+ 
+--- /dev/null
++++ modules/bar/components/ClipboardWidget.qml
+@@ -0,0 +1,58 @@
++pragma ComponentBehavior: Bound
++
++import QtQuick
++import QtQuick.Controls
++import Caelestia.Config
++import Caelestia.Services
++import qs.components
++import qs.components.controls
++import qs.services
++
++StyledRect {
++    id: root
++
++    required property var popouts
++    required property var visibilities
++
++    readonly property bool clipboardOpen: popouts.hasCurrent && popouts.currentName === "clipboard"
++    readonly property bool isHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
++
++    implicitWidth: Tokens.sizes.bar.innerWidth
++    implicitHeight: Tokens.sizes.bar.innerWidth
++    color: clipboardOpen ? Colours.palette.m3secondaryContainer
++        : (clickArea.containsMouse ? Colours.tPalette.m3surfaceContainerHigh : "transparent")
++    radius: Tokens.rounding.full
++    visible: enabled
++
++    Behavior on color { CAnim {} }
++
++    MaterialIcon {
++        anchors.centerIn: parent
++        text: "attach_file"
++        color: Colours.barForeground
++        fontStyle: Tokens.font.icon.builders.medium.weight(Font.Medium).build()
++        Behavior on color { CAnim {} }
++    }
++
++    ToolTip.visible: clickArea.containsMouse && !root.clipboardOpen
++    ToolTip.delay: 700
++    ToolTip.text: qsTr("Zwischenablage öffnen")
++
++    MouseArea {
++        id: clickArea
++        anchors.fill: parent
++        hoverEnabled: true
++        cursorShape: Qt.PointingHandCursor
++        onClicked: {
++            if (root.clipboardOpen) {
++                root.popouts.hasCurrent = false;
++            } else {
++                root.popouts.currentName = "clipboard";
++                root.popouts.currentCenter = root.isHorizontal
++                    ? root.mapToItem(null, root.width / 2, 0).x
++                    : root.mapToItem(null, 0, root.height / 2).y;
++                root.popouts.hasCurrent = true;
++            }
++        }
++    }
++}
+--- /dev/null
++++ modules/bar/popouts/ClipboardHistory.qml
+@@ -0,0 +1,175 @@
++pragma ComponentBehavior: Bound
++
++import QtQuick
++import QtQuick.Controls
++import QtQuick.Layouts
++import Quickshell
++import Quickshell.Io
++import Caelestia.Config
++import qs.components
++import qs.components.controls
++import qs.components.images
++import qs.services
++import qs.modules.launcher.services as Launcher
++
++StyledRect {
++    id: root
++    required property var popouts
++    property real scaleOffset: 1.0
++    property real fontScale: 1.0
++    property bool _isSidebarOpen: false
++    property string feedback: ""
++    readonly property var entries: Launcher.Clipboard.getSortedItems()
++
++    width: 400
++    implicitHeight: layout.implicitHeight + Tokens.padding.large * 2
++    radius: Tokens.rounding.large
++    color: Colours.tPalette.m3surfaceContainer
++
++    Component.onCompleted: Launcher.Clipboard.reload()
++
++    function copyEntry(entry: var): void {
++        if (copyProcess.running)
++            return;
++        if (entry.isPinned) {
++            Launcher.Clipboard.copyPinned(entry.pinId);
++            root.feedback = qsTr("Kopiert");
++            feedbackTimer.restart();
++        } else {
++            copyProcess.command = ["bash", "-o", "pipefail", "-c", 'cliphist decode "$1" | wl-copy', "clipboard-popout", String(entry.id)];
++            copyProcess.running = true;
++        }
++    }
++
++    Process {
++        id: copyProcess
++        onExited: (exitCode, exitStatus) => {
++            root.feedback = exitCode === 0 ? qsTr("Kopiert") : qsTr("Kopieren fehlgeschlagen");
++            feedbackTimer.restart();
++        }
++    }
++    Timer {
++        id: feedbackTimer
++        interval: 2200
++        onTriggered: root.feedback = ""
++    }
++
++    ColumnLayout {
++        id: layout
++        anchors.fill: parent
++        anchors.margins: Tokens.padding.large
++        spacing: Tokens.spacing.medium
++
++        RowLayout {
++            Layout.fillWidth: true
++            spacing: Tokens.spacing.medium
++            StyledRect {
++                implicitWidth: implicitHeight
++                implicitHeight: headerIcon.implicitHeight + Tokens.padding.small * 2
++                radius: Tokens.rounding.full
++                color: Colours.palette.m3secondaryContainer
++                MaterialIcon {
++                    id: headerIcon
++                    anchors.centerIn: parent
++                    text: "attach_file"
++                    color: Colours.palette.m3onSecondaryContainer
++                    fontStyle: Tokens.font.icon.large
++                }
++            }
++            ColumnLayout {
++                Layout.fillWidth: true
++                spacing: 0
++                StyledText {
++                    Layout.fillWidth: true
++                    text: qsTr("Zwischenablage")
++                    font: Tokens.font.body.medium
++                }
++                StyledText {
++                    Layout.fillWidth: true
++                    text: root.feedback || qsTr("%1 Einträge · Zum Kopieren anklicken").arg(root.entries.length)
++                    color: root.feedback ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
++                    font: Tokens.font.body.small
++                    elide: Text.ElideRight
++                }
++            }
++        }
++
++        ListView {
++            id: history
++            Layout.fillWidth: true
++            implicitHeight: Math.min(contentHeight, 380)
++            clip: true
++            spacing: Tokens.spacing.small
++            boundsBehavior: Flickable.StopAtBounds
++            ScrollBar.vertical: ScrollBar {}
++            model: ScriptModel { values: root.entries }
++
++            delegate: StyledRect {
++                id: entryRow
++                required property var modelData
++                width: history.width
++                implicitHeight: modelData.isImage ? 88 : 60
++                radius: Tokens.rounding.large
++                color: Colours.tPalette.m3surfaceContainerHigh
++                property string imagePath: modelData.isPinned ? (modelData.imagePath ?? "")
++                    : (modelData.isImage && Launcher.Clipboard.isImageCached(modelData.id)
++                        ? Launcher.Clipboard.getImagePath(modelData.id) : "")
++                Connections {
++                    target: Launcher.Clipboard
++                    function onImageReady(id: int, path: string): void {
++                        if (entryRow.modelData.isImage && id === entryRow.modelData.id)
++                            entryRow.imagePath = path;
++                    }
++                }
++                StateLayer {
++                    radius: entryRow.radius
++                    onClicked: root.copyEntry(entryRow.modelData)
++                }
++                RowLayout {
++                    anchors.fill: parent
++                    anchors.margins: Tokens.padding.small
++                    spacing: Tokens.spacing.medium
++                    MaterialIcon {
++                        text: entryRow.modelData.isImage ? "image" : "content_paste"
++                        color: Colours.palette.m3onSurfaceVariant
++                    }
++                    CachingImage {
++                        visible: entryRow.modelData.isImage && !!entryRow.imagePath
++                        Layout.preferredWidth: 100
++                        Layout.fillHeight: true
++                        path: entryRow.imagePath
++                        fillMode: Image.PreserveAspectFit
++                    }
++                    StyledText {
++                        Layout.fillWidth: true
++                        text: entryRow.modelData.isImage ? qsTr("Bild") : entryRow.modelData.preview
++                        font: Tokens.font.body.small
++                        maximumLineCount: 2
++                        wrapMode: Text.Wrap
++                        elide: Text.ElideRight
++                    }
++                    IconButton {
++                        icon: entryRow.modelData.isPinned ? "keep" : "keep_off"
++                        type: IconButton.Text
++                        ToolTip.visible: hovered
++                        ToolTip.text: entryRow.modelData.isPinned ? qsTr("Lösen") : qsTr("Anheften")
++                        onClicked: {
++                            if (entryRow.modelData.isPinned)
++                                Launcher.Clipboard.unpin(entryRow.modelData.pinId);
++                            else
++                                Launcher.Clipboard.pin(entryRow.modelData.id);
++                        }
++                    }
++                }
++            }
++        }
++        StyledText {
++            Layout.fillWidth: true
++            visible: root.entries.length === 0
++            text: Launcher.Clipboard.available ? qsTr("Noch keine Einträge") : qsTr("Zwischenablageverlauf nicht verfügbar")
++            font: Tokens.font.body.small
++            color: Colours.palette.m3onSurfaceVariant
++            horizontalAlignment: Text.AlignHCenter
++        }
++    }
++}

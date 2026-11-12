@@ -1,0 +1,15 @@
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -519,9 +519,10 @@
+     }
+     GlassSurface {
+         id: topBarGlass
+-        x: SplitBarSettings.edgeGap
++        // Align the glass cap with the left edge of the launcher button.
++        x: bar.x + bar.padding + Tokens.padding.large
+         y: bar.y + 4
+-        width: Math.max(0, root.width - SplitBarSettings.edgeGap * 2)
++        width: Math.max(0, root.width - SplitBarSettings.edgeGap - x)
+         height: Math.max(0, bar.height - 8)
+         rounded: true
+         visible: bar.position === "top" && bar.visible

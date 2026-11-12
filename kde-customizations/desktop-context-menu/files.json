@@ -1,0 +1,8 @@
+[
+  "components/controls/Menu.qml",
+  "components/controls/MenuItem.qml",
+  "modules/background/DesktopContextMenu.qml",
+  "modules/drawers/ContentWindow.qml",
+  "services/ContextMenuStore.qml",
+  "services/MenuStyle.qml"
+]

@@ -1,0 +1,129 @@
+global.tick = 0;
+bar0 = Sprite(Image("bar0.png"));
+bar1 = Sprite(Image("bar1.png"));
+bar2 = Sprite(Image("bar2.png"));
+bar3 = Sprite(Image("bar3.png"));
+bar4 = Sprite(Image("bar4.png"));
+bar5 = Sprite(Image("bar5.png"));
+bar6 = Sprite(Image("bar6.png"));
+bar7 = Sprite(Image("bar7.png"));
+
+fun animate_logo() {
+  global.tick += 1;
+  center_y = Window.GetHeight() / 2;
+  if (global.visible) center_y = Window.GetHeight() / 2 - 190;
+  # Freeze movement while entering a password or recovery answer.
+  offset = 3 * Math.Sin(global.tick / 35 + 0 * 0.7);
+  if (global.visible) offset = 0;
+  bar0.SetPosition(Window.GetWidth() / 2 + -68, center_y + -84 + offset, 0);
+  offset = 3 * Math.Sin(global.tick / 35 + 1 * 0.7);
+  if (global.visible) offset = 0;
+  bar1.SetPosition(Window.GetWidth() / 2 + -2, center_y + -84 + offset, 0);
+  offset = 3 * Math.Sin(global.tick / 35 + 2 * 0.7);
+  if (global.visible) offset = 0;
+  bar2.SetPosition(Window.GetWidth() / 2 + -64, center_y + -50 + offset, 0);
+  offset = 3 * Math.Sin(global.tick / 35 + 3 * 0.7);
+  if (global.visible) offset = 0;
+  bar3.SetPosition(Window.GetWidth() / 2 + -30, center_y + -50 + offset, 0);
+  offset = 3 * Math.Sin(global.tick / 35 + 4 * 0.7);
+  if (global.visible) offset = 0;
+  bar4.SetPosition(Window.GetWidth() / 2 + 4, center_y + -50 + offset, 0);
+  offset = 3 * Math.Sin(global.tick / 35 + 5 * 0.7);
+  if (global.visible) offset = 0;
+  bar5.SetPosition(Window.GetWidth() / 2 + -64, center_y + 22 + offset, 0);
+  offset = 3 * Math.Sin(global.tick / 35 + 6 * 0.7);
+  if (global.visible) offset = 0;
+  bar6.SetPosition(Window.GetWidth() / 2 + -30, center_y + 22 + offset, 0);
+  offset = 3 * Math.Sin(global.tick / 35 + 7 * 0.7);
+  if (global.visible) offset = 0;
+  bar7.SetPosition(Window.GetWidth() / 2 + 4, center_y + 22 + offset, 0);
+}
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+global.visible = 0;
+global.count = 0;
+global.question = "";
+label = Sprite();
+entry = Sprite();
+line = Sprite();
+message = Sprite();
+label.SetOpacity(0);
+entry.SetOpacity(0);
+line.SetOpacity(0);
+message.SetOpacity(0);
+
+fun layout() {
+  global.width = Window.GetWidth();
+  global.height = Window.GetHeight();
+  if (global.visible) {
+    label_image = Image.Text(global.question, 0.75, 0.78, 0.86, "Sans 12");
+    label.SetImage(label_image);
+    label.SetPosition(global.width / 2 - label_image.GetWidth() / 2, global.height / 2 - 48, 10);
+    value = "";
+    for (i = 0; i < global.count && i < 24; i++) value += "•";
+    if (global.answer) value = global.answer;
+    if (value == "") value = " ";
+    entry_image = Image.Text(value, 0.80, 0.83, 0.90, "Sans 14");
+    entry.SetImage(entry_image);
+    entry.SetPosition(global.width / 2 - entry_image.GetWidth() / 2, global.height / 2 - 5, 10);
+    line_image = Image.Text("________________________________", 0.35, 0.38, 0.46, "Sans 12");
+    line.SetImage(line_image);
+    line.SetPosition(global.width / 2 - line_image.GetWidth() / 2, global.height / 2 + 8, 9);
+  }
+}
+
+fun normal() {
+  global.visible = 0;
+  global.answer = "";
+  label.SetOpacity(0);
+  entry.SetOpacity(0);
+  line.SetOpacity(0);
+  message.SetOpacity(0);
+}
+
+fun password(prompt, bullets) {
+  global.visible = 1;
+  global.question = "Passwort";
+  global.count = bullets;
+  global.answer = "";
+  layout();
+  animate_logo();
+  label.SetOpacity(1);
+  entry.SetOpacity(1);
+  line.SetOpacity(1);
+}
+
+fun question(prompt, answer) {
+  global.visible = 1;
+  global.question = prompt;
+  global.answer = answer;
+  global.count = 0;
+  layout();
+  animate_logo();
+  label.SetOpacity(1);
+  entry.SetOpacity(1);
+  line.SetOpacity(1);
+}
+
+fun refresh() {
+  if (global.width != Window.GetWidth() || global.height != Window.GetHeight()) layout();
+  animate_logo();
+}
+
+fun show_message(text) {
+  image = Image.Text(text, 0.75, 0.78, 0.86, "Sans 11");
+  message.SetImage(image);
+  message.SetPosition(Window.GetWidth() / 2 - image.GetWidth() / 2, Window.GetHeight() / 2 + 65, 10);
+  message.SetOpacity(1);
+}
+
+fun hide_message(text) { message.SetOpacity(0); }
+Plymouth.SetDisplayNormalFunction(normal);
+Plymouth.SetDisplayPasswordFunction(password);
+Plymouth.SetDisplayQuestionFunction(question);
+Plymouth.SetRefreshFunction(refresh);
+Plymouth.SetDisplayMessageFunction(show_message);
+Plymouth.SetHideMessageFunction(hide_message);
+layout();

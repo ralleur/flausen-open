@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: MIT; original Ralleur folder geometry -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+ <defs>
+  <style id="current-color-scheme">.ColorScheme-Accent { color: #ff7058; }</style>
+  <linearGradient id="soft-light" x1="0" y1="0" x2="0" y2="1">
+   <stop stop-color="#fff" stop-opacity=".22"/>
+   <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+ </defs>
+ <g fill="#9b9da1">
+  <path d="M4 15 Q4 9 10 9 H24 Q27 9 29 12 L32 15 H54 Q60 15 60 21 V49 Q60 55 54 55 H10 Q4 55 4 49Z"/>
+  <path fill="#000" fill-opacity=".17" d="M4 15 Q4 9 10 9 H24 Q27 9 29 12 L32 15 H54 Q60 15 60 21 V49 Q60 55 54 55 H10 Q4 55 4 49Z"/>
+  <rect x="4" y="19" width="56" height="38" rx="5"/>
+ </g>
+ <rect x="4" y="19" width="56" height="38" rx="5" fill="url(#soft-light)"/>
+ <rect x="4.5" y="19.5" width="55" height="37" rx="4.5" fill="none" stroke="#fff" stroke-opacity=".13"/>
+</svg>

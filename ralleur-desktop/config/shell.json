@@ -1,0 +1,12 @@
+{
+  "bar": {"persistent": false, "showOnHover": false, "excludedScreens": [".*"]},
+  "border": {"thickness": 6, "rounding": 22, "smoothing": 12},
+  "background": {"enabled": false},
+  "dashboard": {"showOnHover": false},
+  "launcher": {"showOnHover": false},
+  "session": {"enabled": true},
+  "sidebar": {"showOnHover": false},
+  "services": {"smartScheme": false},
+  "general": {"showOverFullscreen": false},
+  "appearance": {"transparency": {"enabled": false}}
+}

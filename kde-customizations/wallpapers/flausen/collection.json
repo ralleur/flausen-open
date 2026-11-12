@@ -1,0 +1,482 @@
+[
+  {
+    "id": "01-still-air-light",
+    "family": "01-still-air",
+    "title": "Still Air",
+    "mode": "light",
+    "description": "Ein farbiges Mobile in der rechten Bildhälfte; feine Fäden im dunklen Raum.",
+    "background": "#ECEEF0",
+    "svg": "light/svg/01-still-air-light.svg",
+    "png": "light/png/01-still-air-light.png"
+  },
+  {
+    "id": "01-still-air-dark",
+    "family": "01-still-air",
+    "title": "Still Air",
+    "mode": "dark",
+    "description": "Ein farbiges Mobile in der rechten Bildhälfte; feine Fäden im dunklen Raum.",
+    "background": "#141B20",
+    "svg": "dark/svg/01-still-air-dark.svg",
+    "png": "dark/png/01-still-air-dark.png"
+  },
+  {
+    "id": "02-paper-gravity-light",
+    "family": "02-paper-gravity",
+    "title": "Paper Gravity",
+    "mode": "light",
+    "description": "Monumentaler blauer Anschnitt, ein aufgehängter Keil und ein winziges Gegengewicht.",
+    "background": "#ECEEF0",
+    "svg": "light/svg/02-paper-gravity-light.svg",
+    "png": "light/png/02-paper-gravity-light.png"
+  },
+  {
+    "id": "02-paper-gravity-dark",
+    "family": "02-paper-gravity",
+    "title": "Paper Gravity",
+    "mode": "dark",
+    "description": "Monumentaler blauer Anschnitt, ein aufgehängter Keil und ein winziges Gegengewicht.",
+    "background": "#171E29",
+    "svg": "dark/svg/02-paper-gravity-dark.svg",
+    "png": "dark/png/02-paper-gravity-dark.png"
+  },
+  {
+    "id": "03-night-rehearsal-light",
+    "family": "03-night-rehearsal",
+    "title": "Night Rehearsal",
+    "mode": "light",
+    "description": "Vier Fundstücke proben eine freie Umlaufbahn; keine starre Mitte.",
+    "background": "#E5EBEB",
+    "svg": "light/svg/03-night-rehearsal-light.svg",
+    "png": "light/png/03-night-rehearsal-light.png"
+  },
+  {
+    "id": "03-night-rehearsal-dark",
+    "family": "03-night-rehearsal",
+    "title": "Night Rehearsal",
+    "mode": "dark",
+    "description": "Vier Fundstücke proben eine freie Umlaufbahn; keine starre Mitte.",
+    "background": "#14232A",
+    "svg": "dark/svg/03-night-rehearsal-dark.svg",
+    "png": "dark/png/03-night-rehearsal-dark.png"
+  },
+  {
+    "id": "04-orange-pause-light",
+    "family": "04-orange-pause",
+    "title": "Orange Pause",
+    "mode": "light",
+    "description": "Ein übergroßer orangefarbener Keil und eine einzelne schwarze, geknickte Linie.",
+    "background": "#EEE6D8",
+    "svg": "light/svg/04-orange-pause-light.svg",
+    "png": "light/png/04-orange-pause-light.png"
+  },
+  {
+    "id": "04-orange-pause-dark",
+    "family": "04-orange-pause",
+    "title": "Orange Pause",
+    "mode": "dark",
+    "description": "Ein übergroßer orangefarbener Keil und eine einzelne schwarze, geknickte Linie.",
+    "background": "#211E1C",
+    "svg": "dark/svg/04-orange-pause-dark.svg",
+    "png": "dark/png/04-orange-pause-dark.png"
+  },
+  {
+    "id": "05-undertow-light",
+    "family": "05-undertow",
+    "title": "Undertow",
+    "mode": "light",
+    "description": "Petrolfarbene Bänder ziehen als gebrochene Strömung durch die untere rechte Ecke.",
+    "background": "#E3EBE6",
+    "svg": "light/svg/05-undertow-light.svg",
+    "png": "light/png/05-undertow-light.png"
+  },
+  {
+    "id": "05-undertow-dark",
+    "family": "05-undertow",
+    "title": "Undertow",
+    "mode": "dark",
+    "description": "Petrolfarbene Bänder ziehen als gebrochene Strömung durch die untere rechte Ecke.",
+    "background": "#101F25",
+    "svg": "dark/svg/05-undertow-dark.svg",
+    "png": "dark/png/05-undertow-dark.png"
+  },
+  {
+    "id": "06-blue-interval-light",
+    "family": "06-blue-interval",
+    "title": "Blue Interval",
+    "mode": "light",
+    "description": "Kobaltblau, eine helle Gegenform und ein warmer Keil im weiten Zwischenraum.",
+    "background": "#E7ECF4",
+    "svg": "light/svg/06-blue-interval-light.svg",
+    "png": "light/png/06-blue-interval-light.png"
+  },
+  {
+    "id": "06-blue-interval-dark",
+    "family": "06-blue-interval",
+    "title": "Blue Interval",
+    "mode": "dark",
+    "description": "Kobaltblau, eine helle Gegenform und ein warmer Keil im weiten Zwischenraum.",
+    "background": "#142F56",
+    "svg": "dark/svg/06-blue-interval-dark.svg",
+    "png": "dark/png/06-blue-interval-dark.png"
+  },
+  {
+    "id": "07-counterpoint-light",
+    "family": "07-counterpoint",
+    "title": "Counterpoint",
+    "mode": "light",
+    "description": "Unwahrscheinliches Gleichgewicht entlang einer durchhängenden Kurve.",
+    "background": "#EBE8E1",
+    "svg": "light/svg/07-counterpoint-light.svg",
+    "png": "light/png/07-counterpoint-light.png"
+  },
+  {
+    "id": "07-counterpoint-dark",
+    "family": "07-counterpoint",
+    "title": "Counterpoint",
+    "mode": "dark",
+    "description": "Unwahrscheinliches Gleichgewicht entlang einer durchhängenden Kurve.",
+    "background": "#1D2020",
+    "svg": "dark/svg/07-counterpoint-dark.svg",
+    "png": "dark/png/07-counterpoint-dark.png"
+  },
+  {
+    "id": "08-cut-and-fold-light",
+    "family": "08-cut-and-fold",
+    "title": "Cut & Fold",
+    "mode": "light",
+    "description": "Drei ausgeschnittene Formen als flache Papierschichten mit präzisen Vektorkanten.",
+    "background": "#EAE4D8",
+    "svg": "light/svg/08-cut-and-fold-light.svg",
+    "png": "light/png/08-cut-and-fold-light.png"
+  },
+  {
+    "id": "08-cut-and-fold-dark",
+    "family": "08-cut-and-fold",
+    "title": "Cut & Fold",
+    "mode": "dark",
+    "description": "Drei ausgeschnittene Formen als flache Papierschichten mit präzisen Vektorkanten.",
+    "background": "#20262C",
+    "svg": "dark/svg/08-cut-and-fold-dark.svg",
+    "png": "dark/png/08-cut-and-fold-dark.png"
+  },
+  {
+    "id": "09-long-conversation-light",
+    "family": "09-long-conversation",
+    "title": "Long Conversation",
+    "mode": "light",
+    "description": "Vier lange Bänder an unterschiedlich langen Drähten und ein winziger brauner Zuhörer.",
+    "background": "#E3ECE8",
+    "svg": "light/svg/09-long-conversation-light.svg",
+    "png": "light/png/09-long-conversation-light.png"
+  },
+  {
+    "id": "09-long-conversation-dark",
+    "family": "09-long-conversation",
+    "title": "Long Conversation",
+    "mode": "dark",
+    "description": "Vier lange Bänder an unterschiedlich langen Drähten und ein winziger brauner Zuhörer.",
+    "background": "#142C30",
+    "svg": "dark/svg/09-long-conversation-dark.svg",
+    "png": "dark/png/09-long-conversation-dark.png"
+  },
+  {
+    "id": "10-margin-notes-light",
+    "family": "10-margin-notes",
+    "title": "Margin Notes",
+    "mode": "light",
+    "description": "Eine großzügige Konturzeichnung mit einem farbigen, aufgehängten Keil.",
+    "background": "#F2F0E9",
+    "svg": "light/svg/10-margin-notes-light.svg",
+    "png": "light/png/10-margin-notes-light.png"
+  },
+  {
+    "id": "10-margin-notes-dark",
+    "family": "10-margin-notes",
+    "title": "Margin Notes",
+    "mode": "dark",
+    "description": "Eine großzügige Konturzeichnung mit einem farbigen, aufgehängten Keil.",
+    "background": "#19232A",
+    "svg": "dark/svg/10-margin-notes-dark.svg",
+    "png": "dark/png/10-margin-notes-dark.png"
+  },
+  {
+    "id": "11-afterimage-light",
+    "family": "11-afterimage",
+    "title": "Afterimage",
+    "mode": "light",
+    "description": "Versetzte blaue Konturen beschreiben die Nachbewegung einer hellen Form.",
+    "background": "#E8ECF2",
+    "svg": "light/svg/11-afterimage-light.svg",
+    "png": "light/png/11-afterimage-light.png"
+  },
+  {
+    "id": "11-afterimage-dark",
+    "family": "11-afterimage",
+    "title": "Afterimage",
+    "mode": "dark",
+    "description": "Versetzte blaue Konturen beschreiben die Nachbewegung einer hellen Form.",
+    "background": "#1A438B",
+    "svg": "dark/svg/11-afterimage-dark.svg",
+    "png": "dark/png/11-afterimage-dark.png"
+  },
+  {
+    "id": "12-small-theatre-light",
+    "family": "12-small-theatre",
+    "title": "Small Theatre",
+    "mode": "light",
+    "description": "Ein kleines Mobile vor dem angeschnittenen Schatten einer riesigen Form.",
+    "background": "#E8E5DF",
+    "svg": "light/svg/12-small-theatre-light.svg",
+    "png": "light/png/12-small-theatre-light.png"
+  },
+  {
+    "id": "12-small-theatre-dark",
+    "family": "12-small-theatre",
+    "title": "Small Theatre",
+    "mode": "dark",
+    "description": "Ein kleines Mobile vor dem angeschnittenen Schatten einer riesigen Form.",
+    "background": "#191E25",
+    "svg": "dark/svg/12-small-theatre-dark.svg",
+    "png": "dark/png/12-small-theatre-dark.png"
+  },
+  {
+    "id": "13-equilibrium-light",
+    "family": "13-equilibrium",
+    "title": "Equilibrium",
+    "mode": "light",
+    "description": "Eine helle, leicht aus dem Lot geratene Hängung über einer feinen Bodenlinie.",
+    "background": "#E8E3D9",
+    "svg": "light/svg/13-equilibrium-light.svg",
+    "png": "light/png/13-equilibrium-light.png"
+  },
+  {
+    "id": "13-equilibrium-dark",
+    "family": "13-equilibrium",
+    "title": "Equilibrium",
+    "mode": "dark",
+    "description": "Eine helle, leicht aus dem Lot geratene Hängung über einer feinen Bodenlinie.",
+    "background": "#1C2427",
+    "svg": "dark/svg/13-equilibrium-dark.svg",
+    "png": "dark/png/13-equilibrium-dark.png"
+  },
+  {
+    "id": "14-crosswind-light",
+    "family": "14-crosswind",
+    "title": "Crosswind",
+    "mode": "light",
+    "description": "Vier Originalformen lösen sich aus ihrer Hängung und reagieren auf einen gedachten Wind.",
+    "background": "#E7ECE9",
+    "svg": "light/svg/14-crosswind-light.svg",
+    "png": "light/png/14-crosswind-light.png"
+  },
+  {
+    "id": "14-crosswind-dark",
+    "family": "14-crosswind",
+    "title": "Crosswind",
+    "mode": "dark",
+    "description": "Vier Originalformen lösen sich aus ihrer Hängung und reagieren auf einen gedachten Wind.",
+    "background": "#19282E",
+    "svg": "dark/svg/14-crosswind-dark.svg",
+    "png": "dark/png/14-crosswind-dark.png"
+  },
+  {
+    "id": "15-resonant-room-light",
+    "family": "15-resonant-room",
+    "title": "Resonant Room",
+    "mode": "light",
+    "description": "Dünne Konturen öffnen einen asymmetrischen Resonanzraum um einen blauen Kern.",
+    "background": "#E7EBEC",
+    "svg": "light/svg/15-resonant-room-light.svg",
+    "png": "light/png/15-resonant-room-light.png"
+  },
+  {
+    "id": "15-resonant-room-dark",
+    "family": "15-resonant-room",
+    "title": "Resonant Room",
+    "mode": "dark",
+    "description": "Dünne Konturen öffnen einen asymmetrischen Resonanzraum um einen blauen Kern.",
+    "background": "#111D24",
+    "svg": "dark/svg/15-resonant-room-dark.svg",
+    "png": "dark/png/15-resonant-room-dark.png"
+  },
+  {
+    "id": "16-off-script-light",
+    "family": "16-off-script",
+    "title": "Off Script",
+    "mode": "light",
+    "description": "Große Anschnitte, ein hängender Keil und eine offene linke Fläche: kontrolliertes Durcheinander.",
+    "background": "#F5F4F0",
+    "svg": "light/svg/16-off-script-light.svg",
+    "png": "light/png/16-off-script-light.png"
+  },
+  {
+    "id": "16-off-script-dark",
+    "family": "16-off-script",
+    "title": "Off Script",
+    "mode": "dark",
+    "description": "Große Anschnitte, ein hängender Keil und eine offene linke Fläche: kontrolliertes Durcheinander.",
+    "background": "#171E25",
+    "svg": "dark/svg/16-off-script-dark.svg",
+    "png": "dark/png/16-off-script-dark.png"
+  },
+  {
+    "id": "17-tidal-balance-light",
+    "family": "17-tidal-balance",
+    "title": "Tidal Balance",
+    "mode": "light",
+    "description": "Petrolbänder spreizen sich wie eine langsame Strömung; ein Keil hält dagegen.",
+    "background": "#E5EDE8",
+    "svg": "light/svg/17-tidal-balance-light.svg",
+    "png": "light/png/17-tidal-balance-light.png"
+  },
+  {
+    "id": "18-soft-collision-light",
+    "family": "18-soft-collision",
+    "title": "Soft Collision",
+    "mode": "light",
+    "description": "Blau und Orange überlagern sich als große, präzise geschnittene Papierkörper.",
+    "background": "#EDE7DF",
+    "svg": "light/svg/18-soft-collision-light.svg",
+    "png": "light/png/18-soft-collision-light.png"
+  },
+  {
+    "id": "19-thread-atlas-light",
+    "family": "19-thread-atlas",
+    "title": "Thread Atlas",
+    "mode": "light",
+    "description": "Ein räumliches Netz aus vier Fäden trägt die unveränderten Fundstücke.",
+    "background": "#F0EDE5",
+    "svg": "light/svg/19-thread-atlas-light.svg",
+    "png": "light/png/19-thread-atlas-light.png"
+  },
+  {
+    "id": "20-diagonal-silence-light",
+    "family": "20-diagonal-silence",
+    "title": "Diagonal Silence",
+    "mode": "light",
+    "description": "Ein orangefarbener Anschnitt von links trifft auf eine kleine blaue Hängung rechts.",
+    "background": "#EEE6DB",
+    "svg": "light/svg/20-diagonal-silence-light.svg",
+    "png": "light/png/20-diagonal-silence-light.png"
+  },
+  {
+    "id": "21-folded-horizon-light",
+    "family": "21-folded-horizon",
+    "title": "Folded Horizon",
+    "mode": "light",
+    "description": "Die blaue Originalform wird durch Drehung und Anschnitt zu einer offenen Landschaft.",
+    "background": "#E4E9EB",
+    "svg": "light/svg/21-folded-horizon-light.svg",
+    "png": "light/png/21-folded-horizon-light.png"
+  },
+  {
+    "id": "22-suspended-duet-light",
+    "family": "22-suspended-duet",
+    "title": "Suspended Duet",
+    "mode": "light",
+    "description": "Eine volle und eine nur gezeichnete Play-Form führen ein stilles Zwiegespräch.",
+    "background": "#F1EEE7",
+    "svg": "light/svg/22-suspended-duet-light.svg",
+    "png": "light/png/22-suspended-duet-light.png"
+  },
+  {
+    "id": "23-quiet-assembly-light",
+    "family": "23-quiet-assembly",
+    "title": "Quiet Assembly",
+    "mode": "light",
+    "description": "Ein kleines farbiges Mobile vor großen, beinahe tonalen Schatten seiner Einzelteile.",
+    "background": "#E9E4DA",
+    "svg": "light/svg/23-quiet-assembly-light.svg",
+    "png": "light/png/23-quiet-assembly-light.png"
+  },
+  {
+    "id": "24-kinetic-score-light",
+    "family": "24-kinetic-score",
+    "title": "Kinetic Score",
+    "mode": "light",
+    "description": "Fünf gedrehte Bänder schreiben eine freie Partitur aus Rhythmus und Pausen.",
+    "background": "#E4ECE8",
+    "svg": "light/svg/24-kinetic-score-light.svg",
+    "png": "light/png/24-kinetic-score-light.png"
+  },
+  {
+    "id": "17-tidal-balance-dark",
+    "family": "17-tidal-balance",
+    "title": "Tidal Balance",
+    "mode": "dark",
+    "description": "Petrolbänder spreizen sich wie eine langsame Strömung; ein Keil hält dagegen.",
+    "background": "#15292D",
+    "svg": "dark/svg/17-tidal-balance-dark.svg",
+    "png": "dark/png/17-tidal-balance-dark.png"
+  },
+  {
+    "id": "18-soft-collision-dark",
+    "family": "18-soft-collision",
+    "title": "Soft Collision",
+    "mode": "dark",
+    "description": "Blau und Orange überlagern sich als große, präzise geschnittene Papierkörper.",
+    "background": "#202332",
+    "svg": "dark/svg/18-soft-collision-dark.svg",
+    "png": "dark/png/18-soft-collision-dark.png"
+  },
+  {
+    "id": "19-thread-atlas-dark",
+    "family": "19-thread-atlas",
+    "title": "Thread Atlas",
+    "mode": "dark",
+    "description": "Ein räumliches Netz aus vier Fäden trägt die unveränderten Fundstücke.",
+    "background": "#142128",
+    "svg": "dark/svg/19-thread-atlas-dark.svg",
+    "png": "dark/png/19-thread-atlas-dark.png"
+  },
+  {
+    "id": "20-diagonal-silence-dark",
+    "family": "20-diagonal-silence",
+    "title": "Diagonal Silence",
+    "mode": "dark",
+    "description": "Ein orangefarbener Anschnitt von links trifft auf eine kleine blaue Hängung rechts.",
+    "background": "#242021",
+    "svg": "dark/svg/20-diagonal-silence-dark.svg",
+    "png": "dark/png/20-diagonal-silence-dark.png"
+  },
+  {
+    "id": "21-folded-horizon-dark",
+    "family": "21-folded-horizon",
+    "title": "Folded Horizon",
+    "mode": "dark",
+    "description": "Die blaue Originalform wird durch Drehung und Anschnitt zu einer offenen Landschaft.",
+    "background": "#15242D",
+    "svg": "dark/svg/21-folded-horizon-dark.svg",
+    "png": "dark/png/21-folded-horizon-dark.png"
+  },
+  {
+    "id": "22-suspended-duet-dark",
+    "family": "22-suspended-duet",
+    "title": "Suspended Duet",
+    "mode": "dark",
+    "description": "Eine volle und eine nur gezeichnete Play-Form führen ein stilles Zwiegespräch.",
+    "background": "#1C252B",
+    "svg": "dark/svg/22-suspended-duet-dark.svg",
+    "png": "dark/png/22-suspended-duet-dark.png"
+  },
+  {
+    "id": "23-quiet-assembly-dark",
+    "family": "23-quiet-assembly",
+    "title": "Quiet Assembly",
+    "mode": "dark",
+    "description": "Ein kleines farbiges Mobile vor großen, beinahe tonalen Schatten seiner Einzelteile.",
+    "background": "#1D2328",
+    "svg": "dark/svg/23-quiet-assembly-dark.svg",
+    "png": "dark/png/23-quiet-assembly-dark.png"
+  },
+  {
+    "id": "24-kinetic-score-dark",
+    "family": "24-kinetic-score",
+    "title": "Kinetic Score",
+    "mode": "dark",
+    "description": "Fünf gedrehte Bänder schreiben eine freie Partitur aus Rhythmus und Pausen.",
+    "background": "#15262C",
+    "svg": "dark/svg/24-kinetic-score-dark.svg",
+    "png": "dark/png/24-kinetic-score-dark.png"
+  }
+]

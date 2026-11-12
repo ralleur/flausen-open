@@ -1,0 +1,594 @@
+--- modules/launcher/Content.qml
++++ modules/launcher/Content.qml
+@@ -20,7 +20,9 @@
+     required property real maxWidth
+     required property real maxHeight
+ 
+-    readonly property int padding: Tokens.padding.large
++    readonly property int padding: 26
++    property bool browsing: false
++    readonly property bool showHome: !search.text && !browsing
+     readonly property int rounding: Tokens.rounding.extraLarge
+     readonly property bool isClipboardMode: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}clipboard `)
+     readonly property int footerSpacing: Tokens.spacing.small
+@@ -29,14 +31,47 @@
+         Clipboard.clearHistory();
+     }
+ 
+-    function triggerSessionCommand(command: list<string>): void {
++    function triggerSessionCommand(command: var): void {
++        // Nested JavaScript arrays from the footer model must not be coerced
++        // through a QML list<string> function parameter (Qt drops their values).
++        const args = [];
++        for (let i = 0; command && i < command.length; ++i)
++            args.push(String(command[i]));
++        if (!args.length) {
++            console.warn("Start menu: empty action command");
++            return;
++        }
+         root.visibilities.launcher = false;
+-        if (!SessionManager.exec(command))
+-            Quickshell.execDetached(command);
+-    }
+-
+-    implicitWidth: listWrapper.width + padding * 2
+-    implicitHeight: listWrapper.height + sessionFooter.height + searchWrapper.height + listWrapper.anchors.bottomMargin + sessionFooter.anchors.bottomMargin + searchWrapper.anchors.bottomMargin
++        if (!SessionManager.exec(args))
++            Quickshell.execDetached(args);
++    }
++
++    implicitWidth: Math.min(720, maxWidth - 40)
++    implicitHeight: Math.min(880, maxHeight)
++
++    Rectangle {
++        anchors.fill: parent
++        radius: 24
++        color: Colours.light ? "#e6f4f5f7" : "#d911161d"
++        border.width: 1
++        border.color: Colours.light ? "#70969ca5" : "#38ffffff"
++    }
++    Shortcut { sequence: "Ctrl+K"; enabled: root.visibilities.launcher; onActivated: search.forceActiveFocus() }
++    StartHome {
++        id: home
++        anchors.top: searchWrapper.bottom
++        anchors.topMargin: 14
++        anchors.bottom: sessionFooter.top
++        anchors.bottomMargin: 16
++        anchors.left: parent.left
++        anchors.right: parent.right
++        anchors.leftMargin: root.padding
++        anchors.rightMargin: root.padding
++        visible: root.showHome
++        visibilities: root.visibilities
++        onBrowse: { root.browsing = true; search.forceActiveFocus(); }
++        onAccount: root.triggerSessionCommand(["kcmshell6", "kcm_users"])
++    }
+ 
+     Connections {
+         function onClearHistoryFinished(success: bool): void {
+@@ -53,115 +88,83 @@
+ 
+     Item {
+         id: listWrapper
+-
+-        implicitWidth: list.implicitWidth
+-        implicitHeight: list.implicitHeight + root.padding
+-
+-        anchors.horizontalCenter: parent.horizontalCenter
++        visible: !root.showHome
++        anchors.top: searchWrapper.bottom
++        anchors.topMargin: 16
+         anchors.bottom: sessionFooter.top
+-        anchors.bottomMargin: root.footerSpacing
+-
++        anchors.bottomMargin: 16
++        anchors.left: parent.left
++        anchors.right: parent.right
++        anchors.leftMargin: root.padding
++        anchors.rightMargin: root.padding
++        clip: true
+         ContentList {
+             id: list
+-
+             content: root
+             visibilities: root.visibilities
+             panels: root.panels
+-            maxWidth: root.maxWidth - root.padding * 2
+-            maxHeight: root.maxHeight - searchWrapper.implicitHeight - sessionFooter.implicitHeight - root.padding * 2 - (sessionFooter.visible ? root.footerSpacing * 2 : root.footerSpacing)
++            maxWidth: listWrapper.width
++            maxHeight: listWrapper.height
+             search: search
+             padding: root.padding
+             rounding: root.rounding
+         }
+     }
+ 
+-    StyledRect {
++    Item {
+         id: sessionFooter
+-
+-        visible: Config.launcher.showPowerMenu
+-
+-        color: Colours.layer(Colours.palette.m3surfaceContainerLow, 2)
+-        radius: Tokens.rounding.extraLarge
+-
+-        anchors.left: parent.left
+-        anchors.right: parent.right
+-        anchors.bottom: searchWrapper.top
+-        anchors.bottomMargin: visible ? root.footerSpacing : 0
+-        anchors.leftMargin: root.padding
+-        anchors.rightMargin: root.padding
+-
+-        implicitHeight: visible ? (footerLayout.implicitHeight + Tokens.padding.medium * 2) : 0
+-
+-        ColumnLayout {
+-            id: footerLayout
+-
+-            anchors.fill: parent
+-            anchors.margins: Tokens.padding.medium
+-            spacing: Tokens.spacing.small
+-
+-            // StyledText {
+-            //     Layout.fillWidth: true
+-            //     text: qsTr("Quick session controls")
+-            //     color: Colours.palette.m3onSurfaceVariant
+-            //     font: Tokens.font.label.large
+-            // }
+-
+-            RowLayout {
+-                Layout.fillWidth: true
+-                spacing: Tokens.spacing.small
+-
+-                IconTextButton {
+-                    Layout.fillWidth: true
+-                    type: TextButton.Tonal
+-                    icon: "logout"
+-                    text: qsTr("Log Out")
+-                    onClicked: root.triggerSessionCommand(["sh", "-c", "qdbus6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout 2>/dev/null"])
+-                }
+-
+-                IconTextButton {
+-                    Layout.fillWidth: true
+-                    type: TextButton.Tonal
+-                    icon: "bedtime"
+-                    text: qsTr("Sleep")
+-                    onClicked: root.triggerSessionCommand(["suspendThenHibernate"])
+-                }
+-
+-                IconTextButton {
+-                    Layout.fillWidth: true
+-                    type: TextButton.Tonal
+-                    icon: "restart_alt"
+-                    text: qsTr("Restart")
+-                    inactiveColour: Colours.palette.m3secondaryContainer
+-                    inactiveOnColour: Colours.palette.m3onSecondaryContainer
+-                    onClicked: root.triggerSessionCommand(Config.session.commands.reboot)
+-                }
+-
+-                IconTextButton {
+-                    Layout.fillWidth: true
+-                    type: TextButton.Tonal
+-                    icon: "power_settings_new"
+-                    text: qsTr("Shut Down")
+-                    inactiveColour: Colours.palette.m3errorContainer
+-                    inactiveOnColour: Colours.palette.m3onErrorContainer
+-                    onClicked: root.triggerSessionCommand(Config.session.commands.shutdown)
+-                }
+-            }
+-        }
+-    }
+-
+-    StyledRect {
+-        id: searchWrapper
+-
+-        color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+-        radius: Tokens.rounding.full
+-
+         anchors.left: parent.left
+         anchors.right: parent.right
+         anchors.bottom: parent.bottom
+         anchors.margins: root.padding
+-        anchors.bottomMargin: CUtils.clamp(root.padding - Config.border.thickness, 0, root.padding)
+-
+-        implicitHeight: Math.max(searchIcon.implicitHeight, search.implicitHeight, clearClipboardIcon.implicitHeight, clearIcon.implicitHeight, commandsBtn.implicitHeight)
++        height: 52
++        implicitHeight: height
++        Rectangle { width: parent.width; height: 1; color: Colours.light ? "#24969ca5" : "#26ffffff" }
++        RowLayout {
++            anchors.fill: parent
++            anchors.topMargin: 12
++            spacing: 4
++            Repeater {
++                model: [
++                    {label: qsTr("Einstellungen"), icon: "settings", command: ["systemsettings"], power: false},
++                    {label: qsTr("Dateien"), icon: "folder_open", command: ["dolphin"], power: false},
++                    {label: qsTr("Sperren"), icon: "lock", command: ["loginctl", "lock-session"], power: false},
++                    {label: qsTr("Neustart"), icon: "restart_alt", command: Config.session.commands.reboot, power: true},
++                    {label: qsTr("Ausschalten"), icon: "power_settings_new", command: Config.session.commands.shutdown, power: true}
++                ]
++                delegate: Button {
++                    id: action
++                    required property var modelData
++                    Layout.fillWidth: true
++                    Layout.fillHeight: true
++                    visible: !modelData.power || Config.launcher.showPowerMenu
++                    onClicked: root.triggerSessionCommand(modelData.command)
++                    background: Rectangle { radius: 10; color: action.hovered || action.visualFocus ? "#20ffffff" : "transparent" }
++                    contentItem: RowLayout {
++                        spacing: 6
++                        MaterialIcon { text: action.modelData.icon; color: action.modelData.icon === "power_settings_new" ? "#ff625c" : Colours.palette.m3onSurface; fontStyle: Tokens.font.icon.small }
++                        Text { Layout.fillWidth: true; text: action.modelData.label; color: Colours.palette.m3onSurface; font.pixelSize: 12; elide: Text.ElideRight }
++                    }
++                }
++            }
++        }
++    }
++
++    StyledRect {
++        id: searchWrapper
++
++        color: Colours.light ? "#10000000" : "#10ffffff"
++        radius: 17
++        border.width: 1
++        border.color: Colours.light ? "#26969ca5" : "#26ffffff"
++
++        anchors.left: parent.left
++        anchors.right: parent.right
++        anchors.top: parent.top
++        anchors.margins: root.padding
++
++        height: 56
++        implicitHeight: height
+ 
+         MaterialIcon {
+             id: searchIcon
+@@ -185,9 +188,13 @@
+             topPadding: Tokens.padding.medium
+             bottomPadding: Tokens.padding.medium
+ 
+-            placeholderText: qsTr("Type \"%1\" for commands").arg(GlobalConfig.launcher.actionPrefix)
++            placeholderText: ""
++
++            background: Item {}
++            anchors.verticalCenter: parent.verticalCenter
+ 
+             onAccepted: {
++                if (root.showHome) { root.browsing = true; return; }
+                 if (list.showAppsBrowser) {
+                     list.currentList?.activateCurrent();
+                     return;
+@@ -217,7 +224,8 @@
+                     list.currentList?.decrementCurrentIndex();
+             }
+             Keys.onDownPressed: {
+-                if (!list.showWallpapers)
++                if (root.showHome) root.browsing = true;
++                else if (!list.showWallpapers)
+                     list.currentList?.incrementCurrentIndex();
+             }
+             Keys.onLeftPressed: event => {
+@@ -244,6 +252,7 @@
+             }
+ 
+             Keys.onEscapePressed: {
++                if (root.browsing && !search.text) { root.browsing = false; return; }
+                 Windows.isSwitching = false;
+                 Kwin.clearHighlight();
+                 root.visibilities.launcher = false;
+@@ -341,6 +350,7 @@
+                 function onLauncherChanged(): void {
+                     if (root.visibilities.launcher) {
+                         // Every open decides the field: the requested prefix, or the app grid.
++                        root.browsing = false;
+                         search.text = Visibilities.launcherInitialSearch;
+                         Visibilities.launcherInitialSearch = "";
+                         search.forceActiveFocus();
+@@ -362,6 +372,7 @@
+             Connections {
+                 function onClosed(): void {
+                     search.text = "";
++                    root.browsing = false;
+                 }
+ 
+                 target: root.panels.launcher
+@@ -382,6 +393,17 @@
+             }
+         }
+ 
++        Text {
++            anchors.verticalCenter: parent.verticalCenter
++            x: search.x + search.leftPadding
++            width: Math.max(0, search.width - search.leftPadding - search.rightPadding)
++            visible: !search.text
++            text: qsTr("Apps, Dateien, Einstellungen suchen …")
++            color: Colours.palette.m3onSurfaceVariant
++            font: search.font
++            elide: Text.ElideRight
++        }
++
+         MaterialIcon {
+             id: clearClipboardIcon
+ 
+@@ -479,7 +501,7 @@
+             implicitHeight: 32
+             radius: Tokens.rounding.full
+             radiusMorph: false
+-            icon: "menu"
++            icon: root.browsing ? "arrow_back" : "terminal"
+ 
+             anchors.verticalCenter: parent.verticalCenter
+             anchors.right: parent.right
+@@ -487,7 +509,9 @@
+             checked: search.text.startsWith(GlobalConfig.launcher.actionPrefix)
+ 
+             onClicked: {
+-                if (search.text.startsWith(GlobalConfig.launcher.actionPrefix)) {
++                if (root.browsing && !search.text) {
++                    root.browsing = false;
++                } else if (search.text.startsWith(GlobalConfig.launcher.actionPrefix)) {
+                     search.text = "";
+                 } else {
+                     search.text = GlobalConfig.launcher.actionPrefix;
+--- modules/launcher/ContentList.qml
++++ modules/launcher/ContentList.qml
+@@ -41,7 +41,7 @@
+     }
+ 
+     anchors.horizontalCenter: parent.horizontalCenter
+-    anchors.bottom: parent.bottom
++    anchors.top: parent.top
+ 
+     width: implicitWidth
+     height: implicitHeight
+@@ -191,8 +191,10 @@
+         anchors.fill: parent
+ 
+         sourceComponent: AppBrowser {
++            id: startBrowser
+             visibilities: root.visibilities
+             maxWidth: root.maxWidth
++            Component.onCompleted: Qt.callLater(() => startBrowser.browser?.selectCategory("all"))
+         }
+ 
+         Behavior on opacity {
+--- modules/launcher/Wrapper.qml
++++ modules/launcher/Wrapper.qml
+@@ -13,14 +13,9 @@
+     required property DrawerVisibilities visibilities
+     required property var panels
+     Config.screen: root.screen.name
+-    readonly property real maxWidth: screen.width
++    readonly property real maxWidth: Math.max(0, screen.width - panels.leftMargin - panels.rightMargin - 24)
+     readonly property bool shouldBeActive: visibilities.launcher && Config.launcher.enabled && !visibilities.overview
+-    readonly property real maxHeight: {
+-        let max = screen.height - Config.border.thickness * 2 + Tokens.padding.extraLarge;
+-        if (visibilities.dashboard)
+-            max -= panels.dashboard.nonAnimHeight;
+-        return max;
+-    }
++    readonly property real maxHeight: Math.max(120, screen.height - 140)
+     property real offsetScale: shouldBeActive ? 0 : 1
+     property bool keepAlive: false
+ 
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -6,6 +6,7 @@
+ import QtQuick.Effects
+ import QtCore
+ import Quickshell
++import Quickshell.Io
+ import Quickshell.Hyprland
+ import Quickshell.Wayland
+ import Caelestia.Blobs
+@@ -20,6 +21,62 @@
+ 
+ StyledWindow {
+     id: root
++
++    readonly property bool launcherBackdropActive: visibilities.launcher && Config.launcher.enabled
++    readonly property string launcherBlurOwner: "launcher:" + screen.name
++    property bool launcherBlurRequested: false
++    property bool launcherBlurReady: false
++    function syncLauncherBlur(): void {
++        if (!launcherBlurProcess.running) {
++            launcherBlurProcess.command = [Quickshell.env("HOME") + "/.local/libexec/ralleur/blur-settings", launcherBlurRequested ? "on" : "off", launcherBlurOwner];
++            launcherBlurProcess.running = true;
++        }
++    }
++    onLauncherBackdropActiveChanged: {
++        if (launcherBackdropActive) {
++            releaseLauncherBlur.stop();
++            launcherBlurRequested = true;
++        } else {
++            releaseLauncherBlur.restart();
++        }
++    }
++    onLauncherBlurRequestedChanged: syncLauncherBlur()
++    Timer {
++        id: releaseLauncherBlur
++        interval: 360
++        onTriggered: root.launcherBlurRequested = false
++    }
++    Process {
++        id: launcherBlurProcess
++        onExited: (exitCode, exitStatus) => {
++            root.launcherBlurReady = command[1] === "on" && exitCode === 0;
++            if (command[1] !== (root.launcherBlurRequested ? "on" : "off"))
++                root.syncLauncherBlur();
++        }
++    }
++    // KWin fades this helper surface without fading the menu or bars.
++    readonly property bool launcherSurfaceVisible: launcherBackdropActive
++    onLauncherSurfaceVisibleChanged: syncBackdropSurface()
++    function syncBackdropSurface(): void {
++        if (backdropSocket.connected) {
++            backdropSocket.write(JSON.stringify({screen: screen.name, shown: launcherSurfaceVisible}) + "\n");
++            backdropSocket.flush();
++        }
++    }
++    Socket {
++        id: backdropSocket
++        path: Quickshell.env("XDG_RUNTIME_DIR") + "/ralleur-start-backdrop.sock"
++        connected: true
++        onConnectionStateChanged: {
++            if (connected) root.syncBackdropSurface();
++            else reconnectBackdrop.restart();
++        }
++    }
++    Timer {
++        id: reconnectBackdrop
++        interval: 250
++        onTriggered: backdropSocket.connected = true
++    }
+ 
+     property real blurOffsetTop: 0
+     property real blurOffsetBottom: 0
+@@ -101,7 +158,7 @@
+     anchors.left: true
+     anchors.right: true
+     WlrLayershell.exclusionMode: ExclusionMode.Ignore
+-    WlrLayershell.layer: !wantsKeyboard && (hasOpenOverlay || (actualFullscreen && fsTransitionProg < 1) || (fsTransitionProg > 0 && Config.general.showOverFullscreen) || (panels.notifications.visible && panels.notifications.height > 0 && GlobalConfig.notifs.fullscreen === "on") || (((monitor?.lastIpcObject?.specialWorkspace?.name?.length ?? 0) > 0) && (monitor?.activeWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false))) ? WlrLayer.Overlay : WlrLayer.Top
++    WlrLayershell.layer: root.launcherBackdropActive ? WlrLayer.Overlay : !wantsKeyboard && (hasOpenOverlay || (actualFullscreen && fsTransitionProg < 1) || (fsTransitionProg > 0 && Config.general.showOverFullscreen) || (panels.notifications.visible && panels.notifications.height > 0 && GlobalConfig.notifs.fullscreen === "on") || (((monitor?.lastIpcObject?.specialWorkspace?.name?.length ?? 0) > 0) && (monitor?.activeWorkspace?.toplevels?.values?.some(t => (t?.lastIpcObject?.fullscreen ?? 0) > 1) ?? false))) ? WlrLayer.Overlay : WlrLayer.Top
+     WlrLayershell.keyboardFocus: wantsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+ 
+     // A pinned sidebar gets out of the way of fullscreen windows (games, video)
+@@ -397,6 +454,7 @@
+         }
+         PanelBg {
+             id: launcherBg
++            group: null // Start menu draws its own glass surface.
+ 
+             panel: panels.launcher
+             deformAmount: 0.1
+@@ -787,6 +845,15 @@
+ 
+     Config.screen: screen.name
+     BackgroundEffect.blurRegion: Region {
++        // Start menu glass remains blurred independently of other panel preferences.
++        Region {
++            x: panels.launcher.x + panels.leftMargin
++            y: panels.launcher.y + panels.topMargin
++            width: panels.launcher.visible ? panels.launcher.width : 0
++            height: panels.launcher.visible ? panels.launcher.height : 0
++            radius: 24
++            intersection: Intersection.Combine
++        }
+         // Independent glass blur for the two bars, without enabling it for every panel.
+         Region {
+             x: topBarGlass.x; y: topBarGlass.y
+--- modules/drawers/Panels.qml
++++ modules/drawers/Panels.qml
+@@ -257,6 +257,7 @@
+         visibilities: root.visibilities
+         panels: root
+         anchors.left: parent.left
++        anchors.leftMargin: 24
+         anchors.top: parent.top
+     }
+     Dashboard.Wrapper {
+--- modules/launcher/services/Apps.qml
++++ modules/launcher/services/Apps.qml
+@@ -1,9 +1,12 @@
+ pragma Singleton
+ 
++import QtQuick
++import QtCore
+ import Quickshell
+ import Caelestia
+ import Caelestia.Models
+ import Caelestia.Config
++import qs.services
+ import qs.utils
+ 
+ Searcher {
+@@ -11,7 +14,68 @@
+ 
+     property alias alphaApps: appDb.alphaApps
+ 
++    Settings {
++        id: recentSettings
++        category: "RalleurStartMenu"
++        property string recentAppIdsJson: "[]"
++    }
++    readonly property var recentAppIds: {
++        try {
++            const ids = JSON.parse(recentSettings.recentAppIdsJson);
++            return Array.isArray(ids) ? ids.filter(id => typeof id === "string") : [];
++        } catch (error) { return []; }
++    }
++    readonly property var recentApps: {
++        const available = root.allApps();
++        return recentAppIds.map(id => available.find(app => app.id === id)).filter(app => app);
++    }
++    property var knownWindowAddresses: []
++    property bool windowsInitialized: false
++
++    function rememberRecent(entry: var): void {
++        if (!entry || !entry.id || root.recentAppIds[0] === entry.id)
++            return;
++        recentSettings.recentAppIdsJson = JSON.stringify([entry.id, ...root.recentAppIds.filter(id => id !== entry.id)].slice(0, 48));
++    }
++    function entryForWindow(window: var): var {
++        const appClass = window?.class ?? "";
++        if (!appClass) return null;
++        const normalise = value => String(value || "").toLowerCase().replace(/\.desktop$/, "");
++        const match = DesktopEntries.heuristicLookup(appClass);
++        const all = root.allApps();
++        const id = normalise(match?.id ?? appClass);
++        return all.find(app => normalise(app.id) === id)
++            ?? all.find(app => normalise(app.startupClass) === normalise(appClass)) ?? null;
++    }
++    function rememberActiveWindow(): void {
++        root.rememberRecent(root.entryForWindow(Kwin.activeWindow));
++    }
++    function trackWindows(): void {
++        const windows = Kwin.windowList;
++        const initial = !root.windowsInitialized;
++        if (root.windowsInitialized) {
++            for (const window of windows) {
++                if (!root.knownWindowAddresses.includes(window.address))
++                    root.rememberRecent(root.entryForWindow(window));
++            }
++        }
++        root.knownWindowAddresses = windows.map(window => window.address);
++        root.windowsInitialized = true;
++        if (initial) root.rememberActiveWindow();
++    }
++    Component.onCompleted: Qt.callLater(root.trackWindows)
++    Connections {
++        target: Kwin
++        function onActiveWindowChanged(): void { root.rememberActiveWindow(); }
++        function onWindowListChanged(): void { root.trackWindows(); }
++    }
++    Connections {
++        target: appDb
++        function onAppsChanged(): void { if (root.recentAppIds.length === 0) root.rememberActiveWindow(); }
++    }
++
+     function launch(entry: DesktopEntry): void {
++        root.rememberRecent(entry);
+         appDb.incrementFrequency(entry.id);
+         Launch.launchEntry(entry);
+     }
+@@ -20,8 +84,10 @@
+     function allApps(): list<var> {
+         const res = [];
+         const apps = list;
+-        for (let i = 0; i < apps.length; i++)
+-            res.push(apps[i].entry);
++        for (let i = 0; i < apps.length; i++) {
++            if (apps[i]?.entry)
++                res.push(apps[i].entry);
++        }
+         return res;
+     }
+ 
+@@ -67,7 +133,7 @@
+         return keys.map(k => item[k]).join(" ");
+     }
+ 
+-    list: appDb.apps.filter(a => !Strings.testRegexList(GlobalConfig.launcher.hiddenApps, a.id))
++    list: appDb.apps.filter(a => a && !Strings.testRegexList(GlobalConfig.launcher.hiddenApps, a.id))
+     useFuzzy: GlobalConfig.launcher.useFuzzy.apps
+ 
+     AppDb {

@@ -1,0 +1,21 @@
+--- modules/bar/components/WeatherWidget.qml
++++ modules/bar/components/WeatherWidget.qml
+@@ -39,8 +39,16 @@
+         StyledText {
+             visible: root.isHorizontal
+             text: Weather.temp
+-            font: Tokens.font.body.medium
+-            color: Colours.palette.m3onSurface
++            font: {
++                // Use the same size, weight and family as the horizontal clock.
++                const rawScale = !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0;
++                const thickness = rawScale < 1.0 ? Tokens.sizes.bar.innerWidth
++                    : Math.round(Tokens.sizes.bar.innerWidth * rawScale);
++                const value = Tokens.font.body.builders.small.size(Math.round(thickness * 0.32)).build();
++                value.family = MenuStyle.fontFamily;
++                return value;
++            }
++            color: Colours.barForeground
+         }
+     }
+ 

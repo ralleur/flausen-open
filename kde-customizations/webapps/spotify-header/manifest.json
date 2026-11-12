@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "flausen Spotify window controls",
+  "version": "1.0.1",
+  "description": "Integrierte Fenstersteuerung für die Spotify-Webapp unter KWin.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq+sVE5LPPdWzRhG8aOF60RqyEndc12aXeKVv1VfKMcbc1ZM3q4rxoRO2vUrTdjlLSNUw889sDTlxEzc6RgMe7DyWZH5WWunBdRf1QofWo2MaP1nYNSaeJ3ILwS7tcScWx504vgb8UC0e0e8KRG/3fo73ZIDCtHpM0Pkfl72Ds0rVafUwC/Dzg1v964I6vW9Ua2oSrq2Swn1f0kqz4tkjzXueaHFDJ2TlGWzveCUgSmceZJ5fcPDZkfE4ksC5UfIuZnh99eLzYP9EceOx94oiLmxDhatGPflDppjGSfw2nGAvUk7WDGPRkqUilOOrl8ZtCu8M6tPxHbqzGD9jvxluSQIDAQAB",
+  "permissions": ["nativeMessaging"],
+  "background": {"service_worker": "window-bridge.js"},
+  "content_scripts": [{
+    "matches": ["https://open.spotify.com/*"],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+  }]
+}

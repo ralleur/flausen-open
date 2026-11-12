@@ -1,0 +1,89 @@
+diff --git a/kdecoration/CMakeLists.txt b/kdecoration/CMakeLists.txt
+index aea5685..e7c0cfb 100644
+--- a/kdecoration/CMakeLists.txt
++++ b/kdecoration/CMakeLists.txt
+@@ -23,7 +23,7 @@ add_library(darklydecoration MODULE
+     ${darklydecoration_config_PART_FORMS_HEADERS})
+ 
+ set_target_properties(darklydecoration PROPERTIES
+-    OUTPUT_NAME org.kde.darkly
++    OUTPUT_NAME org.kde.ralleur
+ )
+ 
+ target_link_libraries(darklydecoration
+diff --git a/kdecoration/darklybutton.cpp b/kdecoration/darklybutton.cpp
+index fe35cb1..4d3c55d 100644
+--- a/kdecoration/darklybutton.cpp
++++ b/kdecoration/darklybutton.cpp
+@@ -1,3 +1,4 @@
++#include "ralleurcontrols.h"
+ /*
+  * Copyright 2014  Martin Gräßlin <mgraesslin@kde.org>
+  * Copyright 2014  Hugo Pereira Da Costa <hugo.pereira@free.fr>
+@@ -155,6 +156,14 @@ void Button::paint(QPainter *painter, const QRectF &repaintRegion)
+ void Button::drawIcon(QPainter *painter) const
+ {
+     auto d = qobject_cast<Decoration *>(decoration());
++    if (type() == DecorationButtonType::Minimize || type() == DecorationButtonType::Maximize || type() == DecorationButtonType::Close) {
++        const auto symbol = type() == DecorationButtonType::Minimize ? RalleurControls::Symbol::Minimize
++            : type() == DecorationButtonType::Maximize ? RalleurControls::Symbol::Maximize : RalleurControls::Symbol::Close;
++        RalleurControls::paint(*painter, geometry(), symbol,
++            decoration()->window()->palette().color(QPalette::Active, QPalette::WindowText),
++            decoration()->window()->isActive(), isHovered(), isPressed());
++        return;
++    }
+     painter->setRenderHints(QPainter::Antialiasing);
+ 
+     /*
+@@ -199,20 +208,12 @@ void Button::drawIcon(QPainter *painter) const
+         }
+ 
+         case DecorationButtonType::Maximize: {
+-            if (isChecked()) {
+-                pen.setJoinStyle(Qt::RoundJoin);
+-                painter->setPen(pen);
+-
+-                painter->drawPolygon(QVector<QPointF>{QPointF(4, 9), QPointF(9, 4), QPointF(14, 9), QPointF(9, 14)});
+-
+-            } else {
+-                painter->drawPolyline(QVector<QPointF>{QPointF(4, 11), QPointF(9, 6), QPointF(14, 11)});
+-            }
++            painter->drawRect(QRectF(5, 5, 8, 8));
+             break;
+         }
+ 
+         case DecorationButtonType::Minimize: {
+-            painter->drawPolyline(QVector<QPointF>{QPointF(4, 7), QPointF(9, 12), QPointF(14, 7)});
++            painter->drawLine(QPointF(5, 12), QPointF(13, 12));
+             break;
+         }
+ 
+diff --git a/kdecoration/darklydecoration.cpp b/kdecoration/darklydecoration.cpp
+index 5c4959c..e93424f 100644
+--- a/kdecoration/darklydecoration.cpp
++++ b/kdecoration/darklydecoration.cpp
+@@ -836,6 +836,15 @@ if (m_internalSettings->floatingTitlebar()){
+ 
+     update();
+ }
++    // Fixed geometry shared with the toolbar and GTK controls.
++    if (m_leftButtons->buttons().isEmpty() && m_rightButtons->buttons().size() == 3) {
++        for (auto button : m_rightButtons->buttons()) {
++            button->setGeometry(QRectF(0, 0, 30, 30));
++        }
++        m_rightButtons->setSpacing(6);
++        m_rightButtons->setPos(QPointF(size().width() - 107, (borderTop() - 30) / 2.0));
++    }
++
+ }
+ 
+ //________________________________________________________________
+@@ -1164,7 +1173,7 @@ QMarginsF Decoration::bordersFor(qreal scale) const
+         // padding above
+         top += KDecoration3::snapToPixelGrid(baseSize * Metrics::TitleBar_TopMargin, scale);
+     }
+-    return QMarginsF(left, top, right, bottom);
++    return QMarginsF(left, hideTitleBar() ? top : std::max(top, qreal(30)), right, bottom);
+ }
+ 
+ void Decoration::setScaledCornerRadius()

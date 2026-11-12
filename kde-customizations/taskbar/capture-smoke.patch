@@ -1,0 +1,553 @@
+--- /dev/null
++++ components/MenuPrimarySurface.qml
+@@ -0,0 +1,24 @@
++import QtQuick
++import qs.services
++
++// Shared primary action material. Geometry and interaction belong to the caller.
++Rectangle {
++    id: root
++    property bool disabled: false
++    radius: 14
++    gradient: Gradient {
++        GradientStop { position: 0; color: root.disabled ? MenuStyle.muted : MenuStyle.primaryTop }
++        GradientStop { position: 1; color: root.disabled ? MenuStyle.muted : MenuStyle.primaryBottom }
++    }
++    border.width: 1
++    border.color: root.disabled ? MenuStyle.rule : MenuStyle.primaryEdge
++    Rectangle {
++        anchors.fill: parent
++        anchors.margins: 1
++        radius: Math.max(0, root.radius - 1)
++        color: "transparent"
++        border.width: 1
++        border.color: MenuStyle.primaryLight
++        opacity: root.disabled ? 0.2 : 0.45
++    }
++}
+--- modules/bar/popouts/MenuCaptureCard.qml
++++ modules/bar/popouts/MenuCaptureCard.qml
+@@ -23,7 +23,7 @@
+     readonly property bool shotMode: root.props.captureMode === "shot"
+     readonly property real nonAnimHeight: btnLayout.implicitHeight + modeRow.implicitHeight + listOrControls.implicitHeight + layout.spacing * 2 + layout.anchors.margins * 2
+ 
+-    readonly property bool hoverLocked: captureButton.expanded || shortcutDialog.visible
++    readonly property bool hoverLocked: captureButton.expanded || recordingButton.expanded || shortcutDialog.visible
+     property int shortcutRevision: 0
+ 
+     function shortcutText(name: string): string {
+@@ -62,7 +62,7 @@
+         id: layout
+ 
+         anchors.fill: parent
+-        anchors.margins: 7 * root.scaleOffset
++        anchors.margins: 12 * root.scaleOffset
+         spacing: 14 * root.scaleOffset
+ 
+         RowLayout {
+@@ -77,7 +77,7 @@
+                 Layout.alignment:Qt.AlignTop
+                 Layout.topMargin:4*root.scaleOffset
+                 implicitWidth: implicitHeight
+-                implicitHeight: 38 * root.scaleOffset
++                implicitHeight: 46 * root.scaleOffset
+ 
+                 radius: 12 * root.scaleOffset
+                 color: Recorder.running ? Colours.palette.m3error : Qt.alpha(MenuStyle.accent,0.18)
+@@ -100,7 +100,8 @@
+                 MenuText {
+                     Layout.fillWidth: true
+                     text: qsTr("Screen Capture")
+-                    font.pointSize: root.bodyPointSize*1.68
++                    font.pointSize: root.bodyPointSize*1.65
++                    font.weight: Font.DemiBold
+                     wrapMode:Text.WordWrap
+                 }
+ 
+@@ -115,6 +116,7 @@
+             }
+ 
+             MenuCaptureSplitButton {
++                id: recordingButton
+                 fontScale:root.fontScale
+                 scaleOffset:root.scaleOffset
+                 Layout.alignment:Qt.AlignTop
+@@ -294,63 +296,54 @@
+             }
+         }
+ 
+-        ButtonRow {
++        Rectangle {
+             id: modeRow
+-            Layout.topMargin:6*root.scaleOffset
+-            Layout.bottomMargin:6*root.scaleOffset
+-
+-            Layout.fillWidth: true
+-            spacing: Tokens.spacing.small
+-
+-            // Scroll over the switcher to flip Record/Capture, like the Quick Toggles card
++            Layout.preferredWidth: Math.min(layout.width, 316 * root.scaleOffset)
++            implicitHeight: Math.max(40 * root.scaleOffset, modeOptions.implicitHeight + 4)
++            radius: 13 * root.scaleOffset
++            color: MenuStyle.cardFill
++            border.width: 1
++            border.color: MenuStyle.border
++            RowLayout {
++                id: modeOptions
++                anchors.fill: parent
++                anchors.margins: 3
++                spacing: 3
++                Repeater {
++                    model: [ { label: qsTr("Screenshot"), icon: "photo_camera", mode: "shot" },
++                             { label: qsTr("Recording"), icon: "videocam", mode: "record" } ]
++                    delegate: Rectangle {
++                        required property var modelData
++                        readonly property bool selected: root.props.captureMode === modelData.mode
++                        Layout.fillWidth: true
++                        implicitHeight: Math.max(34 * root.scaleOffset, optionLabel.implicitHeight + 14)
++                        radius: 10 * root.scaleOffset
++                        color: selected ? Qt.alpha(MenuStyle.accent, 0.24) : "transparent"
++                        border.width: selected ? 1 : 0
++                        border.color: Qt.alpha(MenuStyle.primaryEdge, 0.42)
++                        RowLayout {
++                            anchors.centerIn: parent
++                            spacing: 9 * root.scaleOffset
++                            MaterialIcon { text: modelData.icon; color: MenuStyle.ink }
++                            MenuText { id: optionLabel; text: modelData.label; font.pointSize: root.bodyPointSize }
++                        }
++                        StateLayer { onClicked: root.props.captureMode = modelData.mode }
++                    }
++                }
++            }
+             WheelHandler {
+                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                 onWheel: event => {
+-                    const d = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+-                    if (d < 0)
+-                        root.props.captureMode = "shot";
+-                    else if (d > 0)
+-                        root.props.captureMode = "record";
+-                }
+-            }
+-
+-            // No isToggle: the checked binding alone drives the colour, so clicking the
+-            // already selected mode can't leave it looking deselected
+-            TextButton {
+-                font:Qt.font({family:MenuStyle.fontFamily,pointSize:root.bodyPointSize})
+-                verticalPadding:10*root.scaleOffset
+-                activeColour:MenuStyle.accent
+-                inactiveColour:MenuStyle.cardFill
+-                activeOnColour:"white"
+-                inactiveOnColour:MenuStyle.ink
+-                defaultRadius:14*root.scaleOffset
+-                checkedRadius:14*root.scaleOffset
+-                border.width:1
+-                border.color:MenuStyle.rule
+-                Layout.fillWidth: true
+-                text: qsTr("Record")
+-                type: TextButton.Tonal
+-                checked: !root.shotMode
+-                onClicked: root.props.captureMode = "record"
+-            }
+-
+-            TextButton {
+-                font:Qt.font({family:MenuStyle.fontFamily,pointSize:root.bodyPointSize})
+-                verticalPadding:10*root.scaleOffset
+-                activeColour:MenuStyle.accent
+-                inactiveColour:MenuStyle.cardFill
+-                activeOnColour:"white"
+-                inactiveOnColour:MenuStyle.ink
+-                defaultRadius:14*root.scaleOffset
+-                checkedRadius:14*root.scaleOffset
+-                border.width:1
+-                border.color:MenuStyle.rule
+-                Layout.fillWidth: true
+-                text: qsTr("Capture")
+-                type: TextButton.Tonal
+-                checked: root.shotMode
+-                onClicked: root.props.captureMode = "shot"
+-            }
++                    const d = event.angleDelta.y || event.angleDelta.x;
++                    if (d) root.props.captureMode = d < 0 ? "shot" : "record";
++                }
++            }
++        }
++
++        Rectangle {
++            Layout.fillWidth: true
++            implicitHeight: 1
++            color: MenuStyle.rule
+         }
+ 
+         Loader {
+--- modules/bar/popouts/MenuCaptureSplitButton.qml
++++ modules/bar/popouts/MenuCaptureSplitButton.qml
+@@ -5,7 +5,7 @@
+ import qs.components.controls
+ import qs.services
+ 
+-Row {
++Item {
+     id: root
+ 
+     property real fontScale:1.15
+@@ -37,13 +37,29 @@
+     property color colour: type == MenuCaptureSplitButton.Filled ? MenuStyle.accent : MenuStyle.cardFill
+     property color textColour: type == MenuCaptureSplitButton.Filled ? "white" : MenuStyle.ink
+ 
+-    spacing: Math.floor(Tokens.spacing.extraSmall / 2)
++    implicitWidth: mainButton.implicitWidth + expandBtn.implicitWidth
++    implicitHeight: expandBtn.implicitHeight
++
++    MenuPrimarySurface {
++        anchors.fill: parent
++        radius: 14 * root.scaleOffset
++        disabled: root.disabled
++        visible: root.type === MenuCaptureSplitButton.Filled
++    }
++    Rectangle {
++        x: mainButton.width
++        y: 1
++        width: 1
++        height: parent.height - 2
++        color: MenuStyle.primaryLight
++    }
+ 
+     StyledRect {
++        id: mainButton
+         radius: implicitHeight / 2 * Math.min(1, Tokens.rounding.scale)
+         topRightRadius: Tokens.rounding.medium / 2
+         bottomRightRadius: Tokens.rounding.medium / 2
+-        color: root.disabled ? Colours.disabledContainer : root.colour
++        color: root.type === MenuCaptureSplitButton.Filled ? "transparent" : root.colour
+ 
+         implicitWidth: Math.max(root.minLeftWidth, textRow.implicitWidth + root.horizontalPadding * 2)
+         implicitHeight: expandBtn.implicitHeight
+@@ -83,7 +99,7 @@
+                 animate: true
+                 text: root.active?.activeText ?? root.fallbackText
+                 font.family:MenuStyle.fontFamily
+-                font.pointSize:MenuStyle.bodyPointSize(root.fontScale)*0.81
++                font.pointSize:MenuStyle.bodyPointSize(root.fontScale)
+                 color: root.disabled ? Colours.disabledContent : root.textColour
+                 clip: true
+ 
+@@ -98,16 +114,17 @@
+ 
+     StyledRect {
+         id: expandBtn
++        x: mainButton.width
+ 
+         property real rad: root.expanded ? implicitHeight / 2 * Math.min(1, Tokens.rounding.scale) : Tokens.rounding.medium / 2
+ 
+         radius: implicitHeight / 2 * Math.min(1, Tokens.rounding.scale)
+         topLeftRadius: rad
+         bottomLeftRadius: rad
+-        color: root.disabled ? Colours.disabledContainer : root.colour
++        color: root.type === MenuCaptureSplitButton.Filled ? "transparent" : root.colour
+ 
+         implicitWidth: implicitHeight
+-        implicitHeight: expandIcon.implicitHeight + root.verticalPadding * 2
++        implicitHeight: Math.max(40 * root.scaleOffset, label.implicitHeight + root.verticalPadding * 2)
+ 
+         StateLayer {
+             id: expandStateLayer
+--- modules/bar/popouts/MenuScreenshotList.qml
++++ modules/bar/popouts/MenuScreenshotList.qml
+@@ -10,6 +10,8 @@
+ import Caelestia.Config
+ import qs.components
+ import qs.components.controls
++import qs.modules.screenshot
++import qs.utils
+ import qs.services
+ 
+ ColumnLayout {
+@@ -21,6 +23,51 @@
+     required property var props
+     required property DrawerVisibilities visibilities
+ 
++    property string selectedPath: ""
++    property url selectedUrl
++    property size selectedSize: Qt.size(0, 0)
++    // Thumbnails stay bounded; read native dimensions only for the selection.
++    onSelectedPathChanged: {
++        selectedSize = Qt.size(0, 0);
++        requestDimensions();
++    }
++    function requestDimensions(): void {
++        if (!selectedPath || dimensions.running) return;
++        dimensions.path = selectedPath;
++        dimensions.command = ["magick", "identify", "-ping", "-format", "%w %h", selectedPath];
++        dimensions.running = true;
++    }
++    Process {
++        id: dimensions
++        property string path
++        stdout: StdioCollector {
++            onStreamFinished: {
++                if (dimensions.path !== root.selectedPath) return;
++                const parts = text.trim().split(/\s+/).map(Number);
++                if (parts.length === 2 && parts.every(n => n > 0)) root.selectedSize = Qt.size(parts[0], parts[1]);
++            }
++        }
++        onExited: (code, status) => {
++            if (dimensions.path !== root.selectedPath) root.requestDimensions();
++        }
++    }
++    property bool newestFirst: true
++    readonly property bool hasSelection: selectedPath !== ""
++    function actOnSelection(action: int): void {
++        if (!root.hasSelection || selectedSize.width <= 0 || selectedSize.height <= 0 || actionProcess.running) return;
++        // ScreenshotAction cleans up its input; always work on a disposable copy.
++        const temporary = Paths.runtimeTemp("gallery-action-" + Date.now() + ".png");
++        const script = ScreenshotAction.getScript(0, 0, selectedSize.width, selectedSize.height, temporary, action);
++        actionProcess.command = ["bash", "-c", "set -euo pipefail; trap 'rm -f -- \"$2\"' EXIT; cp -- \"$1\" \"$2\"; " + script, "gallery-action", selectedPath, temporary];
++        actionProcess.running = true;
++    }
++    Process {
++        id: actionProcess
++        onExited: (code, status) => {
++            root.feedback = code === 0 ? qsTr("Done") : qsTr("Action failed");
++            feedbackTimer.restart();
++        }
++    }
+     property string confirmDelete: ""
+     property string pendingCopy: ""
+     property string feedback: ""
+@@ -73,17 +120,27 @@
+ 
+         MaterialIcon {
+             text: root.feedback ? "check_circle" : "photo_library"
+-            color: root.feedback ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
++            color: root.feedback ? MenuStyle.accent : MenuStyle.ink
+         }
+ 
+         MenuText {
+-            Layout.fillWidth: true
+-            text: root.feedback || qsTr("Screenshots")
++            Layout.maximumWidth: 230 * root.scaleOffset
++            text: root.feedback || qsTr("Recent captures")
+             font.pointSize: root.bodyPointSize*0.94
+-            color: root.feedback ? Colours.palette.m3primary : Colours.palette.m3onSurface
++            color: root.feedback ? MenuStyle.accent : MenuStyle.ink
+             elide: Text.ElideRight
+         }
+ 
++        Rectangle {
++            implicitWidth: countLabel.implicitWidth + 14
++            implicitHeight: countLabel.implicitHeight + 4
++            radius: 7
++            color: MenuStyle.cardFill
++            border.width: 1
++            border.color: MenuStyle.rule
++            MenuText { id: countLabel; anchors.centerIn: parent; text: gallery.count; color: MenuStyle.muted; font.pointSize: root.bodyPointSize * 0.81 }
++        }
++        Item { Layout.fillWidth: true }
+         IconButton {
+             icon: "folder_open"
+             type: IconButton.Text
+@@ -92,6 +149,18 @@
+             onClicked: Quickshell.execDetached(["xdg-open", root.shotsdir])
+         }
+ 
++        TextButton {
++            text: root.newestFirst ? qsTr("Newest first") : qsTr("Oldest first")
++            font.family: MenuStyle.fontFamily
++            font.pointSize: root.bodyPointSize * 0.81
++            defaultRadius: 10 * root.scaleOffset
++            checkedRadius: 10 * root.scaleOffset
++            border.width: 1
++            border.color: MenuStyle.rule
++            inactiveColour: MenuStyle.cardFill
++            inactiveOnColour: MenuStyle.ink
++            onClicked: root.newestFirst = !root.newestFirst
++        }
+         IconButton {
+             icon: root.props.screenshotListExpanded ? "unfold_less" : "unfold_more"
+             type: IconButton.Text
+@@ -103,14 +172,14 @@
+     GridView {
+         id: gallery
+ 
+-        readonly property int columns: width >= 460 ? 3 : 2
+-        readonly property real tileHeight: cellWidth * 0.62 + 32
++        readonly property int columns: width >= 540 ? 3 : 2
++        readonly property real tileHeight: cellWidth * 0.69 + 34
+         model: FolderListModel {
+             folder: "file://" + root.shotsdir
+             nameFilters: ["*.png"]
+             showDirs: false
+             sortField: FolderListModel.Time
+-            sortReversed: false
++            sortReversed: !root.newestFirst
+         }
+ 
+         Layout.fillWidth: true
+@@ -128,6 +197,7 @@
+             required property string fileName
+             required property string filePath
+             required property url fileUrl
++            readonly property bool selected: root.selectedPath === filePath
+             readonly property bool confirming: root.confirmDelete === filePath
+             width: gallery.cellWidth
+             height: gallery.cellHeight
+@@ -136,10 +206,10 @@
+                 anchors.fill: parent
+                 anchors.rightMargin: Tokens.spacing.small
+                 anchors.bottomMargin: Tokens.spacing.small
+-                radius: Tokens.rounding.small
++                radius: 11 * root.scaleOffset
+                 color: pointer.containsMouse ? Qt.alpha(MenuStyle.accent,0.12) : MenuStyle.cardFill
+-                border.width:1
+-                border.color:MenuStyle.rule
++                border.width: shot.selected ? 2 : 1
++                border.color: shot.selected ? MenuStyle.accent : MenuStyle.border
+                 clip: true
+ 
+                 Image {
+@@ -147,7 +217,7 @@
+                     anchors.left: parent.left
+                     anchors.right: parent.right
+                     anchors.top: parent.top
+-                    anchors.margins: Tokens.padding.extraSmall
++                    anchors.margins: 7 * root.scaleOffset
+                     height: parent.height - 32 - Tokens.padding.extraSmall
+                     source: shot.fileUrl
+                     sourceSize.width: 420
+@@ -169,13 +239,25 @@
+                     hoverEnabled: true
+                     cursorShape: Qt.PointingHandCursor
+                     enabled: !shot.confirming
+-                    onClicked: root.queueCopy(shot.filePath)
++                    onClicked: {
++                        root.selectedPath = shot.selected ? "" : shot.filePath;
++                        root.selectedUrl = shot.fileUrl;
++                    }
+                     onDoubleClicked: root.openImage(shot.filePath)
+                     ToolTip.visible: containsMouse
+                     ToolTip.delay: 900
+-                    ToolTip.text: qsTr("Click to copy · Double-click to open") + "\n" + shot.fileName
+-                }
+-
++                    ToolTip.text: qsTr("Click to select · Double-click to open") + "\n" + shot.fileName
++                }
++
++                Rectangle {
++                    anchors.right: parent.right
++                    anchors.top: parent.top
++                    anchors.margins: 9
++                    width: 24; height: 24; radius: 12
++                    visible: shot.selected
++                    color: MenuStyle.accent
++                    MaterialIcon { anchors.centerIn: parent; text: "check"; color: "white"; fontStyle: Tokens.font.icon.builders.medium.size(13).build() }
++                }
+                 RowLayout {
+                     anchors.left: parent.left
+                     anchors.right: parent.right
+@@ -236,6 +318,7 @@
+                                 label.color: Colours.palette.m3error
+                                 onClicked: {
+                                     CUtils.deleteFile(shot.fileUrl);
++                                    if (root.selectedPath === shot.filePath) root.selectedPath = "";
+                                     root.confirmDelete = "";
+                                 }
+                             }
+@@ -255,4 +338,62 @@
+ 
+         Behavior on implicitHeight { Anim {} }
+     }
++    Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: MenuStyle.rule }
++    RowLayout {
++        Layout.fillWidth: true
++        spacing: 8 * root.scaleOffset
++        MenuText {
++            Layout.fillWidth: true
++            text: root.hasSelection ? qsTr("1 selected") : qsTr("Select a capture")
++            font.pointSize: root.bodyPointSize * 0.81
++            color: MenuStyle.muted
++        }
++        TextButton {
++            text: qsTr("Copy")
++            enabled: root.hasSelection
++            font.family: MenuStyle.fontFamily
++            font.pointSize: root.bodyPointSize * 0.81
++            defaultRadius: 10 * root.scaleOffset
++            checkedRadius: 10 * root.scaleOffset
++            border.width: 1
++            border.color: MenuStyle.rule
++            inactiveColour: MenuStyle.cardFill
++            inactiveOnColour: MenuStyle.ink
++            onClicked: root.queueCopy(root.selectedPath)
++        }
++        TextButton {
++            text: qsTr("Extract text")
++            enabled: root.hasSelection && root.selectedSize.width > 0 && !actionProcess.running
++            font.family: MenuStyle.fontFamily
++            font.pointSize: root.bodyPointSize * 0.81
++            defaultRadius: 10 * root.scaleOffset
++            checkedRadius: 10 * root.scaleOffset
++            border.width: 1
++            border.color: MenuStyle.rule
++            inactiveColour: MenuStyle.cardFill
++            inactiveOnColour: MenuStyle.ink
++            onClicked: root.actOnSelection(ScreenshotAction.SnipAction.CharRecognition)
++        }
++        TextButton {
++            text: qsTr("Image search")
++            enabled: root.hasSelection && root.selectedSize.width > 0 && !actionProcess.running
++            font.family: MenuStyle.fontFamily
++            font.pointSize: root.bodyPointSize * 0.81
++            defaultRadius: 10 * root.scaleOffset
++            checkedRadius: 10 * root.scaleOffset
++            border.width: 1
++            border.color: MenuStyle.rule
++            inactiveColour: MenuStyle.cardFill
++            inactiveOnColour: MenuStyle.ink
++            onClicked: root.actOnSelection(ScreenshotAction.SnipAction.Search)
++        }
++        IconButton {
++            icon: "delete_outline"
++            type: IconButton.Text
++            enabled: root.hasSelection
++            label.color: Colours.palette.m3error
++            onClicked: root.confirmDelete = root.selectedPath
++        }
++    }
++
+ }
+--- modules/bar/popouts/ScreenCapture.qml
++++ modules/bar/popouts/ScreenCapture.qml
+@@ -8,7 +8,7 @@
+ 
+ import qs.services
+ 
+-// Screen capture popout: the utilities card, reused as is.
++// Taskbar capture gallery; utilities keep their independent card.
+ ColumnLayout {
+     id: root
+ 
+@@ -20,7 +20,7 @@
+     property bool _isSidebarOpen: false
+     readonly property bool hoverLocked: captureView.hoverLocked
+ 
+-    width: 420 * root.scaleOffset
++    width: 560 * root.scaleOffset
+     implicitWidth: width
+     spacing: Tokens.spacing.small
+ 
+--- services/MenuStyle.qml
++++ services/MenuStyle.qml
+@@ -22,6 +22,12 @@
+     readonly property color rule: Colours.light ? "#2420252d" : "#26ffffff"
+     readonly property color cardFill: Colours.light ? "#0a000000" : "#09ffffff"
+     readonly property color accent: "#287dff"
++    // Primary-action reference, first applied to Screen Capture. Keep the hue
++    // stable; depth comes from a restrained vertical light falloff.
++    readonly property color primaryTop: "#2588ff"
++    readonly property color primaryBottom: "#0871ef"
++    readonly property color primaryEdge: "#7db5ff"
++    readonly property color primaryLight: "#38ffffff"
+     // Native Dolphin context-menu values (dolphin-header/contextmenu.cpp).
+     readonly property color contextSurface: Colours.light ? "#59f8f6f3" : "#401c2024"
+     readonly property color contextBorder: Colours.light ? "#66ffffff" : "#38ffffff"

@@ -1,0 +1,36 @@
+--- modules/background/Visualiser.qml
++++ modules/background/Visualiser.qml
+@@ -8,6 +8,7 @@
+ import Caelestia.Services
+ import qs.components
+ import qs.services
++import qs.modules.bar
+ 
+ Item {
+     id: root
+@@ -25,6 +26,11 @@
+     readonly property int barExclusiveZone: barWrapper ? barWrapper.visualThickness : 0
+     readonly property real visualiserSpacing: Tokens.spacing.small * Config.background.visualiser.spacing
+     readonly property real fallbackMargin: Tokens.padding.large + Tokens.spacing.small
++
++    readonly property var dock: Visibilities.docks.get(root.screen.name)
++    // Match the separate dock, including its gap from the screen edge.
++    readonly property real dockHeight: dock?.bar?.height ?? Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, SplitBarSettings.dockScale))
++    readonly property real maxBarHeight: Math.max(0, dockHeight + SplitBarSettings.edgeGap - Config.border.thickness)
+ 
+     opacity: shouldBeActive ? 1 : 0
+ 
+@@ -63,7 +69,12 @@
+ 
+                     readonly property real baseMargin: root.barExclusiveZone + root.visualiserSpacing
+ 
+-                    anchors.fill: parent
++                    anchors.left: parent.left
++                    anchors.right: parent.right
++                    anchors.bottom: parent.bottom
++                    // VisualiserBars uses 40% of its item height for full amplitude.
++                    height: Math.max(0, Math.min(parent.height - anchors.topMargin - anchors.bottomMargin,
++                        Config.bar.position === "top" ? root.maxBarHeight / 0.4 : parent.height))
+                     anchors.margins: Config.border.thickness
+                     anchors.leftMargin: Config.bar.position === "left" ? (root.barExclusiveZone + root.fallbackMargin) : root.fallbackMargin
+                     anchors.rightMargin: Config.bar.position === "right" ? (root.barExclusiveZone + root.fallbackMargin) : root.fallbackMargin

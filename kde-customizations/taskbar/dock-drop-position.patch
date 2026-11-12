@@ -1,0 +1,77 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -50,6 +50,9 @@
+             separatorPosition: listView.mapToGlobal(root.itemOffset(root.pinnedCount) - root.sectionGap / 2 - root.spacing / 2 - listView.contentX, container.itemSize / 2),
+             apps: modelDataArray.map((app, index) => ({
+                 id: app.id, desktopId: app.entry?.id, pinned: app.isPinned, windows: app.toplevels.length,
++                actualCenter: listView.itemAtIndex(index)?.iconCenter(),
++                iconInset: listView.itemAtIndex(index)?.iconInset,
++                zoom: zoomAt(index), zoomShift: zoomShiftAt(index),
+                 offset: itemOffset(index)
+             }))
+         };
+@@ -121,7 +124,7 @@
+         dropInDock = false;
+     }
+ 
+-    function finishIconDrag(entry: var, position: point, moved: bool): void {
++    function finishIconDrag(entry: var, moved: bool): void {
+         if (moved && bar.dockOnly && entry && dropInDock && dragPreview.length) {
+             const desired = dragPreview.map(id => modelDataMap[id]).filter(app => !!app);
+             const pinned = desired.filter(app => app.id === entry.id ? dropPinned : app.isPinned)
+@@ -130,13 +133,13 @@
+                 SplitBarSettings.saveRecentApps([entry.entry?.id || entry.id,
+                     ...SplitBarSettings.recentApps().filter(id => id !== (entry.entry?.id || entry.id))]);
+             // One commit after the preview: no DelegateModel moves or identity changes under the pointer.
+-            root.currentOrder = desired;
++            root.currentOrder = desired.map(app => app.id === entry.id
++                ? Object.assign({}, app, { isPinned: dropPinned, id: dropPinned ? app.entry.id : app.id }) : app);
+             GlobalConfig.bar.dock.pinnedApps = [...new Set(pinned)];
+         } else if (!bar.dockOnly) {
+             root.saveNewOrder();
+         }
+         root.clearIconDrag();
+-        root.rebuildModel();
+     }
+ 
+     function updateRecentApps(apps: var): var {
+@@ -767,6 +770,10 @@
+                 implicitHeight: height
+ 
+                 property var modelData: root.modelDataMap[appId] || root.modelDataArray[index]
++                readonly property real iconInset: delegateItem.x
++                function iconCenter(): point {
++                    return delegateItem.mapToGlobal(delegateItem.width / 2, delegateItem.height / 2);
++                }
+                 transform: Translate {
+                     x: root.previewOffset(delegateContainer.appId, delegateContainer.index) + delegateContainer.zoomShift
+                     Behavior on x { NumberAnimation { duration: Tokens.anim.enabled ? 150 : 0; easing.type: Easing.OutCubic } }
+@@ -915,20 +922,22 @@
+                         }
+ 
+                         onReleased: mouse => {
+-                            const position = mapToItem(listView, mouse.x, mouse.y);
+-                            if (moved) root.updateIconDrag(delegateContainer.modelData, position);
++                            // The last move already selected and displayed the insertion slot.
++                            // Reprojecting the release through the moving/scaled delegate can
++                            // select a different slot, especially with an off-centre grip.
+                             const entry = delegateContainer.modelData;
++                            root.finishIconDrag(entry, moved);
+                             held = false;
++                            delegateItem.x = Qt.binding(() => delegateContainer.sectionInset);
++                            delegateItem.y = 0;
+                             root.isDragging = false;
+-                            delegateItem.x = delegateContainer.sectionInset;
+-                            delegateItem.y = 0;
+-                            root.finishIconDrag(entry, position, moved);
++                            root.rebuildModel();
+                         }
+ 
+                         onCanceled: {
+                             held = false;
+                             root.isDragging = false;
+-                            delegateItem.x = delegateContainer.sectionInset;
++                            delegateItem.x = Qt.binding(() => delegateContainer.sectionInset);
+                             delegateItem.y = 0;
+                             root.clearIconDrag();
+                             root.rebuildModel();

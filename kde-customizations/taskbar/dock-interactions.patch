@@ -1,0 +1,294 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -26,7 +26,7 @@
+     readonly property bool monochromeTopBar: !bar.dockOnly && bar.position === "top"
+     readonly property bool recolourIcons: monochromeTopBar || (Config.bar.dock.recolourIcons ?? false)
+ 
+-    // Keep the running-only section within the native scrolling view.
++    // Keep running and recent apps within the native scrolling view.
+     readonly property int pinnedCount: modelDataArray.filter(app => app.isPinned).length
+     readonly property bool hasSections: bar.dockOnly && bar.isHorizontal
+         && pinnedCount > 0 && pinnedCount < modelDataArray.length
+@@ -40,6 +40,11 @@
+     function inspectSections(): var {
+         return {
+             separator: hasSections, gap: sectionGap,
++            recent: SplitBarSettings.recentApps(),
++            itemSize: container.itemSize,
++            actualSeparator: listView.itemAtIndex(root.pinnedCount)?.children.find(child => child.objectName === "dockSectionResize")?.mapToGlobal(root.sectionGap / 2, container.itemSize / 2),
++            origin: listView.mapToGlobal(0, 0),
++            separatorPosition: listView.mapToGlobal(root.itemOffset(root.pinnedCount) - root.sectionGap / 2 - root.spacing / 2 - listView.contentX, container.itemSize / 2),
+             apps: modelDataArray.map((app, index) => ({
+                 id: app.id, pinned: app.isPinned, windows: app.toplevels.length,
+                 offset: itemOffset(index)
+@@ -52,6 +57,85 @@
+     property var launchingApps: ({})
+ 
+     property bool isDragging: false
++    property bool isResizing: false
++    property string lastRecentFocus: ""
++    property var previousRunningIds: []
++    property bool recentReady: false
++
++    Timer {
++        interval: 2000
++        running: root.bar.dockOnly
++        onTriggered: {
++            if (SplitBarSettings.recentApps().length === 0)
++                root.previousRunningIds = [];
++            root.recentReady = true;
++            root.rebuildModel();
++        }
++    }
++
++    // Convert the dropped icon into a launcher at the requested left-side slot.
++    function pinAt(entry: var, slot: int): bool {
++        if (!entry || entry.isPinned || !entry.entry)
++            return false;
++        const id = entry.entry.id;
++        const pinned = [...(GlobalConfig.bar.dock.pinnedApps || [])];
++        if (!pinned.includes(id)) {
++            pinned.splice(Math.max(0, Math.min(pinned.length, slot)), 0, id);
++            GlobalConfig.bar.dock.pinnedApps = pinned;
++        }
++        return true;
++    }
++
++    function finishIconDrag(entry: var, position: point, moved: bool): void {
++        const contentPosition = position.x + listView.contentX;
++        const boundary = root.itemOffset(root.pinnedCount) - root.sectionGap / 2;
++        const inLeftSection = root.pinnedCount === 0 ? contentPosition <= root.spacing : contentPosition < boundary;
++        const inDock = position.x >= -root.padding && position.x <= listView.width + root.padding
++            && position.y >= -root.padding && position.y <= listView.height + root.padding;
++        if (moved && bar.dockOnly && !entry?.isPinned && inDock && inLeftSection) {
++            const slot = Math.round(contentPosition / (container.itemSize + root.spacing));
++            // Commit any reorder before pinning so it cannot overwrite the new favourite.
++            root.saveNewOrder();
++            root.pinAt(entry, slot);
++            root.rebuildModel();
++        } else {
++            root.saveNewOrder();
++            root.rebuildModel();
++        }
++    }
++
++    function updateRecentApps(apps: var): var {
++        const pinnedIds = GlobalConfig.bar.dock.pinnedApps || [];
++        const pinned = id => pinnedIds.some(pattern => Strings.testRegexList([pattern], id));
++        let recent = SplitBarSettings.recentApps().filter(id => !pinned(id));
++        const running = apps.filter(app => !app.isPinned && app.entry && app.toplevels.length > 0
++            && !pinned(app.entry.id));
++        // New applications enter the history once; focus changes then maintain MRU order.
++        for (const app of running) {
++            if (root.recentReady && !root.previousRunningIds.includes(app.entry.id) && !recent.includes(app.entry.id))
++                recent.unshift(app.entry.id);
++        }
++        root.previousRunningIds = running.map(app => app.entry.id);
++        const active = running.find(app => app.toplevels.some(top =>
++            root.activeTop && String(top.address) === String(root.activeTop.address)));
++        const activeId = active?.entry?.id || "";
++        if (root.recentReady && activeId && activeId !== root.lastRecentFocus)
++            recent = [activeId, ...recent.filter(id => id !== activeId)];
++        root.lastRecentFocus = activeId;
++        recent = recent.filter((id, index) => recent.indexOf(id) === index).slice(0, 3);
++        if (root.recentReady)
++            SplitBarSettings.saveRecentApps(recent);
++        for (const id of recent) {
++            if (apps.some(app => app.entry?.id === id))
++                continue;
++            const entry = DesktopEntries.applications.values.find(entry => entry.id === id);
++            if (!entry)
++                continue;
++            apps.push({id: id, isPinned: false, entry: entry, toplevels: [],
++                appClass: id.replace(".desktop", ""), iconName: id, pid: 0});
++        }
++        return apps;
++    }
+ 
+     property real spacing: Tokens.spacing.medium * (bar.dockOnly ? scaleFactor : 1.0)
+ 
+@@ -521,6 +605,7 @@
+                 property var modelData: root.modelDataMap[appId] || root.modelDataArray[index]
+ 
+                 Rectangle {
++                    id: sectionLine
+                     visible: delegateContainer.sectionInset > 0
+                     x: (delegateContainer.sectionInset - root.spacing) / 2 - width / 2
+                     anchors.verticalCenter: parent.verticalCenter
+@@ -528,7 +613,45 @@
+                     height: container.itemSize * 0.65
+                     radius: width / 2
+                     color: Colours.palette.m3onSurface
+-                    opacity: 0.2
++                    opacity: resizeHandle.containsMouse || root.isResizing ? 0.45 : 0.2
++                }
++
++                MouseArea {
++                    id: resizeHandle
++                    objectName: "dockSectionResize"
++                    visible: delegateContainer.sectionInset > 0
++                    x: -root.spacing / 2
++                    width: delegateContainer.sectionInset
++                    height: parent.height
++                    z: 10
++                    hoverEnabled: true
++                    cursorShape: Qt.SizeVerCursor
++                    preventStealing: true
++                    acceptedButtons: Qt.LeftButton
++                    property real startY: 0
++                    property real startScale: 1
++                    onPressed: mouse => {
++                        startY = mapToGlobal(mouse.x, mouse.y).y;
++                        startScale = SplitBarSettings.dockScale;
++                        root.isResizing = true;
++                        root.bar.popouts.hasCurrent = false;
++                    }
++                    onPositionChanged: mouse => {
++                        if (pressed) {
++                            const delta = startY - mapToGlobal(mouse.x, mouse.y).y;
++                            SplitBarSettings.dockScale = Math.max(0.6, Math.min(1.6, startScale + delta / 180));
++                        }
++                    }
++                    onReleased: {
++                        root.isResizing = false;
++                        SplitBarSettings.setDockScale(SplitBarSettings.dockScale);
++                        root.rebuildModel();
++                    }
++                    onCanceled: {
++                        root.isResizing = false;
++                        SplitBarSettings.setDockScale(startScale);
++                        root.rebuildModel();
++                    }
+                 }
+ 
+                 DropArea {
+@@ -596,7 +719,8 @@
+                         acceptedButtons: Qt.NoButton
+ 
+                         onEntered: {
+-                            if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
++                            if (root.isDragging || root.isResizing) return;
++        if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
+                             bar.popouts.currentName = "dockhover";
+                             bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);
+                             bar.popouts.dockModel = modelData;
+@@ -608,6 +732,7 @@
+                         id: dragArea
+ 
+                         property bool held: false
++                        property bool moved: false
+ 
+                         anchors.fill: parent
+                         drag.target: held ? delegateItem : null
+@@ -616,12 +741,21 @@
+                         cursorShape: Qt.PointingHandCursor
+ 
+                         onPressed: mouse => {
+-                            held = true;
+-                            root.isDragging = true;
++                            held = mouse.button === Qt.LeftButton;
++                            moved = false;
++                            root.isDragging = held;
+                             stateLayer.press(mouse.x, mouse.y);
+                         }
+ 
++                        onPositionChanged: {
++                            if (drag.active) {
++                                moved = true;
++                                root.bar.popouts.hasCurrent = false;
++                            }
++                        }
++
+                         onClicked: mouse => {
++                            if (moved) return;
+                             if (mouse.button === Qt.LeftButton) {
+                                 if (modelData.isPinned && Tokens.anim.enabled) {
+                                     bounceAnim.start();
+@@ -636,19 +770,23 @@
+                             }
+                         }
+ 
+-                        onReleased: {
++                        onReleased: mouse => {
++                            const position = mapToItem(listView, mouse.x, mouse.y);
++                            const entry = delegateContainer.modelData;
++                            held = false;
++                            root.isDragging = false;
++                            delegateItem.x = delegateContainer.sectionInset;
++                            delegateItem.y = 0;
++                            root.finishIconDrag(entry, position, moved);
++                        }
++
++                        onCanceled: {
+                             held = false;
+                             root.isDragging = false;
+                             delegateItem.x = delegateContainer.sectionInset;
+                             delegateItem.y = 0;
+                             root.saveNewOrder();
+-                        }
+-
+-                        onCanceled: {
+-                            held = false;
+-                            root.isDragging = false;
+-                            delegateItem.x = delegateContainer.sectionInset;
+-                            delegateItem.y = 0;
++                            root.rebuildModel();
+                         }
+                     }
+ 
+@@ -837,6 +975,7 @@
+     }
+ 
+     function handleHover(relPos: real, isHorizontal: bool): void {
++        if (root.isDragging || root.isResizing) return;
+         if (bar.popouts.hasCurrent && bar.popouts.currentName === "dockcontext") return;
+ 
+         const itemSize = container.itemSize;
+@@ -881,7 +1020,7 @@
+     onModelDataArrayChanged: currentOrder = [...modelDataArray]
+ 
+     function rebuildModel(): void {
+-        if (root.isDragging) return;
++        if (root.isDragging || root.isResizing) return;
+         let apps = [];
+ 
+         const pinnedIds = GlobalConfig.bar.dock.pinnedApps || [];
+@@ -994,6 +1133,9 @@
+             }
+         }
+ 
++        if (bar.dockOnly)
++            apps = root.updateRecentApps(apps);
++
+         let newLaunching = Object.assign({}, root.launchingApps);
+         let launchingChanged = false;
+ 
+--- modules/bar/SplitBarSettings.qml
++++ modules/bar/SplitBarSettings.qml
+@@ -10,6 +10,26 @@
+     category: "RalleurTaskbar"
+     readonly property int edgeGap: 12
+     property real dockScale: -1
++    // Only launchable desktop IDs are retained; windows and process IDs are not stored.
++    property string recentDockApps: "[]"
++
++    function recentApps(): var {
++        try {
++            const apps = JSON.parse(recentDockApps);
++            return Array.isArray(apps) ? apps.filter(id => typeof id === "string").slice(0, 3) : [];
++        } catch (error) {
++            return [];
++        }
++    }
++
++    function saveRecentApps(apps: var): void {
++        const value = JSON.stringify(apps.slice(0, 3));
++        if (value === recentDockApps)
++            return;
++        recentDockApps = value;
++        setValue("recentDockApps", value);
++        sync();
++    }
+ 
+     function setDockScale(value: real): void {
+         if (!isFinite(value))

@@ -1,0 +1,15 @@
+--- modules/drawers/Interactions.qml
++++ modules/drawers/Interactions.qml
+@@ -309,9 +309,9 @@
+         }
+ 
+         if (inBarArea(x, y)) {
+-            if (!(popouts.hasCurrent && popouts.currentName === "screencapture"
+-                    && Math.abs((isBarHorizontal ? x : y) - popouts.currentCenter) <= 80))
+-                bar.checkPopout(isBarHorizontal ? x : y);
++            // Route every bar item, including neighbours inside the capture bridge.
++            // The bridge below the bar is still handled by inLeftPanel().
++            bar.checkPopout(isBarHorizontal ? x : y);
+             popoutHideTimer.stop();
+         } else {
+             bar.resetHover();

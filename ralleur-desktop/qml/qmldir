@@ -1,0 +1,19 @@
+module qs.ralleur
+singleton Theme 1.0 Theme.qml
+singleton Metrics 1.0 Metrics.qml
+singleton ShellUi 1.0 ShellUi.qml
+singleton AppCatalog 1.0 AppCatalog.qml
+ShellButton 1.0 ShellButton.qml
+Backend 1.0 Backend.qml
+Card 1.0 Card.qml
+ClockCard 1.0 ClockCard.qml
+Desktop 1.0 Desktop.qml
+Dock 1.0 Dock.qml
+Gauge 1.0 Gauge.qml
+ShellText 1.0 ShellText.qml
+MediaCard 1.0 MediaCard.qml
+MetricsCard 1.0 MetricsCard.qml
+PreviewBackend 1.0 PreviewBackend.qml
+Screen 1.0 Screen.qml
+Status 1.0 Status.qml
+Topbar 1.0 Topbar.qml

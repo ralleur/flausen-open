@@ -1,0 +1,51 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -295,6 +295,37 @@
+         root.activateNewEntry(root.modelDataArray[idx]);
+     }
+ 
++    // Arm Krohnkite before starting the app, so even fast windows are matched.
++    function activateTiledEntry(entry: var): void {
++        if (!entry?.entry)
++            return;
++        const aliases = [...new Set([entry.entry.id, entry.appClass, entry.id].filter(value => !!value))];
++        const request = tiledLaunchRequest.createObject(root, {
++            dockEntry: entry,
++            command: ["qdbus6", "org.kde.KWin", "/RalleurTilingLaunch",
++                "org.ralleur.TilingLaunch.arm", JSON.stringify(aliases)]
++        });
++        request.running = true;
++    }
++
++    Component {
++        id: tiledLaunchRequest
++        Process {
++            required property var dockEntry
++            stdout: StdioCollector {}
++            onExited: (exitCode, exitStatus) => {
++                if (exitCode === 0 && stdout.text.trim() === "true") {
++                    root.activateNewEntry(dockEntry);
++                } else {
++                    console.warn("Dock: Krohnkite tiling launch request failed");
++                    Quickshell.execDetached(["notify-send", "Tiling-Start fehlgeschlagen",
++                        "Krohnkite ist nicht erreichbar. Bitte erneut versuchen."]);
++                }
++                destroy();
++            }
++        }
++    }
++
+     function activateNewEntry(entry: var): void {
+         if (!entry)
+             return;
+@@ -791,7 +822,9 @@
+                                     bounceAnim.start();
+                                 }
+ 
+-                                if (mouse.modifiers & Qt.ShiftModifier)
++                                if (mouse.modifiers & Qt.MetaModifier)
++                                    root.activateTiledEntry(modelData);
++                                else if (mouse.modifiers & Qt.ShiftModifier)
+                                     root.activateNewEntry(modelData);
+                                 else
+                                     root.activateEntry(modelData);

@@ -1,0 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Generated from taskbar/menu-style/MenuStyle.qml; do not maintain colour copies.
+#pragma once
+namespace Ralleur {
+inline constexpr auto SmokeLight = "@SMOKE_LIGHT@";
+inline constexpr auto SmokeDark = "@SMOKE_DARK@";
+}

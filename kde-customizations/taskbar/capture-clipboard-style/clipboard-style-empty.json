@@ -1,0 +1,27 @@
+{
+  "saved": true,
+  "width": 520,
+  "height": 159.29999999999998,
+  "rows": [
+    {
+      "text": "attach_file",
+      "font": "Material Symbols Rounded",
+      "size": 20
+    },
+    {
+      "text": "Clipboard",
+      "font": "Noto Sans",
+      "size": 20.16
+    },
+    {
+      "text": "0 entries · Click to copy",
+      "font": "Noto Sans",
+      "size": 9.72
+    },
+    {
+      "text": "No entries yet",
+      "font": "Noto Sans",
+      "size": 9.72
+    }
+  ]
+}

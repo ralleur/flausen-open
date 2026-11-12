@@ -1,0 +1,8 @@
+flausen. / Phase one showcase
+
+Open an app or ask Hermes from the same Start menu.
+Keep your windows floating, or bring them into a shared layout.
+Use four distinct workspaces for everyday work and fullscreen play.
+Capture an idea, copy it, and carry on.
+
+A personal desktop built on CachyOS, KDE Plasma, KWin and Caelestia.

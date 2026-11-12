@@ -1,0 +1,75 @@
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -41,6 +41,16 @@
+     readonly property real middleZoneSize: isHorizontal ? middleLayout.implicitWidth : middleLayout.implicitHeight
+     readonly property real rightZoneSize: isHorizontal ? rightLayout.implicitWidth : rightLayout.implicitHeight
+ 
++    // Expose the actual loaded launcher so the glass follows reordering and scale.
++    readonly property Item launcherButton: {
++        for (let i = 0; i < leftRepeater.count; ++i) {
++            const entry = leftRepeater.itemAt(i);
++            if (entry?.enabled && entry.id === "logo")
++                return entry.item;
++        }
++        return null;
++    }
++
+     property var leftEntries: dockOnly ? [] : BarWidgets.zoneEntries(Config.bar.entries, "left")
+     property var middleEntries: (dockOnly ? Config.bar.position !== "top" : position === "top")
+         ? [] : BarWidgets.zoneEntries(Config.bar.entries, "middle")
+--- modules/bar/BarWrapper.qml
++++ modules/bar/BarWrapper.qml
+@@ -19,6 +19,7 @@
+     required property DrawerVisibilities visibilities
+     required property BarPopouts.Wrapper popouts
+     required property bool fullscreen
++    readonly property Item launcherButton: (content.item as Bar)?.launcherButton ?? null
+     readonly property bool disabled: Strings.testRegexList(Config.bar.excludedScreens, screen.name)
+     readonly property string position: Config.bar.position
+     readonly property int topInset: position === "top" ? Math.max(0, SplitBarSettings.edgeGap - 4) : 0
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -4,6 +4,7 @@
+ import QtQuick
+ import QtQuick.Controls
+ import QtQuick.Effects
++import Qt5Compat.GraphicalEffects as LegacyEffects
+ import QtCore
+ import Quickshell
+ import Quickshell.Io
+@@ -585,6 +586,35 @@
+         height: Math.max(0, bar.height - 8)
+         rounded: true
+         visible: bar.position === "top" && bar.visible
++
++        // Remove the glass tint AND its border behind the translucent launcher.
++        // Map the real button rather than assuming it is the first bar widget.
++        layer.enabled: bar.launcherButton !== null
++        layer.effect: LegacyEffects.OpacityMask {
++            invert: true
++            maskSource: Item {
++                width: topBarGlass.width
++                height: topBarGlass.height
++                Rectangle {
++                    readonly property Item button: bar.launcherButton
++                    readonly property point center: {
++                        if (!button) return Qt.point(0, 0);
++                        // mapToItem alone does not track ancestor layout changes.
++                        for (let item = button; item; item = item.parent) {
++                            void item.x; void item.y; void item.width; void item.height;
++                        }
++                        void topBarGlass.x; void topBarGlass.y;
++                        return button.mapToItem(topBarGlass, button.width / 2, button.height / 2);
++                    }
++                    x: center.x - width / 2
++                    y: center.y - height / 2
++                    width: button ? button.width + 2 : 0
++                    height: width
++                    radius: width / 2
++                    color: "white"
++                }
++            }
++        }
+     }
+     DrawerVisibilities {
+         id: visibilities

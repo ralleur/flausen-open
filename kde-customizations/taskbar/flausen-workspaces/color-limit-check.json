@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Installed SVGs retain the four exact brand fills; screenshot tolerance allows thin-edge antialiasing",
+    "Attempt to create desktop 5 rejected; original four IDs unchanged",
+    "Real Wayland window enters fullscreen without creating a desktop",
+    "Four concept colors present on each of the four active-desktop states"
+  ],
+  "desktopCount": 4,
+  "restoredOriginalDesktop": true
+}

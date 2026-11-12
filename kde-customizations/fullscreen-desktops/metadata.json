@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Id": "ralleur-fullscreen-desktops",
+    "Name": "flausen.: Vollbild auf freien Desktop",
+    "Description": "Vollbild auf den nächsten freien Desktop; sonst direkt nach rechts. Keine zusätzlichen Desktops.",
+    "Version": "2.0",
+    "License": "MIT"
+  },
+  "KPackageStructure": "KWin/Script",
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js"
+}

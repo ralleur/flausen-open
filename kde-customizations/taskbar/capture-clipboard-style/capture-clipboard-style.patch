@@ -1,0 +1,132 @@
+--- modules/bar/popouts/MenuCaptureCard.qml
++++ modules/bar/popouts/MenuCaptureCard.qml
+@@ -80,15 +80,15 @@
+                 implicitHeight: 46 * root.scaleOffset
+ 
+                 radius: 12 * root.scaleOffset
+-                color: Recorder.running ? Colours.palette.m3error : Qt.alpha(MenuStyle.accent,0.18)
++                color: !root.shotMode && Recorder.running ? Colours.palette.m3error : Qt.alpha(MenuStyle.accent,0.18)
+ 
+                 MaterialIcon {
+                     id: icon
+ 
+                     anchors.centerIn: parent
+                     anchors.verticalCenterOffset: Centering.pixelAlign(parent.height, height)
+-                    text: root.shotMode && !Recorder.running ? "screenshot_region" : "screen_record"
+-                    color: Recorder.running ? Colours.palette.m3onError : MenuStyle.accent
++                    text: root.shotMode ? "screenshot_region" : "screen_record"
++                    color: !root.shotMode && Recorder.running ? Colours.palette.m3onError : MenuStyle.accent
+                     fontStyle: Tokens.font.icon.builders.medium.size(Tokens.font.icon.medium.pointSize*root.scaleOffset).build()
+                 }
+             }
+@@ -195,7 +195,6 @@
+                 menu.constrainToWindow: true
+                 menu.maxHeight: 480
+                 visible: root.shotMode
+-                disabled: Recorder.running
+ 
+                 active: captureShotItem
+ 
+@@ -349,7 +348,7 @@
+         Loader {
+             id: listOrControls
+ 
+-            property bool running: Recorder.running
++            property bool running: !root.shotMode && Recorder.running
+ 
+             asynchronous: true
+             Layout.fillWidth: true
+--- modules/bar/popouts/MenuScreenshotList.qml
++++ modules/bar/popouts/MenuScreenshotList.qml
+@@ -75,29 +75,22 @@
+     spacing: Tokens.spacing.small
+ 
+     function openImage(path: string): void {
+-        clickTimer.stop();
+-        root.pendingCopy = "";
+         root.visibilities.utilities = false;
+         if (!Visibilities.sidebarPinned)
+             root.visibilities.sidebar = false;
+         Quickshell.execDetached(["xdg-open", path]);
+     }
+ 
+-    function queueCopy(path: string): void {
++    function copyImage(path: string): void {
+         root.pendingCopy = path;
+-        clickTimer.restart();
+-    }
+-
+-    Timer {
+-        id: clickTimer
+-        // Wait for the double-click window so opening does not also copy.
+-        interval: Qt.styleHints.mouseDoubleClickInterval
+-        onTriggered: {
+-            if (!copyProcess.running) {
+-                copyProcess.command = ["bash", "-c", 'wl-copy --type image/png < "$1"', "screenshot-gallery", root.pendingCopy];
+-                copyProcess.running = true;
+-            }
+-        }
++        copyNextImage();
++    }
++
++    function copyNextImage(): void {
++        if (!root.pendingCopy || copyProcess.running) return;
++        copyProcess.command = ["bash", "-c", 'wl-copy --type image/png < "$1"', "screenshot-gallery", root.pendingCopy];
++        root.pendingCopy = "";
++        copyProcess.running = true;
+     }
+ 
+     Process {
+@@ -105,6 +98,7 @@
+         onExited: (exitCode, exitStatus) => {
+             root.feedback = exitCode === 0 ? qsTr("Image copied") : qsTr("Could not copy image");
+             feedbackTimer.restart();
++            root.copyNextImage();
+         }
+     }
+ 
+@@ -240,13 +234,14 @@
+                     cursorShape: Qt.PointingHandCursor
+                     enabled: !shot.confirming
+                     onClicked: {
+-                        root.selectedPath = shot.selected ? "" : shot.filePath;
++                        root.selectedPath = shot.filePath;
+                         root.selectedUrl = shot.fileUrl;
++                        root.copyImage(shot.filePath);
+                     }
+                     onDoubleClicked: root.openImage(shot.filePath)
+                     ToolTip.visible: containsMouse
+                     ToolTip.delay: 900
+-                    ToolTip.text: qsTr("Click to select · Double-click to open") + "\n" + shot.fileName
++                    ToolTip.text: qsTr("Click to copy · Double-click to open") + "\n" + shot.fileName
+                 }
+ 
+                 Rectangle {
+@@ -283,7 +278,6 @@
+                         type: IconButton.Text
+                         font: Tokens.font.icon.small
+                         onClicked: {
+-                            clickTimer.stop();
+                             root.confirmDelete = shot.filePath;
+                         }
+                     }
+@@ -350,19 +344,6 @@
+             color: MenuStyle.muted
+         }
+         TextButton {
+-            text: qsTr("Copy")
+-            enabled: root.hasSelection
+-            font.family: MenuStyle.fontFamily
+-            font.pointSize: root.bodyPointSize * 0.81
+-            defaultRadius: 10 * root.scaleOffset
+-            checkedRadius: 10 * root.scaleOffset
+-            border.width: 1
+-            border.color: MenuStyle.rule
+-            inactiveColour: MenuStyle.cardFill
+-            inactiveOnColour: MenuStyle.ink
+-            onClicked: root.queueCopy(root.selectedPath)
+-        }
+-        TextButton {
+             text: qsTr("Extract text")
+             enabled: root.hasSelection && root.selectedSize.width > 0 && !actionProcess.running
+             font.family: MenuStyle.fontFamily

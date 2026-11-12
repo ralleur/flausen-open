@@ -1,0 +1,36 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -54,6 +54,8 @@
+                 id: app.id, desktopId: app.entry?.id, pinned: app.isPinned, windows: app.toplevels.length,
+                 actualCenter: listView.itemAtIndex(index)?.iconCenter(),
+                 iconInset: listView.itemAtIndex(index)?.iconInset,
++                iconSource: listView.itemAtIndex(index)?.iconSource,
++                normalizedIconSource: listView.itemAtIndex(index)?.normalizedIconSource,
+                 zoom: zoomAt(index), zoomShift: zoomShiftAt(index),
+                 offset: itemOffset(index)
+             }))
+@@ -775,6 +777,8 @@
+                 implicitHeight: height
+ 
+                 property var modelData: root.modelDataMap[appId] || root.modelDataArray[index]
++                readonly property url iconSource: icon.originalSource
++                readonly property url normalizedIconSource: icon.normalizedSource
+                 readonly property real iconInset: delegateItem.x
+                 function iconCenter(): point {
+                     return delegateItem.mapToGlobal(delegateItem.width / 2, delegateItem.height / 2);
+@@ -989,12 +993,13 @@
+ 
+ 
+ 
+-                    CachingIconImage {
++                    DockIcon {
+                         id: icon
+ 
+                         anchors.centerIn: parent
+                         implicitSize: root.iconSize
+-                        source: modelData ? WinIcons.sourceFor(modelData.entry, modelData.appClass, modelData.iconName, modelData.pid ?? 0) : ""
++                        normalize: root.bar.dockOnly
++                        originalSource: modelData ? WinIcons.sourceFor(modelData.entry, modelData.appClass, modelData.iconName, modelData.pid ?? 0) : ""
+                         visible: !root.recolourIcons
+ 
+                         SequentialAnimation {

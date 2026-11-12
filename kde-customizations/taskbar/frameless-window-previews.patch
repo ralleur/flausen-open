@@ -1,0 +1,84 @@
+--- modules/bar/popouts/DockHover.qml
++++ modules/bar/popouts/DockHover.qml
+@@ -24,6 +24,9 @@
+     property real scaleOffset: 1.0
+     property real fontScale: 1.0
+     property bool _isSidebarOpen: false
++    // Horizontal taskbar previews float as windows, without a menu card.
++    readonly property bool floatingWindows: Config.bar.position === "top" || Config.bar.position === "bottom"
++    readonly property real outerPadding: floatingWindows ? 0 : Tokens.padding.medium * scaleOffset
+     readonly property int previewWidth: Math.round(Tokens.sizes.bar.windowPreviewSize * scaleOffset)
+     readonly property int cardWidth: (root.model && root.model.toplevels && root.model.toplevels.length > 1) ? Math.round(previewWidth * 0.55) : previewWidth
+ 
+@@ -54,10 +57,10 @@
+         Kwin.clearHighlight();
+     }
+     radius: Tokens.rounding.medium
+-    color: Colours.tPalette.m3surfaceContainer
++    color: floatingWindows ? "transparent" : Colours.tPalette.m3surfaceContainer
+     clip: true
+-    implicitWidth: mainLayout.implicitWidth + Tokens.padding.medium * scaleOffset * 2
+-    implicitHeight: mainLayout.implicitHeight + Tokens.padding.medium * scaleOffset * 2
++    implicitWidth: mainLayout.implicitWidth + outerPadding * 2
++    implicitHeight: mainLayout.implicitHeight + outerPadding * 2
+     width: implicitWidth
+     height: implicitHeight
+ 
+@@ -67,7 +70,7 @@
+         anchors.left: parent.left
+         anchors.right: parent.right
+         anchors.top: parent.top
+-        anchors.margins: Tokens.padding.medium * scaleOffset
++        anchors.margins: root.outerPadding
+         spacing: Tokens.spacing.small
+         // Fallback for pinned apps with no active windows
+ 
+@@ -192,7 +195,7 @@
+                         StyledClippingRect {
+                             id: thumb
+ 
+-                            color: Colours.tPalette.m3surfaceContainerHighest
++                            color: root.floatingWindows ? "transparent" : Colours.tPalette.m3surfaceContainerHighest
+                             radius: Tokens.rounding.small
+ 
+                             WindowPreview {
+@@ -237,6 +240,7 @@
+                         }
+                         StyledText {
+                             id: titleText
++                            visible: !root.floatingWindows
+ 
+                             text: card.modelData.title || ""
+                             font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+--- modules/bar/popouts/ClipWrapper.qml
++++ modules/bar/popouts/ClipWrapper.qml
+@@ -21,6 +21,7 @@
+     readonly property bool fromBottomDock: bar.position === "top" && content.currentName.startsWith("dock")
+     readonly property string popoutPosition: fromBottomDock ? "bottom" : bar.position
+     readonly property bool fromFloatingTopBar: popoutPosition === "top" && !content.isDetached
++    readonly property bool framelessDockPreview: (fromBottomDock || bar.position === "bottom") && content.currentName === "dockhover"
+     readonly property bool fromFloatingBar: !content.isDetached && (fromFloatingTopBar || fromBottomDock)
+     readonly property alias content: content
+     readonly property bool isHorizontal: bar.isHorizontal
+@@ -99,7 +100,7 @@
+     // sliding behind either bar or morphing out of the screen frame.
+     Rectangle {
+         anchors.fill: parent
+-        visible: root.fromFloatingBar
++        visible: root.fromFloatingBar && !root.framelessDockPreview
+         // Same glass material and contour as the start menu.
+         radius: ["updateIndicator", "network", "ethernet", "wirelesspassword", "bluetooth", "audio", "battery", "clock"].includes(content.currentName) ? 28 : 24
+         color: MenuStyle.surface
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -891,8 +891,8 @@
+         Region {
+             x: panels.popoutsWrapper.x + panels.leftMargin
+             y: panels.popoutsWrapper.y + panels.topMargin
+-            width: panels.popoutsWrapper.visible && panels.popoutsWrapper.fromFloatingBar ? panels.popoutsWrapper.width : 0
+-            height: panels.popoutsWrapper.visible && panels.popoutsWrapper.fromFloatingBar ? panels.popoutsWrapper.height : 0
++            width: panels.popoutsWrapper.visible && panels.popoutsWrapper.fromFloatingBar && !panels.popoutsWrapper.framelessDockPreview ? panels.popoutsWrapper.width : 0
++            height: panels.popoutsWrapper.visible && panels.popoutsWrapper.fromFloatingBar && !panels.popoutsWrapper.framelessDockPreview ? panels.popoutsWrapper.height : 0
+             radius: 24
+             intersection: Intersection.Combine
+         }

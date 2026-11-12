@@ -1,0 +1,21 @@
+{
+  "name": "flausen-kinetic-website",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "check": "tsc --noEmit",
+    "build": "npm run check && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "playwright test",
+    "render": "node scripts/render.mjs",
+    "predev": "npm run render",
+    "prebuild": "npm run render"
+  },
+  "devDependencies": {
+    "vite": "8.3.5",
+    "typescript": "7.0.2",
+    "@playwright/test": "1.64.1"
+  }
+}

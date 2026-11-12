@@ -1,0 +1,63 @@
+--- modules/bar/popouts/ClipWrapper.qml
++++ modules/bar/popouts/ClipWrapper.qml
+@@ -100,9 +100,11 @@
+     Rectangle {
+         anchors.fill: parent
+         visible: root.fromFloatingBar
+-        radius: Tokens.rounding.extraLarge
+-        color: GlobalConfig.appearance.pitchBlack ? "#000000" : Colours.tPalette.m3surface
+-        opacity: Colours.transparency.enabled ? Colours.transparency.base : 1.0
++        // Same glass material and contour as the start menu.
++        radius: 24
++        color: Colours.light ? "#e6f4f5f7" : "#d911161d"
++        border.width: 1
++        border.color: Colours.light ? "#70969ca5" : "#38ffffff"
+     }
+ 
+     Wrapper {
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -542,6 +542,16 @@
+             }
+         ]
+ 
++        // The shared glass is the outer surface; avoid a second opaque card
++        // covering it. Keep each popout's controls and nested cards intact.
++        Binding {
++            when: GlobalConfig.bar.position === "top" && popout.item !== null && popout.item.hasOwnProperty("color")
++            target: popout.item
++            property: "color"
++            value: "transparent"
++            restoreMode: Binding.RestoreBindingOrValue
++        }
++
+         Binding {
+             when: popout.item !== null
+             target: popout.item
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -885,6 +885,15 @@
+             radius: 24
+             intersection: Intersection.Combine
+         }
++        // Floating taskbar popouts use the start menu's independent rounded blur.
++        Region {
++            x: panels.popoutsWrapper.x + panels.leftMargin
++            y: panels.popoutsWrapper.y + panels.topMargin
++            width: panels.popoutsWrapper.visible && panels.popoutsWrapper.fromFloatingBar ? panels.popoutsWrapper.width : 0
++            height: panels.popoutsWrapper.visible && panels.popoutsWrapper.fromFloatingBar ? panels.popoutsWrapper.height : 0
++            radius: 24
++            intersection: Intersection.Combine
++        }
+         // Independent glass blur for the two bars, without enabling it for every panel.
+         Region {
+             x: topBarGlass.x; y: topBarGlass.y
+@@ -1050,7 +1059,7 @@
+             deformMatrix: dashBg.deformMatrix
+         }
+         BlurMask {
+-            target: panels.popoutsWrapper
++            target: panels.popoutsWrapper.fromFloatingBar ? null : panels.popoutsWrapper
+             contentItem: root.contentItem
+             blurOffsetTop: root.blurOffsetTop - (popoutBg.connectedToSidebar ? Tokens.spacing.extraLarge + 10 + Tokens.rounding.extraLarge : 0)
+             blurOffsetBottom: root.blurOffsetBottom

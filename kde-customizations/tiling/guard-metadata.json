@@ -1,0 +1,12 @@
+{
+  "KPackageStructure": "KWin/Script",
+  "KPlugin": {
+    "Id": "ralleur-tiling-guard",
+    "Name": "Ralleur Tiling: Shift-Konflikt beheben",
+    "Description": "Unterdrückt KDEs Shift-Raster beim Fensterziehen, solange Krohnkite aktiv ist.",
+    "Version": "1.0",
+    "License": "MIT"
+  },
+  "X-Plasma-API": "declarativescript",
+  "X-Plasma-MainScript": "ui/main.qml"
+}

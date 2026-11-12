@@ -1,0 +1,158 @@
+--- modules/bar/GlassSurface.qml
++++ modules/bar/GlassSurface.qml
+@@ -1,94 +1,11 @@
+ import QtQuick
+-import Qt5Compat.GraphicalEffects
+ import qs.services
+ 
+-// Match the lock screen: local live wallpaper blur plus a uniform glass tint.
++// Only a transparent tint. The compositor blurs the actual windows behind us.
+ Rectangle {
+-    id: root
+     property bool rounded: true
+-    property Item backdrop: null
+     radius: rounded ? height / 2 : 0
+-    color: "transparent"
++    color: Colours.light ? "#59f8f6f3" : "#401c2024"
+     border.width: 1
+-    border.color: Colours.light ? "#99ffffff" : "#45484b"
+-
+-    Item {
+-        anchors.fill: parent
+-        anchors.margins: 1
+-        Loader {
+-            anchors.fill: parent
+-            active: root.backdrop !== null && GraphicsInfo.api !== GraphicsInfo.Software
+-            sourceComponent: Component {
+-                Item {
+-                    id: viewport
+-                    readonly property real blurMargin: 64
+-                    readonly property rect crop: {
+-                        // Follow centering, scale and screen changes along the full ancestor chain.
+-                        let geometry = root.backdrop.width + root.backdrop.height
+-                        let ancestor = root
+-                        while (ancestor) {
+-                            geometry += ancestor.x + ancestor.y + ancestor.width + ancestor.height + ancestor.scale
+-                            ancestor = ancestor.parent
+-                        }
+-                        if (!isFinite(geometry)) return Qt.rect(0, 0, 1, 1)
+-                        const top = root.mapToItem(root.backdrop, 1, 1)
+-                        const bottom = root.mapToItem(root.backdrop, root.width - 1, root.height - 1)
+-                        return Qt.rect(top.x, top.y, Math.max(1, bottom.x - top.x), Math.max(1, bottom.y - top.y))
+-                    }
+-                    readonly property real sx: crop.width / Math.max(1, width)
+-                    readonly property real sy: crop.height / Math.max(1, height)
+-                    readonly property real extraLeft: Math.min(blurMargin * sx, Math.max(0, crop.x))
+-                    readonly property real extraTop: Math.min(blurMargin * sy, Math.max(0, crop.y))
+-                    readonly property real extraRight: Math.min(blurMargin * sx, Math.max(0, root.backdrop.width - crop.x - crop.width))
+-                    readonly property real extraBottom: Math.min(blurMargin * sy, Math.max(0, root.backdrop.height - crop.y - crop.height))
+-                    ShaderEffectSource {
+-                        id: sample
+-                        width: (viewport.crop.width + viewport.extraLeft + viewport.extraRight) / viewport.sx
+-                        height: (viewport.crop.height + viewport.extraTop + viewport.extraBottom) / viewport.sy
+-                        sourceItem: root.backdrop
+-                        sourceRect: Qt.rect(viewport.crop.x - viewport.extraLeft, viewport.crop.y - viewport.extraTop,
+-                            viewport.crop.width + viewport.extraLeft + viewport.extraRight,
+-                            viewport.crop.height + viewport.extraTop + viewport.extraBottom)
+-                        live: true
+-                        visible: false
+-                    }
+-                    FastBlur {
+-                        id: frost
+-                        width: sample.width
+-                        height: sample.height
+-                        source: sample
+-                        radius: 48
+-                        transparentBorder: false
+-                        visible: false
+-                    }
+-                    ShaderEffectSource {
+-                        id: croppedFrost
+-                        anchors.fill: parent
+-                        sourceItem: frost
+-                        sourceRect: Qt.rect(viewport.extraLeft / viewport.sx, viewport.extraTop / viewport.sy,
+-                            viewport.width, viewport.height)
+-                        live: true
+-                        visible: false
+-                    }
+-                    Rectangle {
+-                        id: roundedMask
+-                        anchors.fill: parent
+-                        radius: Math.max(0, root.radius - 1)
+-                        color: "white"
+-                        visible: false
+-                    }
+-                    OpacityMask {
+-                        anchors.fill: parent
+-                        source: croppedFrost
+-                        maskSource: roundedMask
+-                    }
+-                }
+-            }
+-        }
+-        Rectangle {
+-            anchors.fill: parent
+-            radius: Math.max(0, root.radius - 1)
+-            color: Colours.light ? "#c7f8f6f3" : "#b81c2024"
+-        }
+-    }
++    border.color: Colours.light ? "#66ffffff" : "#38ffffff"
+ }
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -300,7 +300,7 @@
+                 width: parent.width
+                 height: parent.height
+                 scale: overviewWallpaperLayer.bgScale
+-                active: bar.visible || bottomDock.visible || overviewWallpaperLayer.active || overviewWallpaperLayer.opacity > 0
++                active: overviewWallpaperLayer.active || overviewWallpaperLayer.opacity > 0
+                         || (overviewWallpaperLayer.keepAlive && wallpaperLoader.item && !wallpaperLoader.item.isVideo(wallpaperLoader.item.source))
+                 sourceComponent: Component { Wallpaper { screen: root.screen; skipTransition: true } }
+             }
+@@ -519,7 +519,6 @@
+     }
+     GlassSurface {
+         id: topBarGlass
+-        backdrop: wallpaperLoader.item
+         // The launcher and both glass edges share the same screen inset.
+         x: SplitBarSettings.edgeGap
+         y: bar.y + 4
+@@ -695,7 +694,6 @@
+         }
+         SplitDock {
+             id: bottomDock
+-            glassBackdrop: wallpaperLoader.item
+ 
+             anchors.left: parent.left
+             anchors.right: parent.right
+--- modules/bar/Bar.qml
++++ modules/bar/Bar.qml
+@@ -27,7 +27,6 @@
+ 
+     // Ralleur: reuse the native bar delegates on a second, bottom surface.
+     property bool dockOnly: false
+-    property Item glassBackdrop: null
+     readonly property string position: dockOnly ? "bottom" : Config.bar.position
+ 
+     readonly property int vPadding: Tokens.padding.large
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -286,7 +286,6 @@
+         id: container
+ 
+         GlassSurface {
+-            backdrop: bar.glassBackdrop
+             anchors.fill: parent
+             visible: dockModel.count > 0
+         }
+--- modules/bar/SplitDock.qml
++++ modules/bar/SplitDock.qml
+@@ -22,7 +22,7 @@
+             const popout = root.popouts.parent;
+             return JSON.stringify({
+                 screen: root.screen.name,
+-                glass: {wallpaperReady: root.glassBackdrop !== null, source: root.glassBackdrop?.source ?? "", sourceWidth: root.glassBackdrop?.width ?? 0, sourceHeight: root.glassBackdrop?.height ?? 0},
++                glass: {type: "nativeBackdrop", darkOpacity: 64 / 255, lightOpacity: 89 / 255},
+                 top: { position: top.position, scale: GlobalConfig.bar.scale, height: top.height,
+                     left: content?.leftEntries, middle: content?.middleEntries, right: content?.rightEntries },
+                 dock: { visible: root.visible, scale: root.rawScale, x: (root.width - root.footprintWidth) / 2,

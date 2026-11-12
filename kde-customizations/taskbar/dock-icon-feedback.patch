@@ -1,0 +1,145 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -42,6 +42,7 @@
+         return {
+             magnification: { enabled: zoomEnabled, active: zoomActive, amount: SplitBarSettings.dockMagnificationAmount, pointer: zoomPointer },
+             drag: { active: isDragging, id: draggedId, preview: dragPreview, pinned: previewPinnedCount },
++            launching: launchingApps,
+             resizing: isResizing,
+             scaleLimits: { min: SplitBarSettings.minDockScale, max: SplitBarSettings.maxDockScale },
+             separator: hasSections, gap: sectionGap,
+@@ -65,6 +66,37 @@
+     property int modelUpdateTrigger: 0
+ 
+     property var launchingApps: ({})
++    readonly property int launchTimeoutMs: 15000
++
++    function launchKey(app: var): string {
++        return app.entry?.id || app.appClass || app.id;
++    }
++
++    function markLaunching(app: var): void {
++        const pending = Object.assign({}, launchingApps);
++        pending[launchKey(app)] = Date.now();
++        launchingApps = pending;
++    }
++
++    function clearFinishedLaunches(apps: var, now: real): void {
++        const pending = Object.assign({}, launchingApps);
++        let changed = false;
++        for (const key of Object.keys(pending)) {
++            if (now - pending[key] >= launchTimeoutMs
++                    || apps.some(app => app.toplevels.length > 0 && launchKey(app) === key)) {
++                delete pending[key];
++                changed = true;
++            }
++        }
++        if (changed) launchingApps = pending;
++    }
++
++    Timer {
++        interval: 500
++        repeat: true
++        running: Object.keys(root.launchingApps).length > 0
++        onTriggered: root.clearFinishedLaunches(root.modelDataArray, Date.now())
++    }
+ 
+     property bool isDragging: false
+     property bool isResizing: false
+@@ -332,9 +364,7 @@
+                 }
+             }
+         } else if (entry.entry) {
+-            let newLaunching = Object.assign({}, root.launchingApps);
+-            newLaunching[entry.appClass || entry.id] = true;
+-            root.launchingApps = newLaunching;
++            root.markLaunching(entry);
+ 
+             Launch.launchEntry(entry.entry);
+         }
+@@ -387,9 +417,7 @@
+         if (!entry)
+             return;
+         if (entry.entry) {
+-            let newLaunching = Object.assign({}, root.launchingApps);
+-            newLaunching[entry.appClass || entry.id] = true;
+-            root.launchingApps = newLaunching;
++            root.markLaunching(entry);
+ 
+             Launch.launchEntry(entry.entry);
+         } else if (entry.toplevels.length > 0) {
+@@ -834,7 +862,7 @@
+                         anchors.fill: parent
+                         radius: Tokens.rounding.medium
+                         color: Colours.palette.m3onSurface
+-                        opacity: delegateItem.isActive ? 0.1 : 0
++                        opacity: !root.bar.dockOnly && delegateItem.isActive ? 0.1 : 0
+ 
+                         Behavior on opacity {
+                             Anim {
+@@ -847,7 +875,7 @@
+                         anchors.fill: parent
+                         radius: Tokens.rounding.medium
+                         color: Colours.palette.m3error
+-                        opacity: (delegateItem.badge?.urgent ?? false) ? 0.35 : 0
++                        opacity: !root.bar.dockOnly && (delegateItem.badge?.urgent ?? false) ? 0.35 : 0
+ 
+                         Behavior on opacity {
+                             Anim {
+@@ -859,6 +887,8 @@
+                     StateLayer {
+                         id: stateLayer
+ 
++                        // Keep pointer handling and previews without an icon backplate.
++                        color: root.bar.dockOnly ? "transparent" : Colours.palette.m3onSurface
+                         anchors.fill: parent
+                         radius: Tokens.rounding.medium
+                         acceptedButtons: Qt.NoButton
+@@ -1021,7 +1051,7 @@
+ 
+                     Loader {
+                         anchors.fill: icon
+-                        active: modelData ? (root.launchingApps[modelData.appClass || modelData.id] || false) : false
++                        active: modelData ? (root.launchingApps[root.launchKey(modelData)] || false) : false
+                         sourceComponent: CircularIndicator {
+                             running: true
+                             strokeWidth: 2
+@@ -1251,7 +1281,10 @@
+                         if (isAppSteamGame) continue;
+ 
+                         const baseId = app.id.toLowerCase().replace(".desktop", "");
+-                        if (app.appClass.toLowerCase() === appClass.toLowerCase() ||
++                        const startupClass = (app.entry?.startupClass || "").toLowerCase();
++                        if ((startupClass && (startupClass === appClass.toLowerCase()
++                                || startupClass === (ipc.initialClass || "").toLowerCase())) ||
++                            app.appClass.toLowerCase() === appClass.toLowerCase() ||
+                             app.id.toLowerCase().includes(appClass.toLowerCase()) ||
+                             appClass.toLowerCase().includes(baseId)) {
+                             if (pinnedFirst && app.isPinned && app.toplevels.length > 0)
+@@ -1308,25 +1341,7 @@
+         if (bar.dockOnly)
+             apps = root.updateRecentApps(apps);
+ 
+-        let newLaunching = Object.assign({}, root.launchingApps);
+-        let launchingChanged = false;
+-
+-        for (const app of apps) {
+-            if (app.toplevels.length > 0) {
+-                if (newLaunching[app.appClass]) {
+-                    delete newLaunching[app.appClass];
+-                    launchingChanged = true;
+-                }
+-                if (newLaunching[app.id]) {
+-                    delete newLaunching[app.id];
+-                    launchingChanged = true;
+-                }
+-            }
+-        }
+-
+-        if (launchingChanged) {
+-            root.launchingApps = newLaunching;
+-        }
++        root.clearFinishedLaunches(apps, Date.now());
+ 
+         const existingOrder = (root.currentOrder && root.currentOrder.length > 0) ? root.currentOrder : root.modelDataArray;
+         const existingPinnedOrder = existingOrder.filter(a => a && a.isPinned).map(a => a.id);

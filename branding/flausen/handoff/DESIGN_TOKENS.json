@@ -1,0 +1,91 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "name": "flausen OS / Brand & UI Tokens",
+  "brand": {
+    "name": "flausen.",
+    "technicalProductName": "flausen OS",
+    "parent": "ralleur",
+    "tagline": "Your computer. Your playground.",
+    "mark": {
+      "structure": "three unequal circles, left to right: yellow, coral, blue",
+      "usage": "do not alter order, proportion, or colors"
+    }
+  },
+  "color": {
+    "brand": {
+      "yellow": "#F2B84B",
+      "coral": "#EB6B61",
+      "blue": "#649DEB"
+    },
+    "dark": {
+      "background": "#17191D",
+      "surface": "#24272D",
+      "surfaceRaised": "#2B2E35",
+      "text": "#F5F4F0",
+      "textMuted": "#AAAEB7",
+      "border": "#33363E",
+      "selected": "#323743",
+      "focus": "#649DEB",
+      "primaryButtonBackground": "#F5F4F0",
+      "primaryButtonText": "#17191D",
+      "secondaryButtonBackground": "#272A31"
+    },
+    "light": {
+      "background": "#F5F4F0",
+      "surface": "#FFFFFF",
+      "surfaceRaised": "#F1F2F4",
+      "text": "#17191D",
+      "textMuted": "#646A76",
+      "border": "#D9DBDF",
+      "selected": "#E8EBEF",
+      "focus": "#326DCD",
+      "primaryButtonBackground": "#17191D",
+      "primaryButtonText": "#F5F4F0",
+      "secondaryButtonBackground": "#EDF0F2"
+    },
+    "semantic": {
+      "error": "#CF5850",
+      "warning": "#C78818",
+      "success": "#3A976F",
+      "info": "#477DD2"
+    }
+  },
+  "typography": {
+    "wordmark": "Inter Display Medium (exported to paths in production SVG)",
+    "ui": "Inter, system sans fallback",
+    "monospace": "system monospace",
+    "note": "Use locally installed Inter or system fallback; no font binaries distributed."
+  },
+  "shape": {
+    "cardRadius": 20,
+    "controlRadius": 12,
+    "smallRadius": 8,
+    "osIconRadius": 56
+  },
+  "spacing": {
+    "unit": 4,
+    "scale": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32,
+      48,
+      64
+    ]
+  },
+  "motion": {
+    "reduceMotion": "honor system preference",
+    "defaultDurationMs": 160,
+    "longDurationMs": 340,
+    "easing": "easeOutCubic"
+  },
+  "guidance": {
+    "yellow": "punctuation/highlight; not every primary button",
+    "coral": "tiny expressive accents and illustrations; never as sole danger encoding",
+    "blue": "focus/accessibility/highlights; ensure contrast",
+    "dark": "primary presentation, not exclusively dark",
+    "logo": "primary stack; horizontal alternative for narrow spaces; symbol only where text cannot fit"
+  }
+}

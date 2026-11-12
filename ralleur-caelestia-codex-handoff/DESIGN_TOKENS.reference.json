@@ -1,0 +1,42 @@
+{
+  "$comment": "Unverbindliche, aus dem Mock abgeleitete Startwerte. Brand-Farben und Typografie nach Prüfung von ralleur.com finalisieren.",
+  "typography": {
+    "ui": "Inter",
+    "monospace": "system monospace",
+    "weightRegular": 400,
+    "weightMedium": 500,
+    "weightSemibold": 600
+  },
+  "radii": {
+    "small": 10,
+    "medium": 16,
+    "large": 22,
+    "pill": 999
+  },
+  "spacingBase": 4,
+  "mode": {
+    "light": {
+      "background": "#E9E8E4",
+      "surface": "#F7F6F3",
+      "surfaceElevated": "#FFFFFF",
+      "textPrimary": "#17191B",
+      "textSecondary": "#696B6E",
+      "stroke": "#D3D2CE"
+    },
+    "dark": {
+      "background": "#11161D",
+      "surface": "#171C23",
+      "surfaceElevated": "#20252B",
+      "textPrimary": "#F2F1F0",
+      "textSecondary": "#ADAFB5",
+      "stroke": "#373D46"
+    }
+  },
+  "accents": {
+    "red": "#F46F63",
+    "blue": "#4E94E5",
+    "amber": "#DDAA57",
+    "green": "#4FC28B",
+    "violet": "#B78AD8"
+  }
+}

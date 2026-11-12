@@ -1,0 +1,21 @@
+--- modules/bar/components/StatusIcons.qml
++++ modules/bar/components/StatusIcons.qml
+@@ -34,7 +34,8 @@
+     property real hoverSpacing: Tokens.spacing.small
+ 
+     readonly property bool isHovering: hoverPos !== -1
+-    property real currentHoverSpacing: isHovering ? hoverSpacing : 0
++    // Keep the expanded spacing so hovering never shifts the status icons.
++    readonly property real currentHoverSpacing: hoverSpacing
+ 
+     readonly property var activeEntries: Config.bar.statusIcons.values.filter(entry => entry.enabled && root.entryActive(entry.id))
+ 
+@@ -104,8 +105,6 @@
+     implicitWidth: isHorizontal ? (iconColumn.implicitWidth + Tokens.padding.medium * 2) : barThickness
+     implicitHeight: isHorizontal ? barThickness : (iconColumn.implicitHeight + Tokens.padding.medium * 2)
+ 
+-    Behavior on currentHoverSpacing { Anim { type: Anim.DefaultEffects } }
+-
+     MouseArea {
+         anchors.fill: parent
+         acceptedButtons: Qt.RightButton

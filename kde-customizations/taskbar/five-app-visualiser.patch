@@ -1,0 +1,32 @@
+--- modules/background/Visualiser.qml
++++ modules/background/Visualiser.qml
+@@ -85,23 +85,23 @@
+                     anchors.topMargin: Config.bar.position === "top" ? root.barExclusiveZone : Config.border.thickness
+                     anchors.bottomMargin: Config.bar.position === "bottom" ? root.barExclusiveZone : Config.border.thickness
+                     Repeater {
+-                        model: 2
++                        model: AppVisualiser.split ? Math.min(5, AppVisualiser.apps.length) : 2
+                         delegate: Item {
+                             id: half
+                             required property int index
+                             x: index * width
+-                            width: barsArea.width / 2
++                            width: barsArea.width / (AppVisualiser.split ? Math.min(5, AppVisualiser.apps.length) : 2)
+                             height: barsArea.height
+                             clip: true
+ 
+                             VisualiserBars {
+                                 id: bars
+-                                x: -half.index * half.width
+-                                width: barsArea.width
++                                x: AppVisualiser.split ? 0 : -half.index * half.width
++                                width: AppVisualiser.split ? half.width * 2 : barsArea.width
+                                 height: barsArea.height
+                                 values: AppVisualiser.split ? (AppVisualiser.apps[half.index]?.values ?? []) : (Audio.cava?.values ?? [])
+-                                sideWidth: Math.min(0.5, Math.max(0.05, 0.4 * Config.background.visualiser.size))
+-                                readonly property color appColor: AppVisualiser.split && half.index === 1 ? "#2563C9" : "#E56D2F"
++                                sideWidth: AppVisualiser.split ? 0.5 : Math.min(0.5, Math.max(0.05, 0.4 * Config.background.visualiser.size))
++                                readonly property color appColor: AppVisualiser.split ? (AppVisualiser.apps[half.index]?.color ?? "#E56D2F") : "#E56D2F"
+                                 primaryColor: Qt.alpha(appColor, 0.7)
+                                 secondaryColor: Qt.alpha(appColor, 0.7)
+                                 rounding: Tokens.rounding.medium * Config.background.visualiser.rounding

@@ -1,0 +1,546 @@
+--- modules/bar/popouts/Network.qml
++++ modules/bar/popouts/Network.qml
+@@ -24,8 +24,11 @@
+     property bool detailsExpanded: false
+     property bool wifiPending: false
+     property string wifiError: ""
++    readonly property real bodyPointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.84
++    readonly property real titlePointSize: root.bodyPointSize * 1.68
++    readonly property real contentInset: 7 * root.scaleOffset
+     readonly property color accent: "#287dff"
+-    readonly property color muted: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.52 : 0.59)
++    readonly property color muted: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.68 : 0.62)
+     readonly property color rule: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.12 : 0.16)
+     readonly property var sortedNetworks: [...Nmcli.networks].sort((a, b) => a.active !== b.active ? b.active - a.active : b.strength - a.strength)
+     readonly property var deviceDetails: root.view === "wireless" ? Nmcli.wirelessDeviceDetails : Nmcli.ethernetDeviceDetails
+@@ -43,7 +46,7 @@
+ 
+     width: 420 * scaleOffset
+     implicitWidth: width
+-    spacing: 14 * scaleOffset
++    spacing: 10 * scaleOffset
+ 
+     function openSettings(): void {
+         root.popouts.hasCurrent = false;
+@@ -65,16 +68,18 @@
+ 
+     RowLayout {
+         Layout.fillWidth: true
+-        Layout.topMargin: 7 * root.scaleOffset
+-        Layout.leftMargin: 6 * root.scaleOffset
+-        Layout.rightMargin: 4 * root.scaleOffset
++        Layout.topMargin: 3 * root.scaleOffset
++        Layout.leftMargin: 12 * root.scaleOffset
++        Layout.rightMargin: root.contentInset
+         StyledText {
+             Layout.fillWidth: true
+             text: qsTr("Network")
++                    wrapMode: Text.WordWrap
+             font.weight: 600
+-            font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.65
++            font.pointSize: root.titlePointSize
+         }
+         StyledRect {
++            Layout.alignment: Qt.AlignTop
+             implicitWidth: 38 * root.scaleOffset
+             implicitHeight: implicitWidth
+             radius: height / 2
+@@ -101,18 +106,21 @@
+         content: [
+             RowLayout {
+                 Layout.fillWidth: true
+-                Layout.margins: 14 * root.scaleOffset
+-                spacing: 16 * root.scaleOffset
++                Layout.leftMargin: 16 * root.scaleOffset
++                Layout.rightMargin: 16 * root.scaleOffset
++                Layout.topMargin: 10 * root.scaleOffset
++                Layout.bottomMargin: 10 * root.scaleOffset
++                spacing: 14 * root.scaleOffset
+                 StyledRect {
+-                    implicitWidth: 49 * root.scaleOffset
++                    implicitWidth: 38 * root.scaleOffset
+                     implicitHeight: implicitWidth
+-                    radius: 15 * root.scaleOffset
++                    radius: 12 * root.scaleOffset
+                     color: Qt.alpha(root.accent, Colours.light ? 0.2 : 0.25)
+                     MaterialIcon {
+                         anchors.centerIn: parent
+                         text: root.view === "ethernet" ? "lan" : Nmcli.wifiEnabled ? "wifi" : "wifi_off"
+                         color: Colours.light ? "#164994" : "#dce9ff"
+-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.6
++                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.scaleOffset * 1.25
+                     }
+                 }
+                 ColumnLayout {
+@@ -121,14 +129,14 @@
+                     StyledText {
+                         text: root.view === "wireless" ? "Wi-Fi" : qsTr("Ethernet")
+                         font.weight: 600
+-                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.12
++                        font.pointSize: root.bodyPointSize
+                     }
+                     StyledText {
+                         Layout.fillWidth: true
+                         text: root.view === "ethernet" ? (Nmcli.activeEthernet?.iface || qsTr("Nicht verbunden")) : root.wifiPending ? qsTr("Wird umgeschaltet …") : !Nmcli.wifiEnabled ? qsTr("WLAN ist aus") : Nmcli.connectingSsid ? qsTr("Verbinde mit %1 …").arg(Nmcli.connectingSsid) : Nmcli.active?.ssid || qsTr("Nicht verbunden")
+                         color: root.muted
+                         elide: Text.ElideRight
+-                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.95
++                        font.pointSize: root.bodyPointSize * 0.79
+                     }
+                 }
+                 QQC.Switch {
+@@ -137,11 +145,12 @@
+                     checked: Nmcli.wifiEnabled
+                     enabled: !root.wifiPending
+                     padding: 0
+-                    implicitWidth: 54 * root.scaleOffset
+-                    implicitHeight: 30 * root.scaleOffset
++                    implicitWidth: 46 * root.scaleOffset
++                    implicitHeight: 38 * root.scaleOffset
+                     indicator: Rectangle {
+                         width: wifiSwitch.implicitWidth
+-                        height: wifiSwitch.implicitHeight
++                        height: 26 * root.scaleOffset
++                        y: (wifiSwitch.height - height) / 2
+                         radius: height / 2
+                         color: wifiSwitch.checked ? root.accent : Qt.alpha(Colours.palette.m3onSurface, 0.22)
+                         opacity: wifiSwitch.enabled ? 1 : 0.5
+@@ -174,25 +183,25 @@
+         text: root.wifiError
+         color: Colours.palette.m3error
+         wrapMode: Text.Wrap
+-        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++        font.pointSize: root.bodyPointSize * 0.79
+     }
+ 
+     RowLayout {
+         Layout.fillWidth: true
+-        Layout.leftMargin: 5 * root.scaleOffset
+-        Layout.rightMargin: 5 * root.scaleOffset
++        Layout.leftMargin: 12 * root.scaleOffset
++        Layout.rightMargin: root.contentInset
+         Layout.topMargin: 3 * root.scaleOffset
+         StyledText {
+             Layout.fillWidth: true
+             text: root.view === "wireless" ? qsTr("Verfügbare Netzwerke") : qsTr("Verfügbare Geräte")
+             color: root.muted
+             font.weight: 500
+-            font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.96
++            font.pointSize: root.bodyPointSize * 0.796
+         }
+         StyledText {
+             text: root.view === "wireless" ? (Nmcli.wifiEnabled ? Nmcli.networks.length : 0) : Nmcli.ethernetDevices.length
+             color: root.muted
+-            font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.96
++            font.pointSize: root.bodyPointSize * 0.796
+         }
+     }
+     GroupCard {
+@@ -222,7 +231,7 @@
+                 text: root.view === "ethernet" ? qsTr("No Ethernet devices found") : !Nmcli.wifiEnabled ? qsTr("WLAN einschalten, um Netzwerke zu finden") : Nmcli.scanning ? qsTr("Netzwerke werden gesucht …") : qsTr("Keine Netzwerke gefunden")
+                 color: root.muted
+                 wrapMode: Text.Wrap
+-                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
++                font.pointSize: root.bodyPointSize
+             }
+         ]
+     }
+@@ -230,7 +239,9 @@
+     StyledRect {
+         visible: root.view === "wireless"
+         Layout.fillWidth: true
+-        implicitHeight: Math.max(46 * root.scaleOffset, scanContent.implicitHeight + 16 * root.scaleOffset)
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
++        implicitHeight: Math.max(38 * root.scaleOffset, scanContent.implicitHeight + 10 * root.scaleOffset)
+         radius: 14 * root.scaleOffset
+         color: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.025 : 0.035)
+         border.width: 1
+@@ -244,11 +255,11 @@
+             MaterialIcon {
+                 text: "refresh"
+                 color: root.muted
+-                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.25
++                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.scaleOffset * 1.1
+             }
+             StyledText {
+                 text: Nmcli.scanning ? qsTr("Suche läuft …") : qsTr("Erneut suchen")
+-                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.03
++                font.pointSize: root.bodyPointSize
+             }
+         }
+         StateLayer {
+@@ -261,6 +272,8 @@
+ 
+     Rectangle {
+         Layout.fillWidth: true
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
+         Layout.topMargin: 2 * root.scaleOffset
+         implicitHeight: 1
+         color: root.rule
+@@ -297,7 +310,7 @@
+                 Layout.margins: 16 * root.scaleOffset
+                 text: qsTr("Keine VPN-Profile vorhanden")
+                 color: root.muted
+-                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++                font.pointSize: root.bodyPointSize * 0.79
+             }
+         ]
+     }
+@@ -321,7 +334,7 @@
+                     Layout.bottomMargin: 10 * root.scaleOffset
+                     StyledText {
+                         text: modelData.label
+-                        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++                        font.pointSize: root.bodyPointSize * 0.79
+                     }
+                     StyledText {
+                         Layout.fillWidth: true
+@@ -329,7 +342,7 @@
+                         color: root.muted
+                         horizontalAlignment: Text.AlignRight
+                         elide: Text.ElideRight
+-                        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++                        font.pointSize: root.bodyPointSize * 0.79
+                     }
+                 }
+             }
+@@ -339,6 +352,8 @@
+     component GroupCard: StyledRect {
+         property alias content: rows.data
+         Layout.fillWidth: true
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
+         implicitHeight: rows.implicitHeight + 4 * root.scaleOffset
+         radius: 14 * root.scaleOffset
+         color: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.025 : 0.035)
+@@ -366,7 +381,7 @@
+         property bool expanded: false
+         signal clicked
+         Layout.fillWidth: true
+-        implicitHeight: Math.max((subtitle ? 68 : 49) * root.scaleOffset, rowContent.implicitHeight + 16 * root.scaleOffset)
++        implicitHeight: Math.max((subtitle ? 55 : 44) * root.scaleOffset, rowContent.implicitHeight + 16 * root.scaleOffset)
+         radius: 13 * root.scaleOffset
+         color: row.selected ? Qt.alpha(root.accent, 0.08) : "transparent"
+         Rectangle {
+@@ -374,21 +389,26 @@
+             anchors.top: parent.top
+             anchors.left: parent.left
+             anchors.right: parent.right
+-            anchors.leftMargin: 13 * root.scaleOffset
+-            anchors.rightMargin: 13 * root.scaleOffset
++            anchors.leftMargin: 68 * root.scaleOffset
++            anchors.rightMargin: 16 * root.scaleOffset
+             height: 1
+             color: root.rule
+         }
+         RowLayout {
+             id: rowContent
+             anchors.fill: parent
+-            anchors.leftMargin: 17 * root.scaleOffset
++            anchors.leftMargin: 16 * root.scaleOffset
+             anchors.rightMargin: 16 * root.scaleOffset
+-            spacing: 17 * root.scaleOffset
+-            MaterialIcon {
+-                text: row.symbol
+-                color: row.selected ? root.accent : Colours.palette.m3onSurface
+-                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.35
++            spacing: 16 * root.scaleOffset
++            Item {
++                Layout.preferredWidth: 36 * root.scaleOffset
++                Layout.preferredHeight: 30 * root.scaleOffset
++                MaterialIcon {
++                    anchors.centerIn: parent
++                    text: row.symbol
++                    color: row.selected ? root.accent : Colours.palette.m3onSurface
++                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.scaleOffset * 1.35
++                }
+             }
+             ColumnLayout {
+                 Layout.fillWidth: true
+@@ -398,7 +418,7 @@
+                     text: row.label
+                     elide: Text.ElideRight
+                     font.weight: row.selected || row.expandable ? 500 : 400
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.05
++                    font.pointSize: root.bodyPointSize
+                 }
+                 StyledText {
+                     visible: !!row.subtitle
+@@ -406,7 +426,7 @@
+                     text: row.subtitle
+                     color: root.muted
+                     elide: Text.ElideRight
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.9
++                    font.pointSize: root.bodyPointSize * 0.79
+                 }
+             }
+             MaterialIcon {
+--- modules/bar/popouts/WirelessPassword.qml
++++ modules/bar/popouts/WirelessPassword.qml
+@@ -23,6 +23,11 @@
+ 
+     property real scaleOffset: 1.0
+     property real fontScale: 1.0
++    readonly property real bodyPointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.84
++    readonly property real titlePointSize: root.bodyPointSize * 1.68
++    readonly property real contentInset: 7 * root.scaleOffset
++    readonly property color muted: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.68 : 0.62)
++    readonly property color rule: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.12 : 0.16)
+ 
+     function checkConnectionStatus(): void {
+         if (!root.shouldBeVisible || !connectButton.connecting) {
+@@ -79,9 +84,10 @@
+         }
+     }
+ 
+-    spacing: Tokens.spacing.medium * scaleOffset
+-    implicitWidth: Math.max(400 * scaleOffset, _isSidebarOpen ? (Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)
+-    implicitHeight: content.implicitHeight + Tokens.padding.extraLargeIncreased * scaleOffset
++    spacing: 10 * scaleOffset
++    width: 420 * scaleOffset
++    implicitWidth: width
++    implicitHeight: card.implicitHeight
+     visible: shouldBeVisible || isClosing
+     enabled: shouldBeVisible && !isClosing
+     focus: enabled
+@@ -152,10 +158,14 @@
+         id: card
+ 
+         Layout.fillWidth: true
+-        Layout.preferredWidth: 400 * root.scaleOffset
+-        implicitHeight: content.implicitHeight + Tokens.padding.extraLargeIncreased * root.scaleOffset
+-        radius: Tokens.rounding.large * root.scaleOffset
+-        color: Colours.tPalette.m3surfaceContainer
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
++        Layout.preferredWidth: 406 * root.scaleOffset
++        implicitHeight: content.implicitHeight + 32 * root.scaleOffset
++        radius: 14 * root.scaleOffset
++        color: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.025 : 0.035)
++        border.width: 1
++        border.color: root.rule
+         visible: root.shouldBeVisible || root.isClosing
+         opacity: root.shouldBeVisible && !root.isClosing ? 1 : 0
+         scale: root.shouldBeVisible && !root.isClosing ? 1 : 0.7
+@@ -198,27 +208,33 @@
+             anchors.left: parent.left
+             anchors.right: parent.right
+             anchors.verticalCenter: parent.verticalCenter
+-            anchors.margins: Tokens.padding.large * root.scaleOffset
+-
+-            spacing: Tokens.spacing.medium * root.scaleOffset
+-
+-            MaterialIcon {
+-                Layout.alignment: Qt.AlignHCenter
+-                text: "lock"
+-                fontStyle: Tokens.font.icon.builders.extraLarge.scale(2 * root.scaleOffset).build()
+-            }
+-
+-            StyledText {
+-                Layout.alignment: Qt.AlignHCenter
+-                text: qsTr("Enter password")
+-                font.pointSize: Tokens.font.body.large.pointSize * root.fontScale
+-                font.weight: Font.Medium
++            anchors.margins: 16 * root.scaleOffset
++
++            spacing: 12 * root.scaleOffset
++
++            RowLayout {
++                Layout.fillWidth: true
++                spacing: 12 * root.scaleOffset
++                StyledText {
++                    Layout.fillWidth: true
++                    text: qsTr("Enter password")
++                    wrapMode: Text.WordWrap
++                    font.pointSize: root.titlePointSize
++                    font.weight: 600
++                }
++                MaterialIcon {
++                    text: "lock"
++                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.scaleOffset * 1.35
++                }
+             }
+ 
+             StyledText {
+                 id: networkNameText
+ 
+-                Layout.alignment: Qt.AlignHCenter
++                Layout.fillWidth: true
++                wrapMode: Text.Wrap
++                maximumLineCount: 2
++                elide: Text.ElideRight
+                 text: {
+                     if (root.network) {
+                         const ssid = root.network.ssid;
+@@ -228,8 +244,8 @@
+                     }
+                     return qsTr("Unknown network");
+                 }
+-                color: Colours.palette.m3outline
+-                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++                color: root.muted
++                font.pointSize: root.bodyPointSize * 0.79
+             }
+ 
+             Timer {
+@@ -264,7 +280,7 @@
+             StyledText {
+                 id: statusText
+ 
+-                Layout.alignment: Qt.AlignHCenter
++                Layout.fillWidth: true
+                 Layout.topMargin: Tokens.spacing.small * root.scaleOffset
+                 visible: connectButton.connecting || connectButton.hasError
+                 text: {
+@@ -276,11 +292,11 @@
+                     }
+                     return "";
+                 }
+-                color: connectButton.hasError ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+-                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++                color: connectButton.hasError ? Colours.palette.m3error : root.muted
++                font.pointSize: root.bodyPointSize * 0.79
+                 font.weight: Font.Normal
+                 wrapMode: Text.WordWrap
+-                Layout.maximumWidth: parent.width - Tokens.padding.extraLargeIncreased * root.scaleOffset
++                Layout.maximumWidth: parent.width
+             }
+ 
+             FocusScope {
+@@ -289,9 +305,10 @@
+                 property string passwordBuffer: ""
+ 
+                 objectName: "passwordContainer"
+-                Layout.topMargin: Tokens.spacing.largeIncreased * root.scaleOffset
++                Layout.topMargin: 4 * root.scaleOffset
+                 Layout.fillWidth: true
+-                implicitHeight: Math.max(48 * root.scaleOffset, charList.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset)
++                implicitHeight: Math.max(44 * root.scaleOffset, charList.implicitHeight + 20 * root.scaleOffset)
++                clip: true
+                 focus: true
+                 activeFocusOnTab: true
+ 
+@@ -360,9 +377,9 @@
+ 
+                 StyledRect {
+                     anchors.fill: parent
+-                    radius: Tokens.rounding.large * root.scaleOffset
++                    radius: 10 * root.scaleOffset
+                     color: passwordContainer.activeFocus ? Qt.lighter(Colours.tPalette.m3surfaceContainer, 1.05) : Colours.tPalette.m3surfaceContainer
+-                    border.width: passwordContainer.activeFocus || connectButton.hasError ? 4 : (root.shouldBeVisible ? 1 : 0)
++                    border.width: passwordContainer.activeFocus || connectButton.hasError ? 2 : (root.shouldBeVisible ? 1 : 0)
+                     border.color: {
+                         if (connectButton.hasError) {
+                             return Colours.palette.m3error;
+@@ -391,7 +408,7 @@
+                 StateLayer {
+                     hoverEnabled: false
+                     cursorShape: Qt.IBeamCursor
+-                    radius: Tokens.rounding.large * root.scaleOffset
++                    radius: 10 * root.scaleOffset
+                     onClicked: passwordContainer.forceActiveFocus()
+                 }
+ 
+@@ -400,8 +417,8 @@
+ 
+                     anchors.centerIn: parent
+                     text: qsTr("Password")
+-                    color: Colours.palette.m3outline
+-                    font.pointSize: Tokens.font.mono.medium.pointSize * root.fontScale
++                    color: root.muted
++                    font.pointSize: root.bodyPointSize
+                     opacity: passwordContainer.passwordBuffer ? 0 : 1
+ 
+                     Behavior on opacity {
+@@ -417,8 +434,9 @@
+                     readonly property int fullWidth: count * (implicitHeight + spacing) - spacing
+ 
+                     anchors.centerIn: parent
+-                    implicitWidth: fullWidth
+-                    implicitHeight: Tokens.font.body.medium.pointSize * root.fontScale
++                    implicitWidth: Math.max(0, Math.min(fullWidth, parent.width - 32 * root.scaleOffset))
++                    clip: true
++                    implicitHeight: 7 * root.scaleOffset
+ 
+                     orientation: Qt.Horizontal
+                     spacing: Tokens.spacing.extraSmall * root.scaleOffset
+@@ -435,7 +453,7 @@
+                         implicitHeight: charList.implicitHeight
+ 
+                         color: Colours.palette.m3onSurface
+-                        radius: Tokens.rounding.medium / 2 * root.scaleOffset
++                        radius: height / 2
+ 
+                         opacity: 0
+                         scale: 0
+@@ -495,13 +513,14 @@
+             RowLayout {
+                 Layout.topMargin: Tokens.spacing.medium * root.scaleOffset
+                 Layout.fillWidth: true
+-                spacing: Tokens.spacing.medium * root.scaleOffset
++                spacing: 12 * root.scaleOffset
+ 
+                 TextButton {
+                     id: cancelButton
+ 
+                     Layout.fillWidth: true
+-                    Layout.minimumHeight: Tokens.font.body.medium.pointSize * root.fontScale + Tokens.padding.medium * 2 * root.fontScale
++                    Layout.minimumHeight: 38 * root.scaleOffset
++                    font.pointSize: root.bodyPointSize * 0.94
+                     inactiveColour: Colours.palette.m3secondaryContainer
+                     inactiveOnColour: Colours.palette.m3onSecondaryContainer
+                     text: qsTr("Cancel")
+@@ -516,7 +535,8 @@
+                     property bool hasError: false
+ 
+                     Layout.fillWidth: true
+-                    Layout.minimumHeight: Tokens.font.body.medium.pointSize * root.fontScale + Tokens.padding.medium * 2 * root.fontScale
++                    Layout.minimumHeight: 38 * root.scaleOffset
++                    font.pointSize: root.bodyPointSize * 0.94
+                     inactiveColour: Colours.palette.m3primary
+                     inactiveOnColour: Colours.palette.m3onPrimary
+                     text: qsTr("Connect")
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -100,6 +100,7 @@
+             id: networkPopout
+ 
+             name: "network"
++            minScale: 1.15
+             sourceComponent: Network {
+                 popouts: root.popouts
+                 view: "wireless"
+@@ -108,6 +109,7 @@
+ 
+         Popout {
+             name: "ethernet"
++            minScale: 1.15
+             previewKey: "network"
+             sourceComponent: Network {
+                 popouts: root.popouts
+@@ -119,6 +121,7 @@
+             id: passwordPopout
+ 
+             name: "wirelesspassword"
++            minScale: 1.15
+             previewKey: "network"
+             sourceComponent: WirelessPassword {
+                 id: passwordComponent
+--- modules/bar/popouts/ClipWrapper.qml
++++ modules/bar/popouts/ClipWrapper.qml
+@@ -101,10 +101,10 @@
+         anchors.fill: parent
+         visible: root.fromFloatingBar
+         // Same glass material and contour as the start menu.
+-        radius: content.currentName === "updateIndicator" ? 28 : 24
+-        color: content.currentName === "updateIndicator" ? (Colours.light ? "#eff5f3f1" : "#ed1a1f26") : (Colours.light ? "#e6f4f5f7" : "#d911161d")
++        radius: ["updateIndicator", "network", "ethernet", "wirelesspassword"].includes(content.currentName) ? 28 : 24
++        color: ["updateIndicator", "network", "ethernet", "wirelesspassword"].includes(content.currentName) ? (Colours.light ? "#eff5f3f1" : "#ed1a1f26") : (Colours.light ? "#e6f4f5f7" : "#d911161d")
+         border.width: 1
+-        border.color: content.currentName === "updateIndicator" ? (Colours.light ? "#b3ffffff" : "#4dffffff") : (Colours.light ? "#70969ca5" : "#38ffffff")
++        border.color: ["updateIndicator", "network", "ethernet", "wirelesspassword"].includes(content.currentName) ? (Colours.light ? "#b3ffffff" : "#4dffffff") : (Colours.light ? "#70969ca5" : "#38ffffff")
+     }
+ 
+     Wrapper {

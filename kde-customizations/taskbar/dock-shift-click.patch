@@ -1,0 +1,26 @@
+--- modules/bar/components/Dock.qml
++++ modules/bar/components/Dock.qml
+@@ -292,7 +292,10 @@
+     function activateNewIndex(idx: int): void {
+         if (idx < 0 || idx >= root.modelDataArray.length)
+             return;
+-        const entry = root.modelDataArray[idx];
++        root.activateNewEntry(root.modelDataArray[idx]);
++    }
++
++    function activateNewEntry(entry: var): void {
+         if (!entry)
+             return;
+         if (entry.entry) {
+@@ -788,7 +791,10 @@
+                                     bounceAnim.start();
+                                 }
+ 
+-                                root.activateEntry(modelData);
++                                if (mouse.modifiers & Qt.ShiftModifier)
++                                    root.activateNewEntry(modelData);
++                                else
++                                    root.activateEntry(modelData);
+                             } else if (mouse.button === Qt.RightButton) {
+                                 bar.popouts.currentName = "dockcontext";
+                                 bar.popouts.currentCenter = bar.isHorizontal ? delegateItem.mapToItem(null, delegateItem.width / 2, 0).x : (delegateItem.mapToItem(null, 0, delegateItem.height / 2).y ?? 0);

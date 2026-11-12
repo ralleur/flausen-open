@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Id": "ralleur-desktop-scroll",
+    "Name": "Super + Mouse Wheel Desktops",
+    "Description": "Super + wheel up/down switches to the previous/next virtual desktop",
+    "Version": "1.0",
+    "License": "MIT"
+  },
+  "X-Plasma-API": "declarativescript",
+  "X-Plasma-MainScript": "ui/main.qml",
+  "KPackageStructure": "KWin/Script"
+}

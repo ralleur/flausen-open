@@ -1,0 +1,1447 @@
+--- modules/bar/popouts/ClipWrapper.qml
++++ modules/bar/popouts/ClipWrapper.qml
+@@ -101,10 +101,10 @@
+         anchors.fill: parent
+         visible: root.fromFloatingBar
+         // Same glass material and contour as the start menu.
+-        radius: 24
+-        color: Colours.light ? "#e6f4f5f7" : "#d911161d"
++        radius: content.currentName === "updateIndicator" ? 28 : 24
++        color: content.currentName === "updateIndicator" ? (Colours.light ? "#eff5f3f1" : "#ed1a1f26") : (Colours.light ? "#e6f4f5f7" : "#d911161d")
+         border.width: 1
+-        border.color: Colours.light ? "#70969ca5" : "#38ffffff"
++        border.color: content.currentName === "updateIndicator" ? (Colours.light ? "#b3ffffff" : "#4dffffff") : (Colours.light ? "#70969ca5" : "#38ffffff")
+     }
+ 
+     Wrapper {
+--- modules/bar/popouts/Content.qml
++++ modules/bar/popouts/Content.qml
+@@ -258,6 +258,7 @@
+ 
+         Popout {
+             name: "updateIndicator"
++            minScale: 1.15
+             sourceComponent: Updates {
+                 popouts: root.popouts
+             }
+@@ -541,6 +542,16 @@
+             }
+         ]
+ 
++        // The shared glass is the outer surface; avoid a second opaque card
++        // covering it. Keep each popout's controls and nested cards intact.
++        Binding {
++            when: GlobalConfig.bar.position === "top" && popout.item !== null && popout.item.hasOwnProperty("color")
++            target: popout.item
++            property: "color"
++            value: "transparent"
++            restoreMode: Binding.RestoreBindingOrValue
++        }
++
+         Binding {
+             when: popout.item !== null
+             target: popout.item
+--- modules/bar/popouts/Updates.qml
++++ modules/bar/popouts/Updates.qml
+@@ -1,7 +1,10 @@
+ pragma ComponentBehavior: Bound
+ 
+ import QtQuick
++import QtQuick.Controls
+ import QtQuick.Layouts
++import Quickshell
++import Quickshell.Widgets
+ import Caelestia.Config
+ import qs.components
+ import qs.services
+@@ -10,274 +13,366 @@
+ 
+ ColumnLayout {
+     id: root
+-
+     required property PopoutState popouts
+-
+     property real scaleOffset: 1.0
+     property real fontScale: 1.0
+     property bool _isSidebarOpen: false
+-
+-    // Index of the Nexus "Updates" page, resolved by page key so this menu
+-    // can't drift out of sync if the page registry is reordered.
+-    readonly property int updatesPageIdx: {
+-        const idx = PageRegistry.indexForKey("updates");
+-        return idx >= 0 ? idx : 0;
+-    }
+-
+-    readonly property bool hasUpdate: UpdateChecker.hasUpdate
+-
+-    readonly property bool checking: UpdateChecker.checkingUpdates
+-
+-    readonly property string statusText: {
+-        if (root.checking)
+-            return qsTr("Checking for updates…");
+-        if (root.hasUpdate)
+-            return UpdateChecker.versionSummaryMode
+-                ? qsTr("New version available on %1").arg(UpdateChecker.currentBranch)
+-                : qsTr("%1 new commits on %2 branch").arg(UpdateChecker.pendingCount).arg(UpdateChecker.currentBranch);
+-        return qsTr("System is up to date");
+-    }
+-
+-    readonly property string statusIcon: root.checking ? "sync" : root.hasUpdate ? "update" : "check_circle"
+-
++    readonly property bool checking: UpdateHub.checking || UpdateChecker.checkingUpdates
++    readonly property bool incomplete: UpdateHub.hasErrors || UpdateHub.sources.some(source => UpdateHub.enabled(source.key) && UpdateHub.statusIcon(source.key) === "question_mark") || root.shellIcon === "question_mark"
++    readonly property int updateCount: UpdateHub.pendingCount + (UpdateChecker.hasUpdate ? 1 : 0)
++    readonly property color accent: "#287dff"
++    readonly property color muted: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.52 : 0.59)
++    readonly property color rule: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.12 : 0.16)
++    readonly property string shellIcon: UpdateChecker.checkingUpdates ? "sync" : UpdateChecker.hasUpdate ? "arrow_upward" : UpdateChecker.lastCheckMs > 0 && UpdateChecker.currentVersion !== "unknown" ? "check" : "question_mark"
++    // Proportions are measured against the reference at equal outer width.
++    // App icons stay large while typography and row rhythm become quieter.
++    readonly property real bodyPointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.84
++    readonly property real titlePointSize: root.bodyPointSize * 1.68
++    readonly property real contentInset: 7 * root.scaleOffset
+     property double nowMs: Date.now()
+-
+-    function formatDuration(ms: double): string {
+-        const total = Math.max(0, Math.floor(ms / 1000));
+-        const minutes = Math.floor(total / 60);
+-        const seconds = total % 60;
+-        return minutes > 0 ? qsTr("%1m %2s").arg(minutes).arg(seconds) : qsTr("%1s").arg(seconds);
+-    }
+-
+-    function hideIndicator(): void {
+-        BarWidgets.setEnabled(GlobalConfig.bar, "updateIndicator", false);
++    readonly property string checkedText: {
++        const checks = UpdateHub.sources.filter(s => UpdateHub.enabled(s.key)).map(s => UpdateHub.status[s.key]?.checkedAt ?? 0);
++        if (UpdateChecker.lastCheckMs > 0) checks.push(UpdateChecker.lastCheckMs / 1000);
++        if (!checks.length || checks.some(time => time <= 0)) return "Noch nicht vollständig geprüft";
++        const oldest = Math.min(...checks);
++        const minutes = Math.floor((root.nowMs / 1000 - oldest) / 60);
++        if (minutes < 1) return "Gerade geprüft";
++        if (minutes < 60) return "Vor " + minutes + " Min. geprüft";
++        return "Geprüft " + UpdateHub.stamp(oldest);
++    }
++
++    width: 420 * scaleOffset
++    implicitWidth: width
++    spacing: 10 * scaleOffset
++
++    function openSettings(): void {
+         root.popouts.hasCurrent = false;
+-    }
+-
+-    // Joins the sidebar like the other panel-sized popouts while it is open.
+-    width: Math.max(300 * scaleOffset, _isSidebarOpen ? (Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) * scaleOffset) - Tokens.padding.extraLargeIncreased : 0)
+-    implicitWidth: width
+-    spacing: Tokens.spacing.small * scaleOffset
+-
+-    // Status card: state icon + summary + last/next check timings.
+-    StyledRect {
+-        Layout.fillWidth: true
+-        implicitHeight: statusLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+-        radius: Tokens.rounding.medium * root.scaleOffset
+-        color: Colours.tPalette.m3surfaceContainer
+-        clip: true
+-
++        WindowFactory.create(null, {initialPageIdx: Math.max(0, PageRegistry.indexForKey("updates"))});
++    }
++    function openSource(key: string): void {
++        const source = UpdateHub.sources.find(s => s.key === key);
++        if (source) UpdateHub.open(source);
++    }
++
++    RowLayout {
++        Layout.fillWidth: true
++        Layout.topMargin: 3 * root.scaleOffset
++        Layout.leftMargin: 12 * root.scaleOffset
++        Layout.rightMargin: root.contentInset
++        spacing: 6 * root.scaleOffset
+         ColumnLayout {
+-            id: statusLayout
+-
++            Layout.fillWidth: true
++            spacing: 4 * root.scaleOffset
++            StyledText {
++                Layout.fillWidth: true
++                text: "Updates"
++                font.weight: 600
++                font.pointSize: root.titlePointSize
++            }
++            RowLayout {
++                Layout.fillWidth: true
++                spacing: 8 * root.scaleOffset
++                Rectangle {
++                    implicitWidth: 7 * root.scaleOffset
++                    implicitHeight: implicitWidth
++                    radius: height / 2
++                    color: root.updateCount > 0 ? root.accent : root.muted
++                }
++                StyledText {
++                    Layout.fillWidth: true
++                    text: root.checking ? "Wird geprüft …" : root.updateCount === 1 ? "1 Update verfügbar" : root.updateCount > 1 ? root.updateCount + " Updates verfügbar" : root.incomplete ? "Prüfung unvollständig" : "Alles aktuell"
++                    color: root.muted
++                    font.pointSize: root.bodyPointSize * 0.94
++                }
++            }
++        }
++        HeaderAction {
++            icon: root.checking ? "sync" : "refresh"
++            description: "Updates prüfen"
++            enabled: !root.checking
++            onClicked: { UpdateChecker.checkUpdates(); UpdateHub.refresh(); }
++        }
++        HeaderAction {
++            icon: "settings"
++            description: "Details & Einstellungen"
++            onClicked: root.openSettings()
++        }
++    }
++
++    SectionLabel { text: "System" }
++    GroupCard {
++        content: [
++            StatusRow {
++                label: "Caelestia"
++                symbol: "desktop_windows"
++                statusIcon: root.shellIcon
++                detail: UpdateChecker.hasUpdate ? "Shell-Update verfügbar" : "Installiert: " + UpdateChecker.currentVersion
++                showUpdateLabel: true
++                onClicked: root.openSettings()
++            }
++        ]
++    }
++
++    SectionLabel { text: "Spiele"; visible: steamCard.visible || battleCard.visible }
++    GameCard {
++        id: steamCard
++        label: "Steam"
++        desktop: "steam"
++        provider: "steam"
++        games: "steamGames"
++    }
++    GameCard {
++        id: battleCard
++        label: "Battle.net"
++        desktop: "lab-battlenet"
++        provider: "battlenet"
++        games: "battlenetGames"
++    }
++
++    SectionLabel { text: "Apps"; visible: appsCard.visible }
++    GroupCard {
++        id: appsCard
++        visible: UpdateHub.enabled("wowup") || UpdateHub.enabled("artcraft")
++        content: [
++            StatusRow {
++                visible: UpdateHub.enabled("wowup")
++                label: "WowUp"
++                desktop: "lab-wowup"
++                statusIcon: UpdateHub.statusIcon("wowup")
++                detail: UpdateHub.details("wowup")
++                onClicked: root.openSource("wowup")
++            },
++            Divider { visible: UpdateHub.enabled("wowup") && UpdateHub.enabled("artcraft") },
++            StatusRow {
++                visible: UpdateHub.enabled("artcraft")
++                label: "ArtCraft Suite"
++                desktop: "ai.storyteller.artcraft-launcher"
++                statusIcon: UpdateHub.statusIcon("artcraft")
++                detail: UpdateHub.details("artcraft")
++                onClicked: root.openSource("artcraft")
++            }
++        ]
++    }
++
++    Rectangle {
++        Layout.fillWidth: true
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
++        Layout.topMargin: 5 * root.scaleOffset
++        Layout.bottomMargin: 2 * root.scaleOffset
++        implicitHeight: 1
++        color: root.rule
++    }
++    RowLayout {
++        Layout.fillWidth: true
++        Layout.bottomMargin: 5 * root.scaleOffset
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
++        spacing: 12 * root.scaleOffset
++        StyledText {
++            Layout.fillWidth: true
++            text: root.checkedText
++            color: root.muted
++            font.pointSize: root.bodyPointSize * 0.84
++            elide: Text.ElideRight
++        }
++        StyledRect {
++            id: updateButton
++            implicitWidth: buttonContents.implicitWidth + 24 * root.scaleOffset
++            implicitHeight: 32 * root.scaleOffset
++            radius: height / 2
++            color: root.accent
++            enabled: (root.updateCount > 0 || root.incomplete) && !root.checking
++            opacity: enabled ? 1 : 0.4
++            RowLayout {
++                id: buttonContents
++                anchors.centerIn: parent
++                spacing: 7 * root.scaleOffset
++                MaterialIcon {
++                    text: root.updateCount > 0 ? "arrow_upward" : "check"
++                    color: "white"
++                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 0.9
++                }
++                StyledText {
++                    text: root.updateCount > 0 ? "Updates öffnen" : root.incomplete ? "Details öffnen" : "Alles aktuell"
++                    color: "white"
++                    font.weight: 600
++                    font.pointSize: root.bodyPointSize * 0.94
++                }
++            }
++            StateLayer {
++                onClicked: root.openSettings()
++                Accessible.name: "Verfügbare Updates ansehen"
++                Accessible.role: Accessible.Button
++            }
++        }
++    }
++    Timer { interval: 30000; running: true; repeat: true; onTriggered: root.nowMs = Date.now() }
++
++    component SectionLabel: StyledText {
++        Layout.leftMargin: 12 * root.scaleOffset
++        Layout.topMargin: 3 * root.scaleOffset
++        Layout.bottomMargin: -3 * root.scaleOffset
++        color: root.muted
++        font.weight: 500
++        font.pointSize: root.bodyPointSize * 0.94
++    }
++    component GroupCard: StyledRect {
++        property alias content: cardRows.data
++        Layout.fillWidth: true
++        Layout.leftMargin: root.contentInset
++        Layout.rightMargin: root.contentInset
++        implicitHeight: cardRows.implicitHeight + 4 * root.scaleOffset
++        radius: 14 * root.scaleOffset
++        color: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.025 : 0.035)
++        border.width: 1
++        border.color: root.rule
++        ColumnLayout {
++            id: cardRows
+             anchors.left: parent.left
+             anchors.right: parent.right
+             anchors.top: parent.top
+-            anchors.margins: Tokens.padding.medium * root.scaleOffset
+-            spacing: Tokens.spacing.small * root.scaleOffset
+-
+-            RowLayout {
++            anchors.topMargin: 2 * root.scaleOffset
++            spacing: 0
++        }
++    }
++    component Divider: Rectangle {
++        property bool alignToIconEdge: false
++        Layout.fillWidth: true
++        Layout.leftMargin: (alignToIconEdge ? 53 : 67) * root.scaleOffset
++        Layout.rightMargin: 15 * root.scaleOffset
++        implicitHeight: 1
++        color: root.rule
++    }
++    component GameCard: GroupCard {
++        id: gameCard
++        required property string label
++        required property string desktop
++        required property string provider
++        required property string games
++        visible: UpdateHub.enabled(provider) || UpdateHub.enabled(games)
++        content: [
++            StatusRow {
++                visible: UpdateHub.enabled(gameCard.provider)
++                label: gameCard.label
++                desktop: gameCard.desktop
++                subtitle: "Launcher"
++                statusIcon: UpdateHub.statusIcon(gameCard.provider)
++                detail: UpdateHub.details(gameCard.provider)
++                onClicked: root.openSource(gameCard.provider)
++            },
++            Divider { alignToIconEdge: true; visible: UpdateHub.enabled(gameCard.provider) && UpdateHub.enabled(gameCard.games) },
++            StatusRow {
++                visible: UpdateHub.enabled(gameCard.games)
++                label: "Spiele"
++                symbol: "sports_esports"
++                nested: true
++                statusIcon: UpdateHub.statusIcon(gameCard.games)
++                detail: UpdateHub.details(gameCard.games)
++                onClicked: root.openSource(gameCard.games)
++            }
++        ]
++    }
++    component HeaderAction: StyledRect {
++        id: action
++        required property string icon
++        required property string description
++        signal clicked
++        Layout.alignment: Qt.AlignTop
++        implicitWidth: 38 * root.scaleOffset
++        implicitHeight: 38 * root.scaleOffset
++        radius: Tokens.rounding.full
++        color: "transparent"
++        MaterialIcon {
++            anchors.centerIn: parent
++            text: action.icon
++            color: root.muted
++            fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.2
++        }
++        StateLayer {
++            onClicked: action.clicked()
++            Accessible.name: action.description
++            Accessible.role: Accessible.Button
++        }
++        HoverHandler { id: actionHover }
++        ToolTip.visible: actionHover.hovered
++        ToolTip.delay: 600
++        ToolTip.text: action.description
++    }
++    component StatusRow: StyledRect {
++        id: row
++        required property string label
++        required property string statusIcon
++        property string subtitle
++        property string desktop
++        property string symbol
++        property string detail
++        property bool nested: false
++        property bool showUpdateLabel: false
++        signal clicked
++        Layout.fillWidth: true
++        implicitHeight: (row.showUpdateLabel ? 43 : row.subtitle ? 55 : row.nested ? 38 : 47) * root.scaleOffset
++        radius: 13 * root.scaleOffset
++        color: "transparent"
++        RowLayout {
++            anchors.fill: parent
++            anchors.leftMargin: (row.nested ? 52 : 16) * root.scaleOffset
++            anchors.rightMargin: 16 * root.scaleOffset
++            spacing: 15 * root.scaleOffset
++            Item {
++                Layout.preferredWidth: (row.nested ? 26 : 37) * root.scaleOffset
++                Layout.preferredHeight: 37 * root.scaleOffset
++                IconImage {
++                    anchors.centerIn: parent
++                    implicitSize: 37 * root.scaleOffset
++                    visible: !!row.desktop
++                    source: row.desktop ? WinIcons.sourceFor(DesktopEntries.byId(row.desktop), "", row.desktop, 0) : ""
++                }
++                MaterialIcon {
++                    anchors.centerIn: parent
++                    visible: !!row.symbol
++                    text: row.symbol
++                    color: Colours.palette.m3onSurface
++                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * (row.nested ? 1.25 : 1.35)
++                }
++            }
++            ColumnLayout {
+                 Layout.fillWidth: true
+-                spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                MaterialIcon {
+-                    text: root.statusIcon
+-                    color: root.hasUpdate ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+-                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                }
+-
++                spacing: 2 * root.scaleOffset
+                 StyledText {
+                     Layout.fillWidth: true
+-                    text: root.statusText
+-                    color: Colours.palette.m3onSurface
+-                    wrapMode: Text.Wrap
+-                    font.weight: 600
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                }
+-            }
+-
+-            RowLayout {
+-                Layout.fillWidth: true
+-                spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                MaterialIcon {
+-                    text: "history"
+-                    color: Colours.palette.m3onSurfaceVariant
+-                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                }
+-
++                    text: row.label
++                    font.weight: row.nested ? 400 : 600
++                    font.pointSize: root.bodyPointSize
++                    elide: Text.ElideRight
++                }
+                 StyledText {
+-                    Layout.fillWidth: true
+-                    text: {
+-                        if (root.checking)
+-                            return qsTr("Checking…");
+-                        if (UpdateChecker.lastCheckMs <= 0)
+-                            return qsTr("Last check: not yet");
+-                        return qsTr("Last check %1 ago").arg(root.formatDuration(root.nowMs - UpdateChecker.lastCheckMs));
+-                    }
+-                    color: Colours.palette.m3onSurfaceVariant
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                }
+-            }
+-
+-            RowLayout {
+-                Layout.fillWidth: true
+-                visible: UpdateChecker.lastCheckMs > 0
+-                spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                MaterialIcon {
+-                    text: "schedule"
+-                    color: Colours.palette.m3onSurfaceVariant
+-                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                }
+-
+-                StyledText {
+-                    Layout.fillWidth: true
+-                    text: qsTr("Next check in %1").arg(root.formatDuration(UpdateChecker.lastCheckMs + UpdateChecker.checkIntervalMs - root.nowMs))
+-                    color: Colours.palette.m3onSurfaceVariant
+-                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                }
+-            }
+-        }
+-    }
+-
+-    StyledRect {
+-        Layout.fillWidth: true
+-        implicitHeight: actionsLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+-        radius: Tokens.rounding.medium * root.scaleOffset
+-        color: Colours.tPalette.m3surfaceContainer
+-        clip: true
+-
+-        ColumnLayout {
+-            id: actionsLayout
+-
+-            anchors.left: parent.left
+-            anchors.right: parent.right
+-            anchors.top: parent.top
+-            anchors.margins: Tokens.padding.medium * root.scaleOffset
+-            spacing: Tokens.spacing.small * root.scaleOffset
+-
+-            StyledRect {
+-                Layout.fillWidth: true
+-                implicitHeight: checkRow.implicitHeight
+-                radius: Tokens.rounding.full
+-                color: "transparent"
+-
+-                StateLayer {
+-                    anchors.margins: -Tokens.padding.medium / 2 * root.scaleOffset
+-                    anchors.leftMargin: -Tokens.padding.medium * root.scaleOffset
+-                    anchors.rightMargin: -Tokens.padding.medium * root.scaleOffset
+-
+-                    radius: parent.radius
+-                    enabled: !root.checking
+-                    onClicked: UpdateChecker.checkUpdates()
+-                }
+-
+-                RowLayout {
+-                    id: checkRow
+-
+-                    anchors.left: parent.left
+-                    anchors.right: parent.right
+-                    spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                    MaterialIcon {
+-                        text: root.checking ? "progress_activity" : "refresh"
+-                        color: Colours.palette.m3onSurfaceVariant
+-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                    }
+-
+-                    StyledText {
+-                        Layout.fillWidth: true
+-                        text: root.checking ? qsTr("Checking…") : qsTr("Check for updates")
+-                        color: Colours.palette.m3onSurface
+-                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                    }
+-                }
+-            }
+-
+-            StyledRect {
+-                Layout.fillWidth: true
+-                implicitHeight: openRow.implicitHeight
+-                radius: Tokens.rounding.full
+-                color: "transparent"
+-
+-                StateLayer {
+-                    anchors.margins: -Tokens.padding.medium / 2 * root.scaleOffset
+-                    anchors.leftMargin: -Tokens.padding.medium * root.scaleOffset
+-                    anchors.rightMargin: -Tokens.padding.medium * root.scaleOffset
+-
+-                    radius: parent.radius
+-                    onClicked: {
+-                        root.popouts.hasCurrent = false;
+-                        WindowFactory.create(null, { initialPageIdx: root.updatesPageIdx });
+-                    }
+-                }
+-
+-                RowLayout {
+-                    id: openRow
+-
+-                    anchors.left: parent.left
+-                    anchors.right: parent.right
+-                    spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                    MaterialIcon {
+-                        text: "update"
+-                        color: Colours.palette.m3onSurfaceVariant
+-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                    }
+-
+-                    StyledText {
+-                        Layout.fillWidth: true
+-                        text: qsTr("Open Updates")
+-                        color: Colours.palette.m3onSurface
+-                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                    }
+-                }
+-            }
+-
+-            StyledRect {
+-                Layout.fillWidth: true
+-                implicitHeight: hideRow.implicitHeight
+-                radius: Tokens.rounding.full
+-                color: "transparent"
+-
+-                StateLayer {
+-                    anchors.margins: -Tokens.padding.medium / 2 * root.scaleOffset
+-                    anchors.leftMargin: -Tokens.padding.medium * root.scaleOffset
+-                    anchors.rightMargin: -Tokens.padding.medium * root.scaleOffset
+-
+-                    radius: parent.radius
+-                    onClicked: root.hideIndicator()
+-                }
+-
+-                RowLayout {
+-                    id: hideRow
+-
+-                    anchors.left: parent.left
+-                    anchors.right: parent.right
+-                    spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                    MaterialIcon {
+-                        text: "visibility_off"
+-                        color: Colours.palette.m3onSurfaceVariant
+-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                    }
+-
+-                    StyledText {
+-                        Layout.fillWidth: true
+-                        text: qsTr("Hide from bar")
+-                        color: Colours.palette.m3onSurface
+-                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-                    }
+-                }
+-            }
+-        }
+-    }
+-
+-    Timer {
+-        interval: 1000
+-        repeat: true
+-        running: true
+-        onTriggered: root.nowMs = Date.now()
++                    visible: !!row.subtitle
++                    text: row.subtitle
++                    color: root.muted
++                    font.pointSize: root.bodyPointSize * 0.79
++                }
++            }
++            MaterialIcon {
++                text: row.statusIcon
++                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.08
++                color: row.statusIcon === "arrow_upward" ? root.accent : root.muted
++            }
++            StyledText {
++                visible: row.showUpdateLabel && row.statusIcon === "arrow_upward"
++                text: "Update verfügbar"
++                color: root.accent
++                font.pointSize: root.bodyPointSize * 0.9
++            }
++        }
++        StateLayer {
++            onClicked: row.clicked()
++            Accessible.name: row.label + ": " + (row.statusIcon === "check" ? "Aktuell" : row.statusIcon === "arrow_upward" ? "Update verfügbar" : row.statusIcon === "sync" ? "Wird geprüft" : "Status unbekannt")
++            Accessible.role: Accessible.Button
++        }
++        HoverHandler { id: rowHover }
++        ToolTip.visible: rowHover.hovered && !!row.detail
++        ToolTip.delay: 800
++        ToolTip.text: row.detail
+     }
+ }
+--- modules/nexus/pages/UpdatesPage.qml
++++ modules/nexus/pages/UpdatesPage.qml
+@@ -1,6 +1,7 @@
+ pragma ComponentBehavior: Bound
+ 
+ import QtQuick
++import qs.modules.nexus.flausen
+ import QtQuick.Controls
+ import QtQuick.Layouts
+ import QtCore
+@@ -138,7 +139,7 @@
+         Launch.exec([...root.terminalCommand, "sh", "-c", hold, "sh", ...command]);
+     }
+ 
+-    title: qsTr("Updates")
++    title: "Update-Hub"
+ 
+     headerActions: [
+         IconTextButton {
+@@ -191,7 +192,63 @@
+         anchors.horizontalCenter: parent.horizontalCenter
+         anchors.top: parent.top
+         width: root.cappedWidth
+-        spacing: Tokens.spacing.extraSmall / 2
++        spacing: 8
++
++        SectionHeader { text: "Apps & Spiele" }
++        StyledText {
++            Layout.fillWidth: true
++            text: "Quellen für die Übersicht wählen. Automatische Downloads, Zeitpläne und Spielregeln werden in der jeweiligen App eingestellt. Ausblenden im Hub stoppt keine Updates."
++            wrapMode: Text.Wrap
++            font: FlausenStyle.typeface(14)
++            color: FlausenStyle.secondary
++        }
++        IconTextButton {
++            text: UpdateHub.checking ? "Wird geprüft …" : "Update-Status aktualisieren"
++            icon: "refresh"
++            disabled: UpdateHub.checking
++            type: TextButton.Tonal
++            onClicked: { UpdateHub.refresh(); UpdateChecker.checkUpdates(); }
++        }
++        StyledText {
++            Layout.fillWidth: true
++            visible: !!UpdateHub.error
++            text: UpdateHub.error
++            wrapMode: Text.Wrap
++            color: Colours.palette.m3error
++        }
++        Repeater {
++            model: UpdateHub.sources
++            delegate: ColumnLayout {
++                id: provider
++                required property var modelData
++                Layout.fillWidth: true
++                spacing: 8
++                ToggleRow {
++                    first: true
++                    text: provider.modelData.name + " im Hub anzeigen"
++                    font: FlausenStyle.typeface(14)
++                    subtext: UpdateHub.summary(provider.modelData.key)
++                    checked: UpdateHub.enabled(provider.modelData.key)
++                    onToggled: UpdateHub.setEnabled(provider.modelData.key, checked)
++                }
++                StyledText {
++                    Layout.fillWidth: true
++                    Layout.margins: Tokens.padding.medium
++                    text: UpdateHub.details(provider.modelData.key) + "\n\n" + provider.modelData.hint
++                    wrapMode: Text.Wrap
++                    font: FlausenStyle.typeface(14)
++                    color: FlausenStyle.secondary
++                }
++                NavRow {
++                    last: true
++                    icon: "open_in_new"
++                    label: provider.modelData.key === "steamGames" ? "Steam-Downloads öffnen" : provider.modelData.name + " öffnen & konfigurieren"
++                    onClicked: UpdateHub.open(provider.modelData)
++                }
++
++            }
++        }
++        SectionHeader { text: "Caelestia · Desktop-Shell" }
+ 
+         ConnectedRect {
+             visible: !root.branchDataLoading
+@@ -222,16 +279,16 @@
+                     }
+                     color: (UpdateChecker.hasUpdate || root.selectedVersionId !== "")
+                         ? Colours.palette.m3primary
+-                        : Colours.palette.m3onSurfaceVariant
++                        : FlausenStyle.secondary
+                 }
+ 
+                 StyledText {
+                     Layout.alignment: Qt.AlignHCenter
+                     Layout.fillWidth: true
+-                    font: Tokens.font.title.medium
++                    font: FlausenStyle.typeface(20)
+                     color: (UpdateChecker.hasUpdate || root.selectedVersionId !== "")
+-                        ? Colours.palette.m3onSurface
+-                        : Colours.palette.m3onSurfaceVariant
++                        ? FlausenStyle.text
++                        : FlausenStyle.secondary
+                     horizontalAlignment: Text.AlignHCenter
+                     wrapMode: Text.Wrap
+                     maximumLineCount: 2
+@@ -258,8 +315,8 @@
+                     text: UpdateChecker.versionSummaryMode
+                         ? qsTr("Installed: %1").arg(UpdateChecker.currentVersion)
+                         : qsTr("Channel: %1").arg(UpdateChecker.currentBranch)
+-                    color: Colours.palette.m3onSurfaceVariant
+-                    font: Tokens.font.label.medium
++                    color: FlausenStyle.secondary
++                    font: FlausenStyle.typeface(13)
+                 }
+ 
+                 RowLayout {
+@@ -278,7 +335,7 @@
+                             return qsTr("Install Update");
+                         }
+                         type: TextButton.Filled
+-                        font: Tokens.font.body.medium
++                        font: FlausenStyle.typeface(14)
+                         horizontalPadding: Tokens.padding.large
+                         verticalPadding: Tokens.padding.medium
+                         icon: {
+@@ -302,7 +359,7 @@
+                             return qsTr("Check");
+                         }
+                         type: TextButton.Tonal
+-                        font: Tokens.font.body.medium
++                        font: FlausenStyle.typeface(14)
+                         horizontalPadding: Tokens.padding.large
+                         verticalPadding: Tokens.padding.medium
+                         icon: root.selectedVersionId !== "" ? "close" : "refresh"
+@@ -392,8 +449,8 @@
+                 StyledText {
+                     Layout.fillWidth: true
+                     horizontalAlignment: Text.AlignHCenter
+-                    color: Colours.palette.m3onSurfaceVariant
+-                    font: Tokens.font.body.medium
++                    color: FlausenStyle.secondary
++                    font: FlausenStyle.typeface(14)
+                     text: qsTr("Switching to %1…").arg(root.pendingBranch)
+                 }
+             }
+@@ -456,7 +513,7 @@
+                 && UpdateChecker.hasMoreCommits
+             text: UpdateChecker.loadingMoreCommits ? qsTr("Loading…") : qsTr("Load 10 More")
+             type: TextButton.Tonal
+-            font: Tokens.font.body.medium
++            font: FlausenStyle.typeface(14)
+             horizontalPadding: Tokens.padding.large
+             verticalPadding: Tokens.padding.medium
+             disabled: UpdateChecker.loadingMoreCommits
+--- modules/bar/components/UpdateIndicator.qml
++++ modules/bar/components/UpdateIndicator.qml
+@@ -14,9 +14,9 @@
+ 
+     readonly property int barThickness: Math.round(Tokens.sizes.bar.innerWidth * Math.max(0.6, !isNaN(Config.bar.scale) ? Config.bar.scale : 1.0))
+ 
+-    readonly property bool hasUpdate: UpdateChecker.hasUpdate
++    readonly property bool hasUpdate: (UpdateChecker.hasUpdate || UpdateHub.pendingCount > 0)
+ 
+-    readonly property bool checking: UpdateChecker.checkingUpdates
++    readonly property bool checking: (UpdateChecker.checkingUpdates || UpdateHub.checking)
+ 
+     // Index of the Nexus "Updates" page, resolved by page key so this
+     // indicator can't drift out of sync if the page registry is reordered.
+@@ -33,7 +33,7 @@
+ 
+         anchors.centerIn: parent
+         anchors.horizontalCenterOffset: Centering.pixelAlign(parent.width, width)
+-        text: root.checking ? "sync" : root.hasUpdate ? "update" : "check_circle"
++        text: root.checking ? "sync" : root.hasUpdate ? "arrow_upward" : UpdateHub.hasErrors ? "question_mark" : "check"
+         color: Colours.barForeground
+     }
+ 
+@@ -44,13 +44,13 @@
+         implicitHeight: root.implicitHeight
+         radius: Tokens.rounding.full
+         acceptedButtons: Qt.LeftButton | Qt.RightButton
+-        Accessible.name: qsTr("Caelestia updates")
++        Accessible.name: qsTr("Update-Hub")
+         Accessible.role: Accessible.Button
+         Accessible.description: qsTr("Left-click to open the Updates page. Right-click to check for updates")
+ 
+         onClicked: mouse => {
+             if (mouse.button === Qt.RightButton) {
+-                UpdateChecker.checkUpdates();
++                UpdateChecker.checkUpdates(); UpdateHub.refresh();
+             } else {
+                 WindowFactory.create(null, { initialPageIdx: root.updatesPageIdx });
+             }
+--- modules/nexus/PageDictionary.qml
++++ modules/nexus/PageDictionary.qml
+@@ -6,12 +6,18 @@
+ QtObject {
+     readonly property list<var> pages: [
+         {
+-            label: qsTr("Appearance"),
++            label: qsTr("Erscheinungsbild"),
+             key: "appearance",
+             icon: "palette",
+             description: qsTr("Wallpapers, fonts, colors"),
+             category: "personalization",
+             settings: [
++                { label: "Textgröße", keywords: ["Schriftgröße", "Skalierung", "Text"], subPageIdx: -1 },
++                { label: "Transparenz", keywords: ["Glas", "Durchsichtig"], subPageIdx: -1 },
++                { label: "Bewegung reduzieren", keywords: ["Animationen", "Effekte"], subPageIdx: -1 },
++                { label: "Farbmodus", keywords: ["Hell", "Dunkel", "Automatisch", "Design"], subPageIdx: -1 },
++                { label: "Akzentfarbe", keywords: ["Blau", "Koralle", "Gold", "Grün", "Violett", "Graphit"], subPageIdx: -1 },
++                { label: "Zeitplan", keywords: ["Sonnenaufgang", "Sonnenuntergang", "Automatik"], subPageIdx: 10 },
+                 { label: qsTr("Theme & Effects"), pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
+                 { label: qsTr("Font"), keywords: ["font", "typeface", "family", "text"], pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
+                 { label: qsTr("Monospace font"), keywords: ["monospace", "font", "code", "terminal"], pagePath: "wallandstyle/AppearancePage.qml", subPageIdx: 8 },
+@@ -47,7 +53,7 @@
+             ]
+         },
+         {
+-            label: qsTr("Panels"),
++            label: qsTr("Desktop & Dock"),
+             key: "panels",
+             icon: "dock_to_bottom",
+             description: qsTr("Dashboard, taskbar, launcher, sidebar"),
+@@ -92,7 +98,7 @@
+             ]
+         },
+         {
+-            label: qsTr("Network"),
++            label: qsTr("Netzwerk"),
+             key: "network",
+             icon: "wifi",
+             description: qsTr("Wi-Fi and VPN connections"),
+@@ -134,7 +140,7 @@
+             ]
+         },
+         {
+-            label: qsTr("Notifications"),
++            label: qsTr("Mitteilungen"),
+             key: "notifications",
+             icon: "notifications",
+             description: qsTr("Alerts, toasts, and delivery behavior"),
+@@ -222,13 +228,13 @@
+             ]
+         },
+         {
+-            label: qsTr("Updates"),
++            label: "Update-Hub",
+             key: "updates",
+             icon: "update",
+-            description: qsTr("System updates"),
++            description: "Caelestia, Apps und Spiele",
+             category: "system",
+             settings: [
+-                { label: qsTr("Software Updates"), keywords: ["upgrade", "packages", "pacman", "dnf", "apt"] },
++                { label: "Apps & Spiele", keywords: ["Steam", "Battle.net", "WowUp", "ArtCraft", "PhotoCraft", "LightCraft", "Updates", "Downloads", "automatisch"] },
+                 { label: qsTr("Firmware Updates"), keywords: ["bios", "fwupd", "hardware"] }
+             ]
+         },
+@@ -266,7 +272,12 @@
+                 { label: qsTr("Accounts"), keywords: ["claude", "account", "login", "switch"] },
+                 { label: qsTr("Providers"), keywords: ["ollama", "openai", "chatgpt", "gemini", "openrouter", "api key"] }
+             ]
+-        }
++        },
++        {"label": "Allgemein", "key": "general", "icon": "settings", "description": "Konto, Sprache, Datum, Standardprogramme, Bedienungshilfen", "category": "flausen", "settings": [{"label": "Konto", "systemModule": "kcm_users", "systemTitle": "Konto"}, {"label": "Sprache", "systemModule": "kcm_regionandlang", "systemTitle": "Sprache"}, {"label": "Datum", "systemModule": "kcm_clock", "systemTitle": "Datum"}, {"label": "Standardprogramme", "systemModule": "kcm_componentchooser", "systemTitle": "Standardprogramme"}, {"label": "Bedienungshilfen", "systemModule": "kcm_access", "systemTitle": "Bedienungshilfen"}, {"label": "Benutzerkonto", "systemModule": "kcm_users", "systemTitle": "Benutzerkonto", "keywords": ["Konto", "Profilbild", "Passwort"]}, {"label": "Sprache & Region", "systemModule": "kcm_regionandlang", "systemTitle": "Sprache & Region", "keywords": ["Sprache", "Formate"]}, {"label": "Datum & Uhrzeit", "systemModule": "kcm_clock", "systemTitle": "Datum & Uhrzeit", "keywords": ["Datum", "Zeit", "Zeitzone"]}]},
++        {"label": "Bildschirm", "key": "display", "icon": "monitor", "description": "Auflösung, Skalierung, Nachtlicht, Monitore", "category": "flausen", "settings": [{"label": "Auflösung", "systemModule": "kcm_kscreen", "systemTitle": "Auflösung"}, {"label": "Skalierung", "systemModule": "kcm_kscreen", "systemTitle": "Skalierung"}, {"label": "Nachtlicht", "systemModule": "kcm_nightlight", "systemTitle": "Nachtlicht"}, {"label": "Monitore", "systemModule": "kcm_kscreen", "systemTitle": "Monitore"}, {"label": "Bildschirme einrichten", "systemModule": "kcm_kscreen", "systemTitle": "Bildschirme einrichten", "keywords": ["Auflösung", "Skalierung", "Monitore", "HDR"]}, {"label": "Energie & Standby", "systemModule": "kcm_powerdevilprofilesconfig", "systemTitle": "Energie & Standby", "keywords": ["Energie", "Standby"]}]},
++        {"label": "Tastatur & Maus", "key": "input", "icon": "mouse", "description": "Eingabegeräte, Touchpad, Tastenkürzel", "category": "flausen", "settings": [{"label": "Eingabegeräte"}, {"label": "Touchpad", "systemModule": "kcm_touchpad", "systemTitle": "Touchpad"}, {"label": "Tastenkürzel", "systemModule": "kcm_keys", "systemTitle": "Tastenkürzel"}, {"label": "Tastatur", "systemModule": "kcm_keyboard", "systemTitle": "Tastatur", "keywords": ["Layout", "Num-Lock"]}, {"label": "Maus", "systemModule": "kcm_mouse", "systemTitle": "Maus", "keywords": ["Geschwindigkeit", "Scrollen"]}, {"label": "System-Tastenkürzel", "systemModule": "kcm_keys", "systemTitle": "System-Tastenkürzel", "keywords": ["Tastenkürzel"]}]},
++        {"label": "Datenschutz & Sicherheit", "key": "privacy", "icon": "shield", "description": "Sperrbildschirm, Passwort, Firewall", "category": "flausen", "settings": [{"label": "Sperrbildschirm", "systemModule": "kcm_screenlocker", "systemTitle": "Sperrbildschirm"}, {"label": "Passwort", "systemModule": "kcm_users", "systemTitle": "Passwort"}, {"label": "Firewall", "systemModule": "kcm_firewall", "systemTitle": "Firewall"}, {"label": "Bildschirmsperre", "systemModule": "kcm_screenlocker", "systemTitle": "Bildschirmsperre", "keywords": ["Sperrbildschirm", "Sperren"]}, {"label": "Passwort & Konto", "systemModule": "kcm_users", "systemTitle": "Passwort & Konto", "keywords": ["Passwort"]}]},
++        {"label": "System", "key": "system", "icon": "deployed_code", "description": "Updates, Hardware, Energie, Autostart, Systeminformationen", "category": "flausen", "settings": [{"label": "Updates", "targetPage": 13}, {"label": "Hardware", "systemModule": "kcm_about-distro", "systemTitle": "Hardware"}, {"label": "Energie", "systemModule": "kcm_powerdevilprofilesconfig", "systemTitle": "Energie"}, {"label": "Autostart", "targetPage": 8}, {"label": "Systeminformationen", "systemModule": "kcm_about-distro", "systemTitle": "Systeminformationen"}, {"label": "Energieverwaltung", "systemModule": "kcm_powerdevilprofilesconfig", "systemTitle": "Energieverwaltung", "keywords": ["Energie", "Akku"]}]}
+     ]
+ 
+     // Sub page index of the first entry pointing at the given page, or -1 when
+--- /dev/null
++++ services/UpdateHub.qml
+@@ -0,0 +1,141 @@
++pragma Singleton
++pragma ComponentBehavior: Bound
++import QtQuick
++import QtCore
++import Quickshell
++import Quickshell.Io
++import Caelestia
++import qs.services
++
++Singleton {
++    id: root
++    property var status: ({})
++    property string error: ""
++    property double lastCheck: 0
++    property bool online: true
++    readonly property bool checking: probe.running && online
++    readonly property var sources: [
++        {key: "steam", name: "Steam", hint: "Client-Updates und Beta-Kanal in Steam → Einstellungen → Oberfläche", desktop: "steam", url: "steam://open/settings"},
++        {key: "steamGames", name: "Steam · Spiele", hint: "Downloads, Zeitplan und Limits; je Spiel: Eigenschaften → Updates", desktop: "steam", url: "steam://open/downloads"},
++        {key: "battlenet", name: "Battle.net", hint: "Client-Updates werden von Battle.net verwaltet. Einstellungen im Launcher öffnen.", desktop: "lab-battlenet"},
++        {key: "battlenetGames", name: "Battle.net · Spiele", hint: "Im Launcher: Einstellungen → Downloads → automatische Updates", desktop: "lab-battlenet"},
++        {key: "wowup", name: "WowUp", hint: "App-Updates und Addons: Optionen → WoW-Clients; einzelne Addons separat einstellbar", desktop: "lab-wowup"},
++        {key: "artcraft", name: "ArtCraft · Suite", hint: "Suite-Updates, Prüfintervall und automatische Updates im ArtCraft Launcher einstellen", desktop: "ai.storyteller.artcraft-launcher"}
++    ]
++    readonly property int pendingCount: sources.reduce((sum, source) => sum + (enabled(source.key) ? (status[source.key]?.pending?.length ?? 0) + (status[source.key]?.addonPending ?? 0) : 0), 0)
++    readonly property bool hasErrors: sources.some(source => enabled(source.key) && !!status[source.key]?.error)
++    readonly property string overview: checking ? "Online-Prüfung läuft …" : pendingCount > 0 ? pendingCount + " Updates verfügbar" : hasErrors ? "Einige Quellen sind nicht erreichbar" : "Keine bekannten App-Updates"
++    Settings {
++        id: prefs
++        category: "RalleurUpdateHub"
++        property string hiddenSources: "[]"
++    }
++    function enabled(key: string): bool {
++        try { return !JSON.parse(prefs.hiddenSources).includes(key); } catch (e) { return true; }
++    }
++    function setEnabled(key: string, value: bool): void {
++        let hidden;
++        try { hidden = JSON.parse(prefs.hiddenSources); } catch (e) { hidden = []; }
++        hidden = hidden.filter(k => k !== key);
++        if (!value) hidden.push(key);
++        prefs.hiddenSources = JSON.stringify(hidden);
++        prefs.setValue("hiddenSources", prefs.hiddenSources);
++        prefs.sync();
++    }
++    function stamp(seconds: double): string {
++        return seconds > 0 ? new Date(seconds * 1000).toLocaleString(Qt.locale("de_DE"), "dd.MM. HH:mm") : "noch nie";
++    }
++    function itemState(item: var): string {
++        if (item.downloading) {
++            const percent = item.bytesTotal > 0 ? Math.min(100, Math.floor(item.bytesDownloaded * 100 / item.bytesTotal)) + " %" : "";
++            return "Download läuft " + percent;
++        }
++        if (item.state === "update") return "Update verfügbar";
++        if (item.state === "current") return "Aktuell";
++        if (item.state === "ahead") return "Neuer als der veröffentlichte Stand";
++        if (item.state === "local") return "Kein Update vorgemerkt";
++        return "Versionsvergleich nicht möglich";
++    }
++    function statusIcon(key: string): string {
++        const value = status[key];
++        if (root.checking) return "sync";
++        if ((value?.pending?.length ?? 0) + (value?.addonPending ?? 0) > 0 || value?.downloading > 0) return "arrow_upward";
++        if (root.error || !value || value.error || value.stale || !value.items?.length || value.items.some(item => item.state === "unknown")) return "question_mark";
++        if (key === "wowup" && (!value.addonCheckedAt || Date.now() / 1000 - value.addonCheckedAt > 86400)) return "question_mark";
++        return "check";
++    }
++    function summary(key: string): string {
++        const value = status[key];
++        if (!value) return "Noch nicht geprüft";
++        if (value.error && !value.items?.length) return "Prüfung fehlgeschlagen · " + value.error;
++        if (value.installed === 0) return key === "steamGames" ? "Keine Steam-Spiele installiert" : "Nicht installiert";
++        let label;
++        const pending = value.pending?.length ?? 0;
++        if (key === "steamGames") {
++            label = value.downloading > 0 ? value.downloading + " Downloads laufen" : pending > 0 ? pending + " Updates vorgemerkt" : value.installed + " Titel · keine Updates vorgemerkt";
++        } else if (pending > 0) label = pending + " Updates verfügbar";
++        else if (value.items.some(item => item.state === "unknown")) label = "Versionsstand teilweise unbekannt";
++        else if (value.items.some(item => item.state === "ahead")) label = "Installierter Stand neuer als Release";
++        else label = value.items.length === 1 ? (key === "steam" ? "Build " : "Version ") + value.items[0].installedVersion + " · aktuell" : value.items.length + (key === "battlenetGames" ? " Spiele aktuell" : " Apps aktuell");
++        if (key === "wowup") label += " · " + value.addons.length + " Addons, " + value.addonPending + " bekannte Updates";
++        if (value.stale) label = (value.error ? "Offline · letzter Stand: " : "Veralteter Prüfstand: ") + label;
++        return label;
++    }
++    function details(key: string): string {
++        const value = status[key];
++        if (!value) return "Die erste Prüfung läuft beim Öffnen der Shell.";
++        const lines = (value.items ?? []).map(item => {
++            let line = item.name + ": " + (item.installedVersion || "unbekannt");
++            if (item.latestVersion && item.latestVersion !== item.installedVersion) line += " → " + item.latestVersion;
++            line += " · " + root.itemState(item);
++            if (item.policy) line += " · " + item.policy;
++            if (item.detail) line += "\n" + item.detail;
++            return line;
++        });
++        if (value.evidence) lines.push(value.evidence + " · geprüft " + root.stamp(value.checkedAt));
++        if (value.error) lines.push("Online-Prüfung fehlgeschlagen: " + value.error);
++        if (key === "wowup" && value.addons) {
++            lines.push("Addon-Daten aus WowUp vom " + root.stamp(value.addonCheckedAt) + ": " + value.addonPending + " bekannte Updates · " + value.addonAutoUpdate + " mit Auto-Update");
++            value.addons.filter(item => item.state === "update").slice(0, 8).forEach(item => lines.push(item.name + ": " + item.installedVersion + " → " + item.latestVersion));
++        }
++        if (key === "artcraft" && value.feedTimestamp) lines.push("ArtCraft-Feed vom " + new Date(value.feedTimestamp).toLocaleString(Qt.locale("de_DE"), "dd.MM. HH:mm"));
++        if (key === "artcraft" && value.autoUpdate !== undefined) lines.push("Automatische Suite-Updates: " + (value.autoUpdate === null ? "unbekannt" : value.autoUpdate ? "an" : "aus"));
++        return lines.join("\n");
++    }
++    function compact(key: string): string {
++        const value = status[key];
++        let text = root.summary(key);
++        if (value?.items?.length > 1 && key !== "steamGames") text += "\n" + value.items.map(item => item.name.replace("World of Warcraft · ", "WoW ") + " " + item.installedVersion + (item.state === "update" ? " → " + item.latestVersion : "")).join(" · ");
++        if (value?.checkedAt) text += "\n" + (key === "steamGames" ? "Lokal gelesen " : "Online geprüft ") + root.stamp(value.checkedAt);
++        if (key === "wowup" && value?.addonCheckedAt) text += "\nAddon-Stand " + root.stamp(value.addonCheckedAt);
++        return text;
++    }
++    function open(source: var): void {
++        if (source.url) Qt.openUrlExternally(source.url);
++        else Launch.exec(["gtk-launch", source.desktop]);
++    }
++    function refresh(checkOnline) {
++        if (probe.running) return;
++        root.online = checkOnline !== false;
++        probe.running = true;
++    }
++    Process {
++        id: probe
++        command: ["python3", Qt.resolvedUrl("update-hub-probe.py").toString().replace("file://", ""), ...(root.online ? [] : ["--local"])]
++        stdout: StdioCollector {
++            onStreamFinished: {
++                try { root.status = JSON.parse(text); root.error = ""; root.lastCheck = Date.now(); }
++                catch (e) { root.error = "Update-Prüfung konnte nicht gelesen werden"; }
++            }
++        }
++        onExited: code => { if (code !== 0) root.error = "Update-Prüfung fehlgeschlagen (" + code + ")"; }
++    }
++    IpcHandler {
++        target: "updateHub"
++        function inspect(): string {
++            return JSON.stringify({status: root.status, error: root.error, checking: root.checking, lastCheck: root.lastCheck, enabled: root.sources.filter(s => root.enabled(s.key)).map(s => s.key)});
++        }
++    }
++    Timer { interval: 20000; repeat: true; running: true; onTriggered: root.refresh(false) }
++    Timer { interval: 1800000; repeat: true; running: true; triggeredOnStart: true; onTriggered: root.refresh() }
++}
+--- /dev/null
++++ services/update-hub-probe.py
+@@ -0,0 +1,349 @@
++#!/usr/bin/env python3
++"""Compare installed applications with publisher metadata; never install or launch."""
++import argparse
++from concurrent.futures import ThreadPoolExecutor
++from datetime import datetime, timezone
++import json
++import os
++from pathlib import Path
++import re
++import subprocess
++import threading
++import time
++from urllib.error import URLError, HTTPError
++from urllib.request import Request, urlopen
++
++HOME = Path.home()
++STATE = Path(os.environ.get('XDG_STATE_HOME', HOME / '.local/state')) / 'ralleur-update-hub'
++ARTCRAFT_FEED = 'https://api.storyteller.ai/v1/craft_apps/release_info'
++BNET = HOME / 'Games/battlenet/drive_c'
++NAMES = {'wow': 'World of Warcraft · Retail', 'wowf': 'World of Warcraft · Forever',
++         'wow_classic': 'WoW Classic', 'wow_classic_era': 'WoW Classic Era'}
++
++
++def read_json(path, default=None):
++    return json.loads(path.read_text()) if path.exists() else (default if default is not None else {})
++
++
++def keyvalues(text):
++    """Parse textual Valve KeyValues without flattening nested app state."""
++    tokens = re.finditer(r'"((?:[^"\\]|\\.)*)"|([{}])|(?m:^\s*//.*$)', text)
++    root, stack, key = {}, [], None
++    current = root
++    for token in tokens:
++        value, brace = token.groups()
++        if value is None and brace is None:
++            continue
++        if brace == '{':
++            child = {}
++            if key is None:
++                raise ValueError('Ungültige Steam-Metadaten')
++            current[key] = child
++            stack.append(current)
++            current, key = child, None
++        elif brace == '}':
++            if not stack:
++                raise ValueError('Ungültige Steam-Metadaten')
++            current, key = stack.pop(), None
++        elif key is None:
++            key = value.replace('\\\\', '\\').replace('\\"', '"')
++        else:
++            current[key] = value.replace('\\\\', '\\').replace('\\"', '"')
++            key = None
++    if stack or key is not None:
++        raise ValueError('Unvollständige Steam-Metadaten')
++    return root
++
++
++def version_tuple(value):
++    value = str(value).strip().lstrip('v')
++    if not re.fullmatch(r'\d+(?:\.\d+)*', value):
++        return None
++    return tuple(int(x) for x in value.split('.'))
++
++
++def version_state(installed, latest):
++    before, after = version_tuple(installed), version_tuple(latest)
++    if before is None or after is None:
++        return 'unknown'
++    n = max(len(before), len(after))
++    before += (0,) * (n - len(before))
++    after += (0,) * (n - len(after))
++    return 'update' if before < after else 'ahead' if before > after else 'current'
++
++
++class Publisher:
++    def __init__(self, path=None, local=False, opener=urlopen):
++        self.path = path or STATE / 'publisher-cache.json'
++        self.local, self.opener = local, opener
++        self.lock = threading.Lock()
++        try:
++            self.cache = read_json(self.path)
++        except (OSError, ValueError):
++            self.cache = {}
++
++    def text(self, url):
++        old = self.cache.get(url)
++        if self.local:
++            if old:
++                return old['text'], old['checkedAt'], old.get('error')
++            raise RuntimeError('Noch keine Online-Prüfung vorhanden')
++        try:
++            request = Request(url, headers={'User-Agent': 'RalleurUpdateHub/1.0', 'Accept': 'application/json,text/plain,*/*'})
++            with self.opener(request, timeout=12) as response:
++                data = response.read(8 * 1024 * 1024 + 1)
++                if len(data) > 8 * 1024 * 1024:
++                    raise ValueError('Serverantwort zu groß')
++                text = data.decode('utf-8-sig')
++            stamp = int(time.time())
++            with self.lock:
++                self.cache[url] = {'text': text, 'checkedAt': stamp}
++            return text, stamp, None
++        except (OSError, ValueError, URLError, HTTPError) as error:
++            reason = 'HTTP ' + str(error.code) if isinstance(error, HTTPError) else str(error)
++            if old:
++                old['error'] = reason
++                return old['text'], old['checkedAt'], reason
++            raise RuntimeError(reason) from error
++
++    def save(self):
++        if self.local:
++            return
++        self.path.parent.mkdir(parents=True, exist_ok=True)
++        temp = self.path.with_suffix('.tmp')
++        temp.write_text(json.dumps(self.cache))
++        temp.replace(self.path)
++
++
++def result(items, evidence, checked_at=0, error=None, **extra):
++    pending = [item['name'] for item in items if item.get('state') == 'update']
++    data = {'items': items, 'installed': len(items), 'pending': pending, 'evidence': evidence,
++            'checkedAt': checked_at, 'stale': bool(error) or (checked_at > 0 and time.time() - checked_at > 86400), **extra}
++    if error:
++        data['error'] = error
++    return data
++
++
++def steam_status(base):
++    folders = {base}
++    libraries = base / 'steamapps/libraryfolders.vdf'
++    if libraries.exists():
++        for value in keyvalues(libraries.read_text()).get('libraryfolders', {}).values():
++            if isinstance(value, dict) and value.get('path'):
++                folders.add(Path(value['path']))
++    games = []
++    for folder in sorted(folders):
++        for manifest in sorted((folder / 'steamapps').glob('appmanifest_*.acf')):
++            values = keyvalues(manifest.read_text())
++            app = values.get('AppState', values)
++            flags = int(app.get('StateFlags', '0'))
++            total = int(app.get('BytesToDownload', '0'))
++            done = int(app.get('BytesDownloaded', '0'))
++            active = bool(flags & (256 | 512 | 1024 | 131072))
++            games.append({'name': app.get('name', manifest.stem), 'id': app.get('appid', ''),
++                          'installedVersion': app.get('buildid', 'unbekannt'),
++                          'state': 'update' if flags & 2 else 'local', 'downloading': active,
++                          'bytesDownloaded': done, 'bytesTotal': total,
++                          'policy': {'0': 'Automatisch', '1': 'Beim Start', '2': 'Hohe Priorität'}.get(app.get('AutoUpdateBehavior', '0'), 'Unbekannt')})
++    return result(games, 'Steam-Manifest · lokaler Download-Status', int(time.time()),
++                  downloading=sum(item['downloading'] for item in games))
++
++
++def steam_client(base, publisher):
++    manifest = base / 'package/steam_client_steamrt64.manifest'
++    if not manifest.exists():
++        manifest = base / 'package/steam_client_ubuntu12.manifest'
++    if not manifest.exists():
++        return result([], 'Steam nicht installiert')
++    target = manifest.stem
++    local = keyvalues(manifest.read_text())
++    local = next(iter(local.values()))
++    # The package manifest is a downloaded candidate, not proof that it was
++    # installed. The bootstrapper explicitly records the installed version.
++    installed = None
++    log = base / 'logs/bootstrap_log.txt'
++    if log.exists():
++        matches = re.findall(r'installed version (\d+)', log.read_text(errors='replace')[-2_000_000:])
++        if matches:
++            installed = matches[-1]
++    if not installed:
++        raise RuntimeError('Steam hat noch keine installierte Client-Version protokolliert')
++    beta = base / 'package/beta'
++    channel = beta.read_text().strip() if beta.exists() else ''
++    if channel:
++        if not re.fullmatch(r'[A-Za-z0-9_-]+', channel):
++            raise ValueError('Unbekannter Steam-Kanal')
++        targets = re.findall(r'Downloading manifest: https://[^/\s]+/(steam_client_[A-Za-z0-9_]+)', log.read_text(errors='replace')[-2_000_000:]) if log.exists() else []
++        target = next((entry for entry in reversed(targets) if channel in entry), '')
++        if not target:
++            raise RuntimeError('Steam-Beta-Kanal noch nicht vom Client geprüft')
++    url = 'https://client-update.steamstatic.com/' + target
++    text, checked, error = publisher.text(url)
++    remote = next(iter(keyvalues(text).values()))
++    latest = remote.get('version', '')
++    if not latest.isdigit():
++        raise ValueError('Ungültige Steam-Versionsantwort')
++    item = {'name': 'Steam Client', 'installedVersion': installed, 'latestVersion': latest,
++            'state': version_state(installed, latest), 'channel': channel or 'Stable'}
++    return result([item], 'Valve · ' + (channel or 'Stable'), checked, error)
++
++
++def blizzard_table(text):
++    lines = [line for line in text.splitlines() if line and not line.startswith('#')]
++    if not lines or '|' not in lines[0]:
++        raise ValueError('Ungültige Blizzard-Versionsantwort')
++    keys = [cell.split('!')[0] for cell in lines[0].split('|')]
++    return [dict(zip(keys, line.split('|'))) for line in lines[1:]]
++
++
++def blizzard_remote(product, region, publisher):
++    if not re.fullmatch(r'[a-z0-9_]+', product) or region not in ('eu', 'us', 'kr', 'cn', 'tw'):
++        raise ValueError('Unbekanntes Blizzard-Produkt oder Region')
++    text, stamp, error = publisher.text('https://eu.version.battle.net/' + product + '/versions')
++    rows = blizzard_table(text)
++    row = next((r for r in rows if r.get('Region') == region), None)
++    if not row or not row.get('VersionsName') or not row.get('BuildId', '').isdigit():
++        raise ValueError('Kein Blizzard-Build für ' + region)
++    return row, stamp, error
++
++
++def battlenet_client(base, publisher):
++    executable = base / 'Program Files (x86)/Battle.net/Battle.net.exe'
++    if not executable.exists():
++        return result([], 'Battle.net nicht installiert')
++    info = executable.read_bytes().decode('utf-16le', errors='ignore')
++    match = re.search(r'(?:FileVersion|ProductVersion)\x00+(\d+(?:\.\d+){3})', info)
++    if not match:
++        raise ValueError('Battle.net-Dateiversion nicht lesbar')
++    installed = match.group(1)
++    latest, checked, error = blizzard_remote('bna', 'eu', publisher)
++    item = {'name': 'Battle.net Client', 'installedVersion': installed, 'latestVersion': latest['VersionsName'],
++            'state': version_state(installed, latest['VersionsName'])}
++    return result([item], 'Blizzard · EU · Client-Build', checked, error)
++
++
++def battlenet_games(base, publisher):
++    items, stamps, errors = [], [], []
++    for build in sorted((base / 'Program Files (x86)').glob('*/.build.info')):
++        for row in blizzard_table(build.read_text()):
++            if row.get('Active') != '1':
++                continue
++            product, region = row.get('Product', ''), row.get('Branch', 'eu')
++            item = {'name': NAMES.get(product, build.parent.name + ' · ' + product), 'id': product,
++                    'installedVersion': row.get('Version', ''), 'region': region}
++            try:
++                latest, checked, error = blizzard_remote(product, region, publisher)
++                stamps.append(checked)
++                item['latestVersion'] = latest['VersionsName']
++                item['state'] = version_state(item['installedVersion'], item['latestVersion'])
++                if error:
++                    errors.append(error)
++            except (RuntimeError, ValueError, OSError) as error:
++                item['state'] = 'unknown'
++                item['error'] = str(error)
++                errors.append(str(error))
++            items.append(item)
++    return result(items, 'Blizzard · installierte Produkte und Regionen', min(stamps) if stamps else 0,
++                  '; '.join(dict.fromkeys(errors)) or None)
++
++
++def artcraft_status(publisher):
++    process = subprocess.run(['flatpak', 'list', '--app', '--columns=application,name,version'],
++                             text=True, capture_output=True, timeout=15)
++    if process.returncode:
++        raise RuntimeError(process.stderr.strip() or 'Flatpak-Erkennung fehlgeschlagen')
++    installed = [line.split('\t') for line in process.stdout.splitlines() if line.startswith('ai.storyteller.')]
++    store = HOME / '.var/app/ai.storyteller.artcraft-launcher/data/ai.storyteller.artcraft-launcher/app.ron'
++    match = re.search(r'"settings"\s*:\s*("(?:[^"\\]|\\.)*")', store.read_text()) if store.exists() else None
++    settings = json.loads(match.group(1)) if match else ''
++    auto = re.search(r'(?<![A-Za-z_])auto_update:(true|false)', settings)
++    if not installed:
++        return result([], 'ArtCraft nicht installiert')
++    text, checked, error = publisher.text(ARTCRAFT_FEED)
++    feed = json.loads(text)
++    if not feed.get('success') or not isinstance(feed.get('release_info', {}).get('apps'), dict):
++        raise ValueError('Ungültiger ArtCraft-Feed')
++    catalog = feed['release_info']['apps']
++    items = []
++    for fields in installed:
++        app_id, name, version = (fields + ['', ''])[:3]
++        key = app_id.removeprefix('ai.storyteller.')
++        latest = catalog.get(key, {}).get('latest_release', {}).get('version', '')
++        items.append({'name': name or key, 'id': app_id, 'installedVersion': version,
++                      'latestVersion': latest, 'state': version_state(version, latest)})
++    return result(items, 'ArtCraft · offizieller Suite-Release-Feed', checked, error,
++                  autoUpdate=auto.group(1) == 'true' if auto else None,
++                  feedTimestamp=feed['release_info'].get('last_fetched'))
++
++
++def wowup_status(publisher):
++    state = read_json(HOME / '.local/state/linux-gaming-lab/wowup.json')
++    path = Path(state.get('path', '/nonexistent'))
++    if not path.exists():
++        return result([], 'WowUp nicht installiert')
++    cf = 'wowup-cf' in path.name.lower()
++    folder = HOME / '.config' / ('WowUpCf' if cf else 'WowUp')
++    prefs = read_json(folder / 'preferences.json')
++    match = re.search(r'(\d+\.\d+\.\d+(?:-[A-Za-z0-9.]+)?)', path.name)
++    if not match:
++        raise ValueError('Installierte WowUp-Version nicht erkennbar')
++    installed = match.group(1)
++    repo = 'WowUp/WowUp.CF' if cf else 'WowUp/WowUp'
++    # Channel 1 is stable in this installation; preserve beta selection by
++    # declining to compare a beta with a stable release.
++    text, checked, error = publisher.text('https://api.github.com/repos/' + repo + '/releases/latest')
++    release = json.loads(text)
++    latest = release.get('tag_name', '').lstrip('v')
++    if not latest:
++        raise ValueError('Ungültige WowUp-Release-Antwort')
++    item = {'name': 'WowUp CurseForge' if cf else 'WowUp', 'installedVersion': installed,
++            'latestVersion': latest, 'state': version_state(installed, latest)}
++    if prefs.get('wowup_release_channel_2_6', '1') != '1':
++        item['state'] = 'unknown'
++        item['detail'] = 'Abweichender Release-Kanal; Stable-Vergleich nur zur Information'
++    addons_file = folder / 'addons.json'
++    addons = read_json(addons_file)
++    addons = list(addons.values()) if isinstance(addons, dict) else addons
++    addon_items = []
++    for addon in addons:
++        if addon.get('isIgnored'):
++            continue
++        before, after = addon.get('installedExternalReleaseId'), addon.get('externalLatestReleaseId')
++        known = before is not None and after is not None
++        differs = str(before) != str(after) if known else addon.get('installedVersion') != addon.get('latestVersion')
++        addon_items.append({'name': addon.get('name', 'Addon'), 'installedVersion': addon.get('installedVersion', ''),
++                            'latestVersion': addon.get('latestVersion', ''), 'state': 'update' if differs else 'local',
++                            'autoUpdate': addon.get('autoUpdateEnabled', False)})
++    return result([item], 'WowUp · offizielles GitHub-Release', checked, error,
++                  addons=addon_items, addonCheckedAt=int(addons_file.stat().st_mtime) if addons_file.exists() else 0,
++                  addonPending=sum(a['state'] == 'update' for a in addon_items),
++                  addonAutoUpdate=sum(a['autoUpdate'] for a in addon_items))
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--local', action='store_true', help='Refresh local state using previously checked publisher metadata')
++    args = parser.parse_args()
++    publisher = Publisher(local=args.local)
++    steam = HOME / '.local/share/Steam'
++    providers = {'steam': lambda: steam_client(steam, publisher), 'steamGames': lambda: steam_status(steam),
++                 'battlenet': lambda: battlenet_client(BNET, publisher),
++                 'battlenetGames': lambda: battlenet_games(BNET, publisher),
++                 'wowup': lambda: wowup_status(publisher), 'artcraft': lambda: artcraft_status(publisher)}
++    def probe(pair):
++        key, function = pair
++        try:
++            return key, function()
++        except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
++            return key, {'error': str(error), 'items': [], 'pending': [], 'installed': 0, 'stale': True}
++    with ThreadPoolExecutor(max_workers=6) as pool:
++        data = dict(pool.map(probe, providers.items()))
++    try:
++        publisher.save()
++    except OSError:
++        pass  # Read-only metadata remains useful when the cache cannot be saved.
++    print(json.dumps(data, ensure_ascii=False))
++
++
++if __name__ == '__main__':
++    main()

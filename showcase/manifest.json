@@ -1,0 +1,262 @@
+{
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "durationSeconds": 93.4,
+    "audio": false
+  },
+  "background": "10-colour-current",
+  "smallWindowReview": {
+    "width": 960,
+    "height": 540
+  },
+  "featureCount": 27,
+  "files": [
+    {
+      "path": "README.txt",
+      "bytes": 4177,
+      "sha256": "5feeb10db5cac0515c4ec6f6dc9a504493b6e468330a71d778fdff5be5f4ae86"
+    },
+    {
+      "path": "features.json",
+      "bytes": 14778,
+      "sha256": "7cc56235d96219894100a5900f0e1d57cb461ed15dbd4a56dd8471df67732a4b"
+    },
+    {
+      "path": "demo-script.txt",
+      "bytes": 1337,
+      "sha256": "21d1955a7202a4d71d3579fc6071576fda1968926c3a8ae5345192b5dc050440"
+    },
+    {
+      "path": "flausen-showcase-en.srt",
+      "bytes": 1319,
+      "sha256": "8ebc6ea8d1b654c6ef9c4fa352ac4256bcac680af09d274a85ca454233d70f8b"
+    },
+    {
+      "path": "flausen-showcase-1080p.mp4",
+      "bytes": 3136340,
+      "sha256": "5f4eb35ab084d3b70a6f69ab14af3a319e9bfe4b8af76294c63780b8ac9578ea"
+    },
+    {
+      "path": "flausen-phase-one-overview.pdf",
+      "bytes": 5242263,
+      "sha256": "309b41c527c4e69cc73a7cc6da5a6b1a35178807a04a586d19e747dbced718b1"
+    },
+    {
+      "path": "desktop-workflow.mp4",
+      "bytes": 1703717,
+      "sha256": "3a296e1ec02059c2554eee784fe6acd8c7142b7dee1d8f527f3f5eca828719c6"
+    },
+    {
+      "path": "exports/appearance-1080p.png",
+      "bytes": 138950,
+      "sha256": "b5562f46c5cc1b212aee68fb8331e219d35e2b0056d7abf5c8838ed46a919c8f"
+    },
+    {
+      "path": "exports/capture-1080p.png",
+      "bytes": 154788,
+      "sha256": "d4adc2d8908bab5989b397572adea414384ea43940ff8d6b2edf3cc76b1ad13a"
+    },
+    {
+      "path": "exports/clipboard-1080p.png",
+      "bytes": 135169,
+      "sha256": "8f0cca6fe66821ee2eb03b661bc901a2aa74fd046db1bcb9fdc07033858f2d58"
+    },
+    {
+      "path": "exports/end-1080p.png",
+      "bytes": 205289,
+      "sha256": "1899cd92029209179adf744991a52c423ffc7b19de3c086bce6e41c708111741"
+    },
+    {
+      "path": "exports/hermes-1080p.png",
+      "bytes": 123400,
+      "sha256": "49b838470149316cd20a8f79af9d6eea990578ec9edb57483e2484c98dc7bfd2"
+    },
+    {
+      "path": "exports/intro-1080p.png",
+      "bytes": 188994,
+      "sha256": "c121c219ca43fe1fc2cdd829dd1ba870578c105929c500153f366e7ecb7ccfe8"
+    },
+    {
+      "path": "exports/models-1080p.png",
+      "bytes": 161967,
+      "sha256": "289225c783e9ff4db77e8c83dee2451f8b31edcafcc1b1f38cbe94bc5e6925b5"
+    },
+    {
+      "path": "exports/overview-1.png",
+      "bytes": 188110,
+      "sha256": "c573e5255cdee82c255d978e355a56a88d7ce948c0b3a0ab21d2184290507ac0"
+    },
+    {
+      "path": "exports/overview-2.png",
+      "bytes": 181342,
+      "sha256": "aae046832eff7659d27c4a61182d041c79fa5cee840d53588ecd97f44d4ba1af"
+    },
+    {
+      "path": "exports/overview-3.png",
+      "bytes": 228036,
+      "sha256": "9ef023e88e83985d7fa09fe2f359fea8a08774c4fffb9c8a6eeaf07bd00069e1"
+    },
+    {
+      "path": "exports/overview-4.png",
+      "bytes": 215714,
+      "sha256": "aa125c8b6b7cf9e6a51b4362b9103e820679fe617c940feae2874037dde23533"
+    },
+    {
+      "path": "exports/overview-5.png",
+      "bytes": 229998,
+      "sha256": "965045ebbc5bd400ff630b717d608825e3ff657b1d88dcd004cc263fdf13a024"
+    },
+    {
+      "path": "exports/overview-6.png",
+      "bytes": 213902,
+      "sha256": "0de0d3ab6d1234c89755ff1c6dc906545dd1f8f8dc6e3dab5e22be25afef3297"
+    },
+    {
+      "path": "exports/overview-7.png",
+      "bytes": 213447,
+      "sha256": "b433f410decebe7b71dcd3511c840e4443fd739579b19fb280723921f8779202"
+    },
+    {
+      "path": "exports/overview-8.png",
+      "bytes": 335953,
+      "sha256": "8ab4161aaf98998cef31148aa388ca6946ab563c6f3700b76eb83ac3f75645a3"
+    },
+    {
+      "path": "exports/overview-9.png",
+      "bytes": 338879,
+      "sha256": "52c5aa8b437ab7a0f43133a33aa4b97d2359e964e60af1b376b4ac6fd644ecc7"
+    },
+    {
+      "path": "exports/start-1080p.png",
+      "bytes": 156442,
+      "sha256": "e7fd1f885eaf9a0753485cab6146340f7a173f484f2238f221a79a17616fd4f3"
+    },
+    {
+      "path": "exports/updates-1080p.png",
+      "bytes": 134977,
+      "sha256": "1c054743a1d0d19f1afa9844cd6d71d831348e207ffbbd768ce83de5445c3f6e"
+    },
+    {
+      "path": "screenshots/appearance.png",
+      "bytes": 104743,
+      "sha256": "6bfb2389eec9f4be454bf5d8a0af5fd712da9ce404339d7e24a2b616ae0f44b1"
+    },
+    {
+      "path": "screenshots/audio.png",
+      "bytes": 22784,
+      "sha256": "4e36688b09a64ac3e61aa350c29fa778efb977c0a39fa1971f8bdf012256a429"
+    },
+    {
+      "path": "screenshots/capture.png",
+      "bytes": 54315,
+      "sha256": "f47bff85231dd2dafecb710bab9d39aaf4bd7ea1c964066d8e95043accd6ae64"
+    },
+    {
+      "path": "screenshots/clipboard.png",
+      "bytes": 31748,
+      "sha256": "d9cc37b0ccefa89125748304bab6b6677e5fba5c00a47f8c1555d46c22f4752b"
+    },
+    {
+      "path": "screenshots/clock.png",
+      "bytes": 32460,
+      "sha256": "48aeadb108e789e6da44610c85c6b27b65d1418d12600c7dc76e044f673c9885"
+    },
+    {
+      "path": "screenshots/desktop.png",
+      "bytes": 86215,
+      "sha256": "1d83b2004977fbffb23037491dc71e218fe2cdbf6c493d4955e03db9f559e4db"
+    },
+    {
+      "path": "screenshots/desktop-hero.png",
+      "bytes": 479124,
+      "sha256": "cca00d2c88085fe887d81f8c57a22eaaded03949ba6cb7c1962de108a32aafe9"
+    },
+    {
+      "path": "screenshots/files.png",
+      "bytes": 420232,
+      "sha256": "a7b74e2f940a976959a65282eb89e112a80f7bf7468cc139ca919b5ec61d4ce6"
+    },
+    {
+      "path": "screenshots/floating.png",
+      "bytes": 461835,
+      "sha256": "e50409dcd4bd4fe4bf3d4b3269c2887b11a06ac9e04c5246436194cfa2587f04"
+    },
+    {
+      "path": "screenshots/fullscreen.png",
+      "bytes": 2291257,
+      "sha256": "105103673abd8460076eea0fd072b91eeaf1a6dad540c82da2dfd07059a98a6c"
+    },
+    {
+      "path": "screenshots/hermes-settings.png",
+      "bytes": 142966,
+      "sha256": "ccc73426c541bcad13b69f3060bc94273cce5e5e23e16810ccfe2d741ed5aa6d"
+    },
+    {
+      "path": "screenshots/hermes-vram-preview.png",
+      "bytes": 143000,
+      "sha256": "2bb701640ca2f0d3ebf766b887176ed7dd24ac40679c2e11037c2974185759b4"
+    },
+    {
+      "path": "screenshots/hermes.png",
+      "bytes": 60413,
+      "sha256": "eb680d12f5a7cbc235cd4825003edb569e4275c4379e336b00eae5b22063765a"
+    },
+    {
+      "path": "screenshots/launcher.png",
+      "bytes": 95789,
+      "sha256": "6741996ae3324955d9e90c69127687eac8ff1b7241cac8890f693b50e19c1d55"
+    },
+    {
+      "path": "screenshots/tiling.png",
+      "bytes": 415342,
+      "sha256": "4f130b216b89d330405d1b547322147d6aa171d2b4a5a20ebf9ec600d0c75650"
+    },
+    {
+      "path": "screenshots/untile.png",
+      "bytes": 358601,
+      "sha256": "f192ca7319c3300592de87b6812b999b9345f0d3f1f73212f59b9017fff7783d"
+    },
+    {
+      "path": "screenshots/updates.png",
+      "bytes": 53588,
+      "sha256": "d0b3d03b617a273eb66be612c047de660a72533fbcaee04adec2f88a4ae6096a"
+    },
+    {
+      "path": "source/capture.py",
+      "bytes": 5724,
+      "sha256": "7ce99e2629ebdfda5ad20ccb625648df871dd5bef825fb70fee8fa3e6bd9aee0"
+    },
+    {
+      "path": "source/capture_tools.py",
+      "bytes": 4554,
+      "sha256": "31e4e7a41a7dde646b19559228fad9f1439e42786340f94128f989489359e2ca"
+    },
+    {
+      "path": "source/capture_desktop.py",
+      "bytes": 7175,
+      "sha256": "c036fd8badc7d4548ec6018317c3257030db85ab299c70fe197e7c7af4c20c64"
+    },
+    {
+      "path": "source/build_assets.py",
+      "bytes": 7621,
+      "sha256": "2f07c1d7d5721b101f950bf8c80c92fb755181ad1e3c9188f1027938a9991b4d"
+    },
+    {
+      "path": "source/build_video.py",
+      "bytes": 6316,
+      "sha256": "cbf69afbc5fcb221fcb7dc0ebd143b2fa9aecddd57503d3175c650fb89856b93"
+    },
+    {
+      "path": "source/workflow-markers.json",
+      "bytes": 731,
+      "sha256": "375d47a89c6772c4ecb9eacd0a231303b8fe1a30268d4375003e9b7555f9a5e4"
+    },
+    {
+      "path": "source/background.png",
+      "bytes": 277932,
+      "sha256": "ad37ebdce9822c16f0aaffb081cdd115f0c64354004340596f1b862659c1b1b2"
+    }
+  ]
+}

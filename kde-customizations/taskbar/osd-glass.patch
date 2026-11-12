@@ -1,0 +1,14 @@
+--- modules/drawers/ContentWindow.qml
++++ modules/drawers/ContentWindow.qml
+@@ -491,8 +491,10 @@
+         PanelBg {
+             id: osdBg
+ 
++            // The OSD draws its own translucent glass surface.
++            group: null
+             panel: panels.osdWrapper
+-            deformAmount: 0.25
++            deformAmount: 0
+             x: panels.osdWrapper.x + panels.leftMargin
+             implicitWidth: panels.osdWrapper.width
+         }

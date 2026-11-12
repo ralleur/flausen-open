@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""Start the system Dolphin with its optional, user-local header plugin."""
+import os
+from pathlib import Path
+import sys
+
+env = os.environ.copy()
+plugins = Path.home() / ".local/lib/ralleur/dolphin-header/plugins"
+library = plugins / "generic/libralleurdolphin.so"
+if env.get("RALLEUR_DOLPHIN_HEADER") != "0" and library.is_file():
+    env["RALLEUR_DOLPHIN_PLUGIN_DIR"] = str(plugins)
+    env["QT_PLUGIN_PATH"] = str(plugins) + (":" + env["QT_PLUGIN_PATH"] if env.get("QT_PLUGIN_PATH") else "")
+    generic = env.get("QT_QPA_GENERIC_PLUGINS", "").split(",")
+    if "ralleurdolphin" not in generic:
+        generic.append("ralleurdolphin")
+    env["QT_QPA_GENERIC_PLUGINS"] = ",".join(filter(None, generic))
+os.execve("/usr/bin/dolphin", ["/usr/bin/dolphin", *sys.argv[1:]], env)

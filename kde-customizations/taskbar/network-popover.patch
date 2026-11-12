@@ -1,0 +1,999 @@
+--- modules/bar/popouts/Network.qml
++++ modules/bar/popouts/Network.qml
+@@ -1,6 +1,7 @@
+ pragma ComponentBehavior: Bound
+ 
+ import QtQuick
++import QtQuick.Controls as QQC
+ import QtQuick.Layouts
+ import Quickshell
+ import Caelestia.Config
+@@ -8,576 +9,454 @@
+ import qs.components.controls
+ import qs.services
+ import qs.utils
++import qs.modules.nexus
+ 
+ ColumnLayout {
+     id: root
+-
+     required property PopoutState popouts
+-
+     property string view: "wireless"
+     property var passwordNetwork: null
+     property bool showPasswordDialog: false
+     property bool _isSidebarOpen: false
+-
+-    readonly property var activeDeviceDetails: root.view === "wireless" ? Nmcli.wirelessDeviceDetails : Nmcli.ethernetDeviceDetails
+-    readonly property var activeDetails: {
+-        const d = root.activeDeviceDetails;
+-        if (!d || typeof d !== "object" || Object.keys(d).length === 0)
+-            return { visible: false, rows: [] };
+-
+-        const dnsList = Array.isArray(d.dns) ? d.dns : [];
+-        return {
+-            visible: true,
+-            rows: [
+-                { label: qsTr("IP address"), value: d.ipAddress ?? "" },
+-                { label: qsTr("Subnet mask"), value: d.subnet ?? "" },
+-                { label: qsTr("Gateway"), value: d.gateway ?? "" },
+-                { label: qsTr("DNS"), value: dnsList.join(", ") },
+-                { label: qsTr("MAC address"), value: d.macAddress ?? "" }
+-            ]
+-        };
+-    }
+-
+     property real scaleOffset: 1.0
+     property real fontScale: 1.0
+-
+-    spacing: Tokens.spacing.medium * scaleOffset
+-    // With the sidebar open, match its width so the popout joins it (like the
+-    // narrower popouts do) instead of sticking out past it.
+-    width: _isSidebarOpen ? Math.max(300 * scaleOffset, (Visibilities.sidebarWidthFor(Tokens.sizes.sidebar.width) * scaleOffset) - Tokens.padding.extraLargeIncreased) : 400 * scaleOffset
++    property bool vpnExpanded: false
++    property bool detailsExpanded: false
++    property bool wifiPending: false
++    property string wifiError: ""
++    readonly property color accent: "#287dff"
++    readonly property color muted: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.52 : 0.59)
++    readonly property color rule: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.12 : 0.16)
++    readonly property var sortedNetworks: [...Nmcli.networks].sort((a, b) => a.active !== b.active ? b.active - a.active : b.strength - a.strength)
++    readonly property var deviceDetails: root.view === "wireless" ? Nmcli.wirelessDeviceDetails : Nmcli.ethernetDeviceDetails
++    readonly property var detailRows: {
++        const d = root.deviceDetails;
++        if (!d) return [];
++        return [
++            {label: qsTr("IP address"), value: d.ipAddress || ""},
++            {label: qsTr("Subnet mask"), value: d.subnet || ""},
++            {label: qsTr("Gateway"), value: d.gateway || ""},
++            {label: qsTr("DNS"), value: Array.isArray(d.dns) ? d.dns.join(", ") : ""},
++            {label: qsTr("MAC address"), value: d.macAddress || ""}
++        ].filter(row => row.value);
++    }
++
++    width: 420 * scaleOffset
++    implicitWidth: width
++    spacing: 14 * scaleOffset
++
++    function openSettings(): void {
++        root.popouts.hasCurrent = false;
++        WindowFactory.create(null, {initialPageIdx: Math.max(0, PageRegistry.indexForKey("network"))});
++    }
++    function connectNetwork(network): void {
++        if (network.active) {
++            Nmcli.disconnectFromNetwork();
++            return;
++        }
++        NetworkConnection.handleConnect(network, null, ap => {
++            const snapshot = {ssid: ap.ssid, bssid: ap.bssid || "", isSecure: ap.isSecure ?? true, strength: ap.strength ?? 0};
++            NetworkConnection.passwordNetwork = snapshot;
++            root.passwordNetwork = snapshot;
++            root.showPasswordDialog = true;
++            root.popouts.currentName = "wirelesspassword";
++        });
++    }
+ 
+     RowLayout {
+-        Layout.topMargin: Tokens.padding.small * root.scaleOffset
+-        Layout.leftMargin: Tokens.padding.small * root.scaleOffset
+-        Layout.rightMargin: Tokens.padding.small * root.scaleOffset
+-        Layout.fillWidth: true
+-        spacing: Tokens.spacing.small * root.scaleOffset
+-
++        Layout.fillWidth: true
++        Layout.topMargin: 7 * root.scaleOffset
++        Layout.leftMargin: 6 * root.scaleOffset
++        Layout.rightMargin: 4 * root.scaleOffset
+         StyledText {
+             Layout.fillWidth: true
+             text: qsTr("Network")
++            font.weight: 600
++            font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.65
++        }
++        StyledRect {
++            implicitWidth: 38 * root.scaleOffset
++            implicitHeight: implicitWidth
++            radius: height / 2
++            color: "transparent"
++            MaterialIcon {
++                anchors.centerIn: parent
++                text: "settings"
++                color: root.muted
++                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.2
++            }
++            StateLayer {
++                onClicked: root.openSettings()
++                Accessible.name: qsTr("Network settings")
++                Accessible.role: Accessible.Button
++            }
++            HoverHandler { id: settingsHover }
++            QQC.ToolTip.visible: settingsHover.hovered
++            QQC.ToolTip.delay: 600
++            QQC.ToolTip.text: qsTr("Network settings")
++        }
++    }
++
++    GroupCard {
++        content: [
++            RowLayout {
++                Layout.fillWidth: true
++                Layout.margins: 14 * root.scaleOffset
++                spacing: 16 * root.scaleOffset
++                StyledRect {
++                    implicitWidth: 49 * root.scaleOffset
++                    implicitHeight: implicitWidth
++                    radius: 15 * root.scaleOffset
++                    color: Qt.alpha(root.accent, Colours.light ? 0.2 : 0.25)
++                    MaterialIcon {
++                        anchors.centerIn: parent
++                        text: root.view === "ethernet" ? "lan" : Nmcli.wifiEnabled ? "wifi" : "wifi_off"
++                        color: Colours.light ? "#164994" : "#dce9ff"
++                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.6
++                    }
++                }
++                ColumnLayout {
++                    Layout.fillWidth: true
++                    spacing: 3 * root.scaleOffset
++                    StyledText {
++                        text: root.view === "wireless" ? "Wi-Fi" : qsTr("Ethernet")
++                        font.weight: 600
++                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.12
++                    }
++                    StyledText {
++                        Layout.fillWidth: true
++                        text: root.view === "ethernet" ? (Nmcli.activeEthernet?.iface || qsTr("Nicht verbunden")) : root.wifiPending ? qsTr("Wird umgeschaltet …") : !Nmcli.wifiEnabled ? qsTr("WLAN ist aus") : Nmcli.connectingSsid ? qsTr("Verbinde mit %1 …").arg(Nmcli.connectingSsid) : Nmcli.active?.ssid || qsTr("Nicht verbunden")
++                        color: root.muted
++                        elide: Text.ElideRight
++                        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.95
++                    }
++                }
++                QQC.Switch {
++                    id: wifiSwitch
++                    visible: root.view === "wireless"
++                    checked: Nmcli.wifiEnabled
++                    enabled: !root.wifiPending
++                    padding: 0
++                    implicitWidth: 54 * root.scaleOffset
++                    implicitHeight: 30 * root.scaleOffset
++                    indicator: Rectangle {
++                        width: wifiSwitch.implicitWidth
++                        height: wifiSwitch.implicitHeight
++                        radius: height / 2
++                        color: wifiSwitch.checked ? root.accent : Qt.alpha(Colours.palette.m3onSurface, 0.22)
++                        opacity: wifiSwitch.enabled ? 1 : 0.5
++                        Rectangle {
++                            y: 3 * root.scaleOffset
++                            x: wifiSwitch.checked ? parent.width - width - y : y
++                            width: parent.height - 2 * y
++                            height: width
++                            radius: height / 2
++                            color: "white"
++                            Behavior on x { Anim {} }
++                        }
++                    }
++                    onToggled: {
++                        root.wifiPending = true;
++                        root.wifiError = "";
++                        Nmcli.enableWifi(checked, result => {
++                            root.wifiPending = false;
++                            if (result && result.success === false) root.wifiError = result.error || qsTr("WLAN konnte nicht umgeschaltet werden");
++                        });
++                    }
++                    Accessible.name: qsTr("Wi-Fi")
++                }
++            }
++        ]
++    }
++    StyledText {
++        visible: !!root.wifiError
++        Layout.fillWidth: true
++        text: root.wifiError
++        color: Colours.palette.m3error
++        wrapMode: Text.Wrap
++        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++    }
++
++    RowLayout {
++        Layout.fillWidth: true
++        Layout.leftMargin: 5 * root.scaleOffset
++        Layout.rightMargin: 5 * root.scaleOffset
++        Layout.topMargin: 3 * root.scaleOffset
++        StyledText {
++            Layout.fillWidth: true
++            text: root.view === "wireless" ? qsTr("Verfügbare Netzwerke") : qsTr("Verfügbare Geräte")
++            color: root.muted
+             font.weight: 500
+-            font.pointSize: Tokens.font.title.small.pointSize * root.fontScale
+-        }
+-
+-        IconButton {
+-            icon: "settings"
+-            font: Tokens.font.icon.medium
+-            type: IconButton.Tonal
+-            isRound: true
+-            inactiveColour: Colours.tPalette.m3surfaceContainerHigh
+-            inactiveOnColour: Colours.palette.m3onSurfaceVariant
+-            onClicked: root.popouts.detachRequested("network")
+-        }
++            font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.96
++        }
++        StyledText {
++            text: root.view === "wireless" ? (Nmcli.wifiEnabled ? Nmcli.networks.length : 0) : Nmcli.ethernetDevices.length
++            color: root.muted
++            font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.96
++        }
++    }
++    GroupCard {
++        content: [
++            Repeater {
++                model: ScriptModel { values: root.view === "wireless" ? (Nmcli.wifiEnabled ? root.sortedNetworks.slice(0, 8) : []) : [...Nmcli.ethernetDevices].sort((a,b) => b.connected - a.connected).slice(0,8) }
++                NetworkRow {
++                    required property var modelData
++                    required property int index
++                    label: root.view === "wireless" ? modelData.ssid : modelData.iface || qsTr("Unknown")
++                    symbol: root.view === "wireless" ? (modelData.strength >= 60 ? "wifi" : modelData.strength >= 30 ? "wifi_2_bar" : "wifi_1_bar") : "cable"
++                    selected: root.view === "wireless" ? modelData.active : modelData.connected
++                    secure: root.view === "wireless" && (modelData.isSecure ?? false)
++                    loading: root.view === "wireless" && Nmcli.connectingSsid === modelData.ssid
++                    divider: index > 0
++                    onClicked: {
++                        if (root.view === "wireless") root.connectNetwork(modelData);
++                        else if (modelData.connected && modelData.connection) Nmcli.disconnectEthernet(modelData.connection, () => {});
++                        else Nmcli.connectEthernet(modelData.connection || "", modelData.iface || "", () => {});
++                    }
++                }
++            },
++            StyledText {
++                visible: root.view === "wireless" ? !Nmcli.wifiEnabled || !Nmcli.networks.length : !Nmcli.ethernetDevices.length
++                Layout.fillWidth: true
++                Layout.margins: 18 * root.scaleOffset
++                text: root.view === "ethernet" ? qsTr("No Ethernet devices found") : !Nmcli.wifiEnabled ? qsTr("WLAN einschalten, um Netzwerke zu finden") : Nmcli.scanning ? qsTr("Netzwerke werden gesucht …") : qsTr("Keine Netzwerke gefunden")
++                color: root.muted
++                wrapMode: Text.Wrap
++                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
++            }
++        ]
+     }
+ 
+     StyledRect {
+-        Layout.fillWidth: true
+-        implicitWidth: cardLayout.implicitWidth + Tokens.padding.medium * 2 * root.scaleOffset
+-        implicitHeight: cardLayout.implicitHeight + Tokens.padding.medium * 2 * root.scaleOffset
+-        radius: Tokens.rounding.medium * root.scaleOffset
+-        color: Colours.tPalette.m3surfaceContainer
+-        clip: true
+-
++        visible: root.view === "wireless"
++        Layout.fillWidth: true
++        implicitHeight: Math.max(46 * root.scaleOffset, scanContent.implicitHeight + 16 * root.scaleOffset)
++        radius: 14 * root.scaleOffset
++        color: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.025 : 0.035)
++        border.width: 1
++        border.color: root.rule
++        enabled: Nmcli.wifiEnabled && !Nmcli.scanning
++        opacity: Nmcli.wifiEnabled ? 1 : 0.45
++        RowLayout {
++            id: scanContent
++            anchors.centerIn: parent
++            spacing: 12 * root.scaleOffset
++            MaterialIcon {
++                text: "refresh"
++                color: root.muted
++                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.25
++            }
++            StyledText {
++                text: Nmcli.scanning ? qsTr("Suche läuft …") : qsTr("Erneut suchen")
++                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.03
++            }
++        }
++        StateLayer {
++            disabled: !parent.enabled
++            onClicked: Nmcli.rescanWifi()
++            Accessible.name: qsTr("Erneut suchen")
++            Accessible.role: Accessible.Button
++        }
++    }
++
++    Rectangle {
++        Layout.fillWidth: true
++        Layout.topMargin: 2 * root.scaleOffset
++        implicitHeight: 1
++        color: root.rule
++    }
++    GroupCard {
++        content: [
++            NetworkRow {
++                label: "VPN"
++                subtitle: Nmcli.activeVpn?.name || qsTr("Verbindungen verwalten")
++                symbol: "shield"
++                expanded: root.vpnExpanded
++                expandable: true
++                onClicked: root.vpnExpanded = !root.vpnExpanded
++            },
++            Repeater {
++                model: root.vpnExpanded ? Nmcli.vpnConnections : []
++                NetworkRow {
++                    required property var modelData
++                    label: modelData.name
++                    subtitle: modelData.detail || ""
++                    symbol: "vpn_key"
++                    divider: true
++                    selected: modelData.connected
++                    loading: Nmcli.vpnPendingConnection === modelData.name
++                    onClicked: {
++                        if (modelData.connected) Nmcli.disconnectVpn(modelData.connectionId || modelData.name, () => {});
++                        else Nmcli.connectVpn(modelData.connectionId || modelData.name, () => {});
++                    }
++                }
++            },
++            StyledText {
++                visible: root.vpnExpanded && Nmcli.vpnConnections.length === 0
++                Layout.fillWidth: true
++                Layout.margins: 16 * root.scaleOffset
++                text: qsTr("Keine VPN-Profile vorhanden")
++                color: root.muted
++                font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++            }
++        ]
++    }
++    GroupCard {
++        visible: root.detailRows.length > 0
++        content: [
++            NetworkRow {
++                label: qsTr("Connection details")
++                symbol: "info"
++                expandable: true
++                expanded: root.detailsExpanded
++                onClicked: root.detailsExpanded = !root.detailsExpanded
++            },
++            Repeater {
++                model: root.detailsExpanded ? root.detailRows : []
++                RowLayout {
++                    required property var modelData
++                    Layout.fillWidth: true
++                    Layout.leftMargin: 16 * root.scaleOffset
++                    Layout.rightMargin: 16 * root.scaleOffset
++                    Layout.bottomMargin: 10 * root.scaleOffset
++                    StyledText {
++                        text: modelData.label
++                        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++                    }
++                    StyledText {
++                        Layout.fillWidth: true
++                        text: modelData.value
++                        color: root.muted
++                        horizontalAlignment: Text.AlignRight
++                        elide: Text.ElideRight
++                        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
++                    }
++                }
++            }
++        ]
++    }
++
++    component GroupCard: StyledRect {
++        property alias content: rows.data
++        Layout.fillWidth: true
++        implicitHeight: rows.implicitHeight + 4 * root.scaleOffset
++        radius: 14 * root.scaleOffset
++        color: Qt.alpha(Colours.palette.m3onSurface, Colours.light ? 0.025 : 0.035)
++        border.width: 1
++        border.color: root.rule
+         ColumnLayout {
+-            id: cardLayout
+-
+-            width: parent.width - Tokens.padding.medium * 2 * root.scaleOffset
+-            x: Tokens.padding.medium * root.scaleOffset
+-            y: Tokens.padding.medium * root.scaleOffset
+-            spacing: Tokens.spacing.small * root.scaleOffset
+-
+-    StyledText {
+-        visible: root.view === "wireless"
+-
+-        Layout.topMargin: visible ? Tokens.padding.medium * root.scaleOffset : 0
+-        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+-        text: qsTr("Wireless")
+-        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-    }
+-
+-    StyledText {
+-        visible: root.view === "wireless"
+-
+-        Layout.topMargin: visible ? Tokens.spacing.small * root.scaleOffset : 0
+-        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+-        text: qsTr("%1 networks available").arg(Nmcli.networks.length) // qmllint disable missing-property
+-        color: Colours.palette.m3onSurfaceVariant
+-        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-    }
+-
+-    Repeater {
+-        visible: root.view === "wireless"
+-        model: ScriptModel {
+-            values: [...Nmcli.networks].sort((a, b) => {
+-                if (a.active !== b.active)
+-                    return b.active - a.active;
+-                return b.strength - a.strength;
+-            }).slice(0, 8)
+-        }
+-
+-        StyledRect {
+-            id: networkItem
+-
+-            required property Nmcli.AccessPoint modelData
+-            readonly property bool isConnecting: Nmcli.connectingSsid === modelData?.ssid
+-            readonly property bool loading: networkItem.isConnecting
+-
+-            Layout.fillWidth: true
+-            Layout.preferredWidth: 0
+-            implicitHeight: networkRow.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
+-            visible: root.view === "wireless"
+-            radius: Tokens.rounding.small * root.scaleOffset
+-            color: networkItem.modelData?.active ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+-
+-            RowLayout {
+-                id: networkRow
+-
+-                anchors.left: parent.left
+-                anchors.right: parent.right
+-                anchors.verticalCenter: parent.verticalCenter
+-                anchors.leftMargin: Tokens.padding.medium * root.scaleOffset
+-                anchors.rightMargin: Tokens.padding.medium * root.scaleOffset
+-                spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                MaterialIcon {
+-                    text: Icons.getNetworkIcon(networkItem.modelData?.strength ?? 0)
+-                    color: networkItem.modelData?.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+-                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                }
+-
+-                MaterialIcon {
+-                    visible: networkItem.modelData?.isSecure ?? false
+-                    text: "lock"
+-                    color: Colours.palette.m3onSurfaceVariant
+-                    fontStyle.pointSize: Tokens.font.icon.small.pointSize * root.fontScale
+-                }
+-
++            id: rows
++            anchors.left: parent.left
++            anchors.right: parent.right
++            anchors.top: parent.top
++            anchors.topMargin: 2 * root.scaleOffset
++            spacing: 0
++        }
++    }
++    component NetworkRow: StyledRect {
++        id: row
++        required property string label
++        required property string symbol
++        property string subtitle: ""
++        property bool selected: false
++        property bool secure: false
++        property bool loading: false
++        property bool divider: false
++        property bool expandable: false
++        property bool expanded: false
++        signal clicked
++        Layout.fillWidth: true
++        implicitHeight: Math.max((subtitle ? 68 : 49) * root.scaleOffset, rowContent.implicitHeight + 16 * root.scaleOffset)
++        radius: 13 * root.scaleOffset
++        color: row.selected ? Qt.alpha(root.accent, 0.08) : "transparent"
++        Rectangle {
++            visible: row.divider
++            anchors.top: parent.top
++            anchors.left: parent.left
++            anchors.right: parent.right
++            anchors.leftMargin: 13 * root.scaleOffset
++            anchors.rightMargin: 13 * root.scaleOffset
++            height: 1
++            color: root.rule
++        }
++        RowLayout {
++            id: rowContent
++            anchors.fill: parent
++            anchors.leftMargin: 17 * root.scaleOffset
++            anchors.rightMargin: 16 * root.scaleOffset
++            spacing: 17 * root.scaleOffset
++            MaterialIcon {
++                text: row.symbol
++                color: row.selected ? root.accent : Colours.palette.m3onSurface
++                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale * 1.35
++            }
++            ColumnLayout {
++                Layout.fillWidth: true
++                spacing: 3 * root.scaleOffset
+                 StyledText {
+                     Layout.fillWidth: true
+-                    Layout.preferredWidth: 0
++                    text: row.label
+                     elide: Text.ElideRight
+-                    text: networkItem.modelData?.ssid ?? ""
+-                    color: networkItem.modelData?.active ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-                }
+-
+-                Item {
+-                    Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+-                    Layout.preferredHeight: width
+-
+-                    CircularIndicator {
+-                        anchors.fill: parent
+-                        running: networkItem.loading
+-                    }
+-
+-                    MaterialIcon {
+-                        anchors.centerIn: parent
+-                        text: networkItem.modelData?.active ? "check_circle" : "radio_button_unchecked"
+-                        color: networkItem.modelData?.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                        opacity: networkItem.loading ? 0 : 1
+-                    }
+-                }
+-            }
+-
+-            StateLayer {
+-                anchors.fill: parent
+-                radius: networkItem.radius
+-                disabled: networkItem.loading || !Nmcli.wifiEnabled
+-
+-                onClicked: {
+-                    if (networkItem.modelData?.active) {
+-                        Nmcli.disconnectFromNetwork();
+-                    } else if (networkItem.modelData) {
+-                        NetworkConnection.handleConnect(networkItem.modelData, null, network => {
+-                            const networkSnapshot = {
+-                                ssid: network.ssid,
+-                                bssid: network.bssid || "",
+-                                isSecure: network.isSecure ?? true,
+-                                strength: network.strength ?? 0
+-                            };
+-                            NetworkConnection.passwordNetwork = networkSnapshot;
+-                            root.passwordNetwork = networkSnapshot;
+-                            root.showPasswordDialog = true;
+-                            root.popouts.currentName = "wirelesspassword";
+-                        });
+-
+-                    }
+-                }
+-            }
+-        }
+-    }
+-
+-    StyledRect {
+-        visible: root.view === "wireless"
+-
+-        Layout.topMargin: visible ? Tokens.spacing.small * root.scaleOffset : 0
+-        Layout.fillWidth: true
+-        implicitHeight: rescanBtn.implicitHeight + Tokens.padding.small * root.scaleOffset
+-
+-        radius: Tokens.rounding.full * root.scaleOffset
+-        color: Colours.palette.m3primaryContainer
+-
++                    font.weight: row.selected || row.expandable ? 500 : 400
++                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 1.05
++                }
++                StyledText {
++                    visible: !!row.subtitle
++                    Layout.fillWidth: true
++                    text: row.subtitle
++                    color: root.muted
++                    elide: Text.ElideRight
++                    font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale * 0.9
++                }
++            }
++            MaterialIcon {
++                visible: row.secure
++                text: "lock"
++                color: root.muted
++                fontStyle.pointSize: Tokens.font.icon.small.pointSize * root.fontScale
++            }
++            Item {
++                Layout.preferredWidth: 20 * root.scaleOffset
++                Layout.preferredHeight: width
++                CircularIndicator { anchors.fill: parent; running: row.loading }
++                MaterialIcon {
++                    anchors.centerIn: parent
++                    visible: !row.loading
++                    text: row.expandable ? "expand_more" : row.selected ? "check" : "chevron_right"
++                    rotation: row.expandable && row.expanded ? 180 : 0
++                    color: row.selected ? root.accent : root.muted
++                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
++                    Behavior on rotation { Anim {} }
++                }
++            }
++        }
+         StateLayer {
+-            color: Colours.palette.m3onPrimaryContainer
+-            disabled: Nmcli.scanning || !Nmcli.wifiEnabled
+-            onClicked: Nmcli.rescanWifi()
+-        }
+-
+-        RowLayout {
+-            id: rescanBtn
+-
+-            anchors.centerIn: parent
+-            spacing: Tokens.spacing.small * root.scaleOffset
+-            opacity: Nmcli.scanning ? 0 : 1
+-
+-            MaterialIcon {
+-                id: scanIcon
+-
+-                Layout.topMargin: Math.round(fontInfo.pointSize * 0.0575)
+-                animate: true
+-                text: "wifi_find"
+-                color: Colours.palette.m3onPrimaryContainer
+-                fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-            }
+-
+-            StyledText {
+-                Layout.topMargin: -Math.round(scanIcon.fontInfo.pointSize * 0.0575)
+-                text: qsTr("Rescan networks")
+-                color: Colours.palette.m3onPrimaryContainer
+-                font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-            }
+-
+-            Behavior on opacity {
+-                Anim {
+-                    type: Anim.DefaultEffects
+-                }
+-            }
+-        }
+-
+-        CircularIndicator {
+-            anchors.centerIn: parent
+-            strokeWidth: Tokens.padding.extraSmall / 2 * root.scaleOffset
+-            bgColour: "transparent"
+-            implicitSize: parent.implicitHeight - Tokens.padding.large * root.scaleOffset
+-            running: Nmcli.scanning
+-        }
+-    }
+-
+-    PopoutSection {
+-        Layout.fillWidth: true
+-        Layout.topMargin: Tokens.padding.small * root.scaleOffset
+-        scaleOffset: root.scaleOffset
+-        fontScale: root.fontScale
+-        title: qsTr("VPN")
+-        expanded: false
+-
+-        StyledText {
+-            Layout.topMargin: Tokens.spacing.extraSmall * root.scaleOffset
+-            Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+-            text: qsTr("%1 profiles available").arg(Nmcli.vpnConnections.length)
+-            color: Colours.palette.m3onSurfaceVariant
+-            font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-        }
+-
+-        ListView {
+-            id: vpnList
+-
+-            model: Nmcli.vpnConnections
+-
+-            Layout.fillWidth: true
+-            Layout.leftMargin: Tokens.padding.extraSmall * root.scaleOffset
+-            Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+-
+-            clip: true
+-            interactive: Nmcli.vpnConnections.length > 1
+-            boundsBehavior: Flickable.StopAtBounds
+-            spacing: Tokens.spacing.extraSmall * root.scaleOffset
+-            implicitHeight: Math.min(contentHeight, Tokens.sizes.bar.networkVpnListMaxHeight * root.scaleOffset)
+-
+-            StyledScrollBar.vertical: StyledScrollBar {
+-                flickable: vpnList
+-            }
+-
+-            add: Transition {
+-                Anim {
+-                    property: "opacity"
+-                    from: 0
+-                    to: 1
+-                    type: Anim.FastEffects
+-                }
+-                Anim {
+-                    property: "y"
+-                    type: Anim.FastSpatial
+-                }
+-            }
+-            remove: Transition {
+-                Anim {
+-                    property: "opacity"
+-                    to: 0
+-                    type: Anim.FastEffects
+-                }
+-            }
+-            move: Transition {
+-                Anim {
+-                    property: "y"
+-                    type: Anim.FastSpatial
+-                }
+-            }
+-            displaced: Transition {
+-                Anim {
+-                    property: "y"
+-                    type: Anim.FastSpatial
+-                }
+-            }
+-
+-            delegate: StyledRect {
+-                id: vpnItem
+-
+-                required property var modelData
+-                readonly property bool loading: Nmcli.vpnPendingConnection === modelData?.name
+-
+-                width: ListView.view.width
+-                implicitHeight: vpnRow.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
+-                radius: Tokens.rounding.small * root.scaleOffset
+-                color: vpnItem.modelData?.connected ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+-
+-                RowLayout {
+-                    id: vpnRow
+-
+-                    anchors.left: parent.left
+-                    anchors.right: parent.right
+-                    anchors.verticalCenter: parent.verticalCenter
+-                    anchors.leftMargin: Tokens.padding.medium * root.scaleOffset
+-                    anchors.rightMargin: Tokens.padding.medium * root.scaleOffset
+-                    spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                    MaterialIcon {
+-                        text: "vpn_key"
+-                        color: vpnItem.modelData?.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                    }
+-
+-                    StyledText {
+-                        Layout.fillWidth: true
+-                        Layout.preferredWidth: 0
+-                        elide: Text.ElideRight
+-                        text: vpnItem.modelData?.name ?? ""
+-                        color: vpnItem.modelData?.connected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+-                        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-                    }
+-
+-                    Item {
+-                        Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+-                        Layout.preferredHeight: width
+-
+-                        CircularIndicator {
+-                            anchors.fill: parent
+-                            running: vpnItem.loading
+-                        }
+-
+-                        MaterialIcon {
+-                            anchors.centerIn: parent
+-                            text: vpnItem.modelData?.connected ? "check_circle" : "radio_button_unchecked"
+-                            color: vpnItem.modelData?.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+-                            fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                            opacity: vpnItem.loading ? 0 : 1
+-                        }
+-                    }
+-                }
+-
+-                StateLayer {
+-                    anchors.fill: parent
+-                    radius: vpnItem.radius
+-                    disabled: vpnItem.loading
+-
+-                    onClicked: {
+-                        if (vpnItem.modelData?.connected) {
+-                            Nmcli.disconnectVpn(vpnItem.modelData.name, () => {});
+-                        } else if (vpnItem.modelData?.name) {
+-                            Nmcli.connectVpn(vpnItem.modelData.name, () => {});
+-                        }
+-                    }
+-                }
+-            }
+-        }
+-
+-        StyledText {
+-            visible: Nmcli.vpnConnections.length === 0
+-            Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+-            text: qsTr("No VPN profiles found")
+-            color: Colours.palette.m3onSurfaceVariant
+-            font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-        }
+-    }
+-
+-    StyledText {
+-        visible: root.view === "ethernet"
+-
+-        Layout.topMargin: visible ? Tokens.padding.medium * root.scaleOffset : 0
+-        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+-        text: qsTr("Ethernet")
+-        font.pointSize: Tokens.font.body.medium.pointSize * root.fontScale
+-    }
+-
+-    StyledText {
+-        visible: root.view === "ethernet"
+-
+-        Layout.topMargin: visible ? Tokens.spacing.small * root.scaleOffset : 0
+-        Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+-        text: qsTr("%1 devices available").arg(Nmcli.ethernetDevices.length)
+-        color: Colours.palette.m3onSurfaceVariant
+-        font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-    }
+-
+-    Repeater {
+-        visible: root.view === "ethernet"
+-        model: ScriptModel {
+-            values: [...Nmcli.ethernetDevices].sort((a, b) => {
+-                if (a.connected !== b.connected)
+-                    return b.connected - a.connected;
+-                return (a.iface || "").localeCompare(b.iface || "");
+-            }).slice(0, 8)
+-        }
+-
+-        StyledRect {
+-            id: ethernetItem
+-
+-            required property Nmcli.EthernetDevice modelData
+-            readonly property bool loading: false
+-
+-            Layout.fillWidth: true
+-            Layout.preferredWidth: 0
+-            implicitHeight: ethernetRow.implicitHeight + Tokens.padding.small * 2 * root.scaleOffset
+-            visible: root.view === "ethernet"
+-            radius: Tokens.rounding.small * root.scaleOffset
+-            color: ethernetItem.modelData?.connected ? Colours.tPalette.m3surfaceContainerHigh : "transparent"
+-
+-            RowLayout {
+-                id: ethernetRow
+-
+-                anchors.left: parent.left
+-                anchors.right: parent.right
+-                anchors.verticalCenter: parent.verticalCenter
+-                anchors.leftMargin: Tokens.padding.medium * root.scaleOffset
+-                anchors.rightMargin: Tokens.padding.medium * root.scaleOffset
+-                spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                MaterialIcon {
+-                    text: "cable"
+-                    color: ethernetItem.modelData?.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+-                    fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                }
+-
+-                StyledText {
+-                    Layout.fillWidth: true
+-                    Layout.preferredWidth: 0
+-                    elide: Text.ElideRight
+-                    text: ethernetItem.modelData?.iface || qsTr("Unknown")
+-                    color: ethernetItem.modelData?.connected ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-                }
+-
+-                Item {
+-                    Layout.preferredWidth: Tokens.font.icon.medium.pointSize * root.scaleOffset
+-                    Layout.preferredHeight: width
+-
+-                    CircularIndicator {
+-                        anchors.fill: parent
+-                        running: ethernetItem.loading
+-                    }
+-
+-                    MaterialIcon {
+-                        anchors.centerIn: parent
+-                        text: ethernetItem.modelData?.connected ? "check_circle" : "radio_button_unchecked"
+-                        color: ethernetItem.modelData?.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+-                        fontStyle.pointSize: Tokens.font.icon.medium.pointSize * root.fontScale
+-                        opacity: ethernetItem.loading ? 0 : 1
+-                    }
+-                }
+-            }
+-
+-            StateLayer {
+-                anchors.fill: parent
+-                radius: ethernetItem.radius
+-                disabled: ethernetItem.loading
+-
+-                onClicked: {
+-                    if (ethernetItem.modelData?.connected && ethernetItem.modelData?.connection) {
+-                        Nmcli.disconnectEthernet(ethernetItem.modelData.connection, () => {});
+-                    } else if (ethernetItem.modelData) {
+-                        Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.iface || "", () => {});
+-                    }
+-                }
+-            }
+-        }
+-    }
+-
+-    PopoutSection {
+-        visible: root.activeDetails.visible
+-        Layout.fillWidth: true
+-        Layout.topMargin: visible ? Tokens.padding.medium * root.scaleOffset : 0
+-        scaleOffset: root.scaleOffset
+-        fontScale: root.fontScale
+-        title: qsTr("Connection details")
+-        expanded: false
+-
+-        Repeater {
+-            model: root.activeDetails.rows
+-
+-            RowLayout {
+-                required property var modelData
+-
+-                visible: (modelData?.value ?? "") !== ""
+-
+-                Layout.fillWidth: true
+-                Layout.rightMargin: Tokens.padding.extraSmall * root.scaleOffset
+-                spacing: Tokens.spacing.small * root.scaleOffset
+-
+-                StyledText {
+-                    text: modelData?.label ?? ""
+-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-                }
+-
+-                StyledText {
+-                    Layout.fillWidth: true
+-                    horizontalAlignment: Text.AlignRight
+-                    text: modelData?.value ?? ""
+-                    color: Colours.palette.m3onSurfaceVariant
+-                    elide: Text.ElideRight
+-                    font.pointSize: Tokens.font.body.small.pointSize * root.fontScale
+-                }
+-            }
+-        }
+-    }
+-        }
+-    }
+-
++            disabled: row.loading
++            onClicked: row.clicked()
++            Accessible.name: row.label + (row.selected ? ", " + qsTr("Connected") : "")
++            Accessible.role: Accessible.Button
++        }
++        HoverHandler { id: rowHover }
++        QQC.ToolTip.visible: rowHover.hovered
++        QQC.ToolTip.delay: 800
++        QQC.ToolTip.text: row.label + (row.selected && !row.expandable ? " · " + qsTr("Disconnect") : "")
++    }
+     Connections {
++        target: Nmcli
+         function onActiveChanged(): void {
+-            if (root.showPasswordDialog && root.passwordNetwork && Nmcli.active && Nmcli.active.ssid === root.passwordNetwork.ssid) {
++            if (root.showPasswordDialog && root.passwordNetwork && Nmcli.active?.ssid === root.passwordNetwork.ssid) {
+                 root.showPasswordDialog = false;
+                 root.passwordNetwork = null;
+             }
+         }
+-
+-        function onScanningChanged(): void {
+-            if (!Nmcli.scanning)
+-                scanIcon.rotation = 0;
+-        }
+-
+-        target: Nmcli
+-    }
+-
++    }
+     Connections {
++        target: root.popouts
+         function onCurrentNameChanged(): void {
+             if (root.popouts.currentName !== "wirelesspassword" && root.showPasswordDialog) {
+                 root.showPasswordDialog = false;
+                 root.passwordNetwork = null;
+             }
+         }
+-
+-        target: root.popouts
+     }
+ }

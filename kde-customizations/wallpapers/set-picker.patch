@@ -1,0 +1,187 @@
+--- modules/nexus/pages/wallandstyle/WallpaperSelect.qml
++++ modules/nexus/pages/wallandstyle/WallpaperSelect.qml
+@@ -18,6 +18,31 @@
+ PageBase {
+     id: root
+ 
++    readonly property var wallpaperSets: [
++        { name: "ralleur set", icon: "grid_view", path: Paths.home + "/Bilder/Wallpapers/ralleur-4k/png", preview: "01-nocturne.png" },
++        { name: "flausen dark", icon: "dark_mode", path: Paths.home + "/Bilder/Wallpapers/flausen-4k/dark/png", preview: "01-still-air-dark.png" },
++        { name: "flausen light", icon: "light_mode", path: Paths.home + "/Bilder/Wallpapers/flausen-4k/light/png", preview: "01-still-air-light.png" }
++    ]
++    readonly property var activeWallpaperSet: wallpaperSets.find(set => set.path === Paths.wallsdir.replace(/\/+$/, "")) ?? null
++    readonly property string setPreview: activeWallpaperSet ? activeWallpaperSet.path + "/" + activeWallpaperSet.preview : Wallpapers.fallback
++
++    function selectWallpaperSet(index: int): void {
++        const set = wallpaperSets[index];
++        if (!set)
++            return;
++        root.sortColor = "transparent";
++        root.wallpaperColors = ({});
++        root.colorDistances = ({});
++        GlobalConfig.paths.wallpaperDir = set.path;
++        GlobalConfig.save();
++        gridList.positionViewAtBeginning();
++    }
++
++    property Timer sortDebouncer: Timer {
++        interval: 250
++        onTriggered: root.analyzeColors()
++    }
++
+     property color sortColor: "transparent"
+ 
+     property var colorDistances: ({})
+@@ -67,7 +92,7 @@
+             list.push(categories[cat]);
+         }
+ 
+-        if (root.sortColor !== "transparent") {
++        if (root.sortColor.a > 0) {
+             list.sort((a, b) => {
+                 const distA = root.colorDistances[a.path] ?? 999999;
+                 const distB = root.colorDistances[b.path] ?? 999999;
+@@ -124,7 +149,7 @@
+     scrollable: false
+ 
+     onSortColorChanged: {
+-        if (sortColor === "transparent") {
++        if (sortColor.a === 0) {
+             wallpaperColors = ({});
+             colorDistances = ({});
+         }
+@@ -146,12 +171,56 @@
+             width: gridList.width
+             spacing: Tokens.spacing.small
+ 
+-            Timer {
+-                id: sortDebouncer
+-
+-                interval: 250
+-                onTriggered: {
+-                    root.analyzeColors();
++
++            ColumnLayout {
++                Layout.fillWidth: true
++                Layout.bottomMargin: Tokens.spacing.medium
++                spacing: Tokens.spacing.small
++
++                StyledText {
++                    text: "Wallpaper-Sets"
++                    font: Tokens.font.title.small
++                }
++
++                Flow {
++                    Layout.fillWidth: true
++                    spacing: Tokens.spacing.small
++
++                    Repeater {
++                        id: setButtons
++                        model: root.wallpaperSets
++
++                        IconTextButton {
++                            required property var modelData
++                            required property int index
++
++                            objectName: "wallpaper-set-" + index
++                            icon: modelData.icon
++                            text: modelData.name
++                            type: root.activeWallpaperSet?.path === modelData.path ? IconTextButton.Filled : IconTextButton.Tonal
++                            isRound: true
++                            horizontalPadding: Tokens.padding.large
++                            verticalPadding: Tokens.padding.medium
++                            activeFocusOnTab: true
++                            border.width: activeFocus ? 2 : 0
++                            border.color: Colours.palette.m3onSurface
++                            Accessible.role: Accessible.RadioButton
++                            Accessible.name: modelData.name
++                            Accessible.checked: !!root.activeWallpaperSet && root.activeWallpaperSet.path === modelData.path
++                            Keys.onReturnPressed: clicked()
++                            Keys.onEnterPressed: clicked()
++                            Keys.onSpacePressed: clicked()
++                            onClicked: root.selectWallpaperSet(index)
++                        }
++                    }
++                }
++
++                StyledText {
++                    Layout.fillWidth: true
++                    text: "Die Auswahl gilt auch für Zufall und Diashow."
++                    font: Tokens.font.body.small
++                    color: Colours.palette.m3onSurfaceVariant
++                    wrapMode: Text.WordWrap
+                 }
+             }
+ 
+@@ -183,6 +252,7 @@
+                 }
+ 
+                 IconTextButton {
++                    disabled: Wallpapers.list.length === 0
+                     icon: "shuffle"
+                     text: qsTr("Random")
+                     font: Tokens.font.body.large
+@@ -214,11 +284,11 @@
+                 Layout.topMargin: Tokens.spacing.medium
+                 imgHeight: Math.round(width * 0.3)
+                 radius: Tokens.rounding.extraLarge
+-                source: Wallpapers.fallback
+-                text: qsTr("Featured wallpaper")
++                source: root.setPreview
++                text: root.activeWallpaperSet ? root.activeWallpaperSet.name : qsTr("Featured wallpaper")
+                 fillLabel: false
+                 onClicked: {
+-                    Wallpapers.setWallpaper(Wallpapers.fallback);
++                    Wallpapers.setWallpaper(root.setPreview);
+                     root.nState.closeSubPage();
+                 }
+             }
+@@ -434,7 +504,7 @@
+ 
+             StyledText {
+                 Layout.topMargin: Tokens.spacing.large
+-                text: qsTr("Local wallpapers")
++                text: root.activeWallpaperSet ? root.activeWallpaperSet.name + " · " + Wallpapers.list.length + " Hintergrundbilder" : qsTr("Local wallpapers")
+                 font: Tokens.font.title.small
+             }
+         }
+@@ -461,7 +531,7 @@
+                     enabled: !!modelData
+                     Layout.fillWidth: true
+ 
+-                    isFolder: modelData && modelData.parentDir !== Paths.wallsdir
++                    isFolder: !!modelData && modelData.parentDir !== Paths.wallsdir
+                     folderCount: {
+                         if (!modelData || modelData.parentDir === Paths.wallsdir)
+                             return 0;
+@@ -492,13 +562,13 @@
+                     ImageAnalyser {
+                         id: colorAnalyzer
+ 
+-                        source: (root.sortColor !== "transparent" && wallItem.modelData && wallItem.modelData.parentDir === Paths.wallsdir) ? wallItem.modelData.path : ""
++                        source: (root.sortColor.a > 0 && wallItem.modelData && wallItem.modelData.parentDir === Paths.wallsdir) ? wallItem.modelData.path : ""
+                         rescaleSize: 64
+                         onDominantColourChanged: {
+                             if (wallItem.modelData && dominantColour.a > 0) {
+                                 root.wallpaperColors[wallItem.modelData.path] = dominantColour;
+-                                if (root.sortColor !== "transparent") {
+-                                    sortDebouncer.restart();
++                                if (root.sortColor.a > 0) {
++                                    root.sortDebouncer.restart();
+                                 }
+                             }
+                         }
+--- services/Wallpapers.qml
++++ services/Wallpapers.qml
+@@ -26,7 +26,10 @@
+     property string currentMediaFilter: "All"
+ 
+     property var filteredList: {
+-        const res = wallpapers.entries || [];
++        // Drop entries from the previous root immediately during an asynchronous
++        // folder reload. Random and slideshow must never sample the old set.
++        const base = Paths.wallsdir.replace(/\/+$/, "") + "/";
++        const res = (wallpapers.entries || []).filter(entry => entry.path.startsWith(base));
+         if (currentMediaFilter === "Image") {
+             return res.filter(w => !Images.isVideo(w.relativePath) && !Images.isAnimated(w.relativePath));
+         } else if (currentMediaFilter === "Video") {

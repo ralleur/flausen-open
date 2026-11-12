@@ -1,0 +1,147 @@
+{
+  "saved": true,
+  "width": 520,
+  "height": 312,
+  "rows": [
+    {
+      "text": "screen_record",
+      "font": "Material Symbols Rounded",
+      "size": 20
+    },
+    {
+      "text": "Screen Capture",
+      "font": "Noto Sans",
+      "size": 20.16
+    },
+    {
+      "text": "Ready",
+      "font": "Noto Sans",
+      "size": 9.72
+    },
+    {
+      "text": "fullscreen",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Start",
+      "font": "Noto Sans",
+      "size": 9.72
+    },
+    {
+      "text": "expand_more",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "Record",
+      "font": "Noto Sans",
+      "size": 12
+    },
+    {
+      "text": "Record",
+      "font": "Noto Sans",
+      "size": 12
+    },
+    {
+      "text": "Capture",
+      "font": "Noto Sans",
+      "size": 12
+    },
+    {
+      "text": "Capture",
+      "font": "Noto Sans",
+      "size": 12
+    },
+    {
+      "text": "list",
+      "font": "Material Symbols Rounded",
+      "size": 24
+    },
+    {
+      "text": "Recordings",
+      "font": "Noto Sans",
+      "size": 11.28
+    },
+    {
+      "text": "unfold_more",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "scan_delete",
+      "font": "Material Symbols Rounded",
+      "size": 36
+    },
+    {
+      "text": "scan_delete",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "No recordings found",
+      "font": "Noto Sans",
+      "size": 9.72
+    },
+    {
+      "text": "scan_delete",
+      "font": "Material Symbols Rounded",
+      "size": 36
+    },
+    {
+      "text": "scan_delete",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "No recordings found",
+      "font": "Noto Sans",
+      "size": 9.72
+    },
+    {
+      "text": "list",
+      "font": "Material Symbols Rounded",
+      "size": 24
+    },
+    {
+      "text": "Recordings",
+      "font": "Noto Sans",
+      "size": 11.28
+    },
+    {
+      "text": "unfold_more",
+      "font": "Material Symbols Rounded",
+      "size": 18
+    },
+    {
+      "text": "scan_delete",
+      "font": "Material Symbols Rounded",
+      "size": 36
+    },
+    {
+      "text": "scan_delete",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "No recordings found",
+      "font": "Noto Sans",
+      "size": 9.72
+    },
+    {
+      "text": "scan_delete",
+      "font": "Material Symbols Rounded",
+      "size": 36
+    },
+    {
+      "text": "scan_delete",
+      "font": "Material Symbols Rounded",
+      "size": 15
+    },
+    {
+      "text": "No recordings found",
+      "font": "Noto Sans",
+      "size": 9.72
+    }
+  ]
+}

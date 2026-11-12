@@ -1,0 +1,345 @@
+{
+  "modules/nexus/Nexus.qml": [
+    "4cae3e149da77cab02387b3dfc95b4c0f02731c1766ba287d36ce4a6da83884e",
+    "7f548e2dc89d8fe554e097f20f95fa6ac27e3f7cfeea229f03f10d22a119e9bb"
+  ],
+  "modules/nexus/NavPane.qml": "24f320f58a74b26206a938b0eb5e05c9e50980cca055f02f0a1ef304578270bb",
+  "modules/nexus/WindowFactory.qml": [
+    "45a3cc4cbafbbda241ab507f984e4922867a47946b9c6f1cfbd215a187a5a6b3",
+    "b3fcb5409ede4ef790222ee95d4b186faf9a41a99cdee9426a581d8c0251cb8f"
+  ],
+  "modules/nexus/PageCompRegistry.qml": "393726bfbea11602b08983c8ac3f87ec3e7b021f121759399165b4dbed1265fc",
+  "modules/nexus/PageDictionary.qml": [
+    "c8ab334bbcfc5cf1053aa4d32495864e642bbebe9c22660c21ca7ee50c5cd216",
+    "9deed5af774dffb76f6ebb1d7dc16c520ccc78a1b7235eec90f44ba6d159270a"
+  ],
+  "modules/nexus/navpane/NavLocations.qml": "c5bda036f13b853b32b22d4d0ea5e26a4f9e03d12a14d20bf276add33b0a223f",
+  "modules/nexus/pages/WallpaperAndStyle.qml": "2f7d7d8d4b87a58abd375a207b0f0f1bafb6d65c0e0d9758c4ef33a19fc393c5",
+  "modules/nexus/common/PageBase.qml": [
+    "9b4d067df2c91b472f7e7fc02b398f3bf57dafa9a3d26eefd8b1fe6fb8fe7def",
+    "14b98804d520b9ffa5d365234a505e3c230188ec25bd7cd6caee2f38a78ca4c4"
+  ],
+  "modules/nexus/NexusState.qml": [
+    "0a81fdc2d8621e76513f7602a805077e0b46d903a3ff2035ae3f27a8f3aef47e",
+    "8afa242f9bdff57d26b3837debd5614e62b8c26f0e696334ed527636973509dc",
+    "d34d59714f34ae0c232d66c9f87b74d110efbf59b4478ec53d5cb6ca45add13e"
+  ],
+  "modules/nexus/common/NetworkList.qml": [
+    "83cb7028aa05b33d9f025285507777c459db2e99d0b34d05e62721c69b2fa810"
+  ],
+  "modules/nexus/common/KeyCaptureDialog.qml": [
+    "69fe2f13a9c8d56231096fb06ae21837c585136134fc1260f89e18c6ebc0fd3a"
+  ],
+  "modules/nexus/common/ExpandablePluginRow.qml": [
+    "b2366c1036981cf055ea0e571a22cfe0bfe3044348bd3b2520c49fe100af8021"
+  ],
+  "modules/nexus/common/SelectRow.qml": [
+    "bb67b4a475f7882778f5cfdd62b3bcefd26cc41d4e6f5e87fb8d5c1e14fc7c88"
+  ],
+  "modules/nexus/common/TextFieldRow.qml": [
+    "ee28c231fd9596e6ecec0c8b1dfb8592267c3538978e42b2d6124cf3c8b543cd"
+  ],
+  "modules/nexus/common/ShortcutRow.qml": [
+    "cc4e3ad4b6c0daf3e308a4e9f999f04ccfec8f54f92fb6db6b711db67b11d020"
+  ],
+  "modules/nexus/common/ListEditor.qml": [
+    "5621da89b9c9a06d11e4b3c0e8804677a93efe99d61b4ff0735bca9120ea0031"
+  ],
+  "modules/nexus/common/WallItem.qml": [
+    "a5dbb0fd5f2e0d7705b35ef5859d244b2f5617dbd04a9dbe304bb73169ad9e82"
+  ],
+  "modules/nexus/common/EthernetSection.qml": [
+    "da7778625e394daddfa8bdb84f07fe504627eaadde3e24ad57d494ed79856c9b"
+  ],
+  "modules/nexus/common/PopupRow.qml": [
+    "523e4a9a0d7b889ab9031ea76f8fabfc2ba6b6e7120bf2030f6bd14c2ac30ee0"
+  ],
+  "modules/nexus/common/ToggleRow.qml": [
+    "101d6d9e0909685cda2090c25ccd2c77c8f5ba1fbcdad981c082c2558d97227a"
+  ],
+  "modules/nexus/common/InfoRow.qml": [
+    "b7fba688e3b1754ae2f299019be181b12267be48a9e07bb2fbe7d5c72d6b9590"
+  ],
+  "modules/nexus/common/BlobPopup.qml": [
+    "13473b305415dbb00ea783fb20b449a9f3375595b3f01b21f7818bc4d25e348d"
+  ],
+  "modules/nexus/common/UninstallDialog.qml": [
+    "e260fce250db7ce42ccadfba7c3b98b532a9f648e65bd0052f2ecd2efc1931eb"
+  ],
+  "modules/nexus/common/UpdateTimeline.qml": [
+    "4268240b674fbabc7d31c6f415caa6877de9dcfc20208a7cf5d3c6f6edb27a43"
+  ],
+  "modules/nexus/common/AudioDeviceList.qml": [
+    "3bb3953a60074f20c30d70cda5616110a22be0c564badc5d54a9f141b40be72a"
+  ],
+  "modules/nexus/common/ItemList.qml": [
+    "449b634b2ccf52838a9014f34c71b9c7ec7856c8ac9d9cbbe9b1aa86236ba516"
+  ],
+  "modules/nexus/common/RowButton.qml": [
+    "43480b70d45887fc0613beb5d7a659cc553b54d55627a77618b1265898abb021"
+  ],
+  "modules/nexus/common/ConnectedRect.qml": [
+    "131b59bb4e7f31976bc559960a0ee79f9a7e0b3c23fe8690a1d87064b2932ddc"
+  ],
+  "modules/nexus/common/AnimatedLogo.qml": [
+    "f01221b9fed1e3905c21a4d2ead5976965949ff82fc7f23e59b237eacd28f3d4"
+  ],
+  "modules/nexus/common/SectionHeader.qml": [
+    "eecfe13d3f4423b27cde003c93fd9340360b7fb12a0eed76576c6879b9579930"
+  ],
+  "modules/nexus/common/DialogRowButton.qml": [
+    "f6ba22307ed57e24bea6fd1f8bc65da21473350875155c71efd4a696160e85b6"
+  ],
+  "modules/nexus/common/NavRow.qml": [
+    "8c8e75f325bc257ee7dc60968c6c010bd648280879250b178c81ff600a2f2f53"
+  ],
+  "modules/nexus/common/DoubleStepperRow.qml": [
+    "f321439a5703e5cbc2bd12d1a0390fa60f52339fc577d36227e0798b5c2ecc05"
+  ],
+  "modules/nexus/common/WindowPickerRow.qml": [
+    "660b06c7ed8e8d0889dfcb4d7b2ff63027307e01677de4eaffed768603629ab0"
+  ],
+  "modules/nexus/common/StepperRow.qml": [
+    "df4e02f50df05920cd01f55ad6cd92147fa537eb30b478fc890d0b9f4ed29c4c"
+  ],
+  "modules/nexus/common/DialogSelectButton.qml": [
+    "15cb88ae2b7c1d2a54aa8bffbc0a32b4080c8e6a3c7f463880d7fb8a1226075f"
+  ],
+  "modules/nexus/common/Ipv4ConfigSection.qml": [
+    "acfc2367181535efd9650d133af1edb13a3c4519a7966fbe79e9971536e66ccb"
+  ],
+  "modules/nexus/pages/AboutPage.qml": [
+    "97f5eb1cbdec0d8039772d19408b989196715453cae3ddd4c4048d27b6ecba4a"
+  ],
+  "modules/nexus/pages/AudioPage.qml": [
+    "1d992919b6b162b9eaa4975d1d1d5984c352e4e89fb349e7166f7f1f6de142f5"
+  ],
+  "modules/nexus/pages/DesktopPage.qml": [
+    "ca41de0e3aba1b7589785b88013e54141b80c13b6459fc7a190324f997fd0f00"
+  ],
+  "modules/nexus/pages/UtilitiesPage.qml": [
+    "21c5521df642a4998c2da7145d34ab9ee97595eae297efa8585ecaeeca1d0ba2"
+  ],
+  "modules/nexus/pages/ShortcutManagerPage.qml": [
+    "e42e141cfa86becfd10176f4f7e8d7584d40ea376cd5b3440c4f876521955ab3"
+  ],
+  "modules/nexus/pages/AppsPage.qml": [
+    "68d005d2614ac076bc7398cff5c71348dc0af17c907986958da103e938fb2e69"
+  ],
+  "modules/nexus/pages/SessionPage.qml": [
+    "f3538bb89911126cf1ebc74331d27508890d6e1f5748e8a923f9f58c4375c6a1"
+  ],
+  "modules/nexus/pages/LanguageAndRegion.qml": [
+    "4c47fe81c2fbfdebe85d82e78ba6e324a3c53895744f67c724d590137d549323"
+  ],
+  "modules/nexus/pages/UpdatesPage.qml": [
+    "9a8a89740e6da1747b4492df8019bf23df912482125a771f0579213cdada75a3"
+  ],
+  "modules/nexus/pages/PanelsPage.qml": [
+    "f87bfbbccd452bbfc57c9b9c15cbf7360bddc068dfd8935c64eda6b835205527"
+  ],
+  "modules/nexus/pages/NetworkPage.qml": [
+    "fcb9487d99696e477d6aa63f128e64148443377815031d838f21034a16694c75"
+  ],
+  "modules/nexus/pages/BluetoothPage.qml": [
+    "14bf1e53041ba878d98556acdde16928c6d88ca6987a7abcb76f025bc58ba1ab"
+  ],
+  "modules/nexus/pages/PluginSettingsPopup.qml": [
+    "c4b0b5d7fb9b3e6c100bffc65fe41b3eb38685c83ec6027cb875f794d8fc618c"
+  ],
+  "modules/nexus/pages/ServicesPage.qml": [
+    "56f51007f86ee8e6445e7a8b588e3c867ece03e89f42f4d2f8eac8c8635896a3"
+  ],
+  "modules/nexus/pages/PluginsPage.qml": [
+    "aac1ab8a1c7f9e07e22bae7a9476cedec146453492b175c0bbf574df7ac8d93f"
+  ],
+  "modules/nexus/pages/AiSettingsPage.qml": [
+    "56726e8e7ba5672cbbbb1fedfc11a5f87ed850a6a2685da91a79b32cc604d2bc"
+  ],
+  "modules/nexus/pages/bluetooth/BtDeviceInfo.qml": [
+    "55ef8bf52ff613b2f56d34d575bf9733ec96ac1d018834007fe1c5a8c758d973"
+  ],
+  "modules/nexus/pages/bluetooth/BluetoothPairing.qml": [
+    "4132abe42c326cdd43890739b32e8ec2367a2a50209f4251a348db22b79f5565"
+  ],
+  "modules/nexus/pages/utilities/OsdPage.qml": [
+    "28a4df55ab223faff57ef89acfab0a0fc54be2ad8e1a895a43645ebc09829ea1"
+  ],
+  "modules/nexus/pages/utilities/QuickTogglesPage.qml": [
+    "31ae4a790d55fe8acbcd38617690f4171b8e597ab01cb8c8cdff4412e060d911"
+  ],
+  "modules/nexus/pages/utilities/UtilitiesPanelPage.qml": [
+    "3890314922e7a0a3d4f2ca3b7522ab82360aba5a9efd9ec2901b96141e7b0626"
+  ],
+  "modules/nexus/pages/network/NetworkDetailPage.qml": [
+    "e0b5a5668b94e60b4d4ef3a610a1ed6e6c6e75db468fb22dfe4b29603d05461b"
+  ],
+  "modules/nexus/pages/network/SavedNetworksPage.qml": [
+    "be39218ef2b9cb647ba6427885eccbb2018bf090e97233ed1a22289375e8f205"
+  ],
+  "modules/nexus/pages/network/AddNetworkPage.qml": [
+    "70f412b0335200d21747dd496c0bc29ceca5639be1e9a602a8e2b43e9cd74d11"
+  ],
+  "modules/nexus/pages/network/HotspotPage.qml": [
+    "5c00fa7d2810838529978ceda4b4f219fe7fb39cbe7cedab2a2e9a65328cc107"
+  ],
+  "modules/nexus/pages/network/AllNetworksPage.qml": [
+    "bf4c46dc45850120d696503898e389bc8eb27b826a427023fd9c81e6ceff16b4"
+  ],
+  "modules/nexus/pages/network/EthernetDetailPage.qml": [
+    "ba235afbd2dd26eeda84dee9818f67641604dc0663477059cdf23bab57452036"
+  ],
+  "modules/nexus/pages/network/AddVpnPage.qml": [
+    "6eaa9e248517aedca6065f1833da15dcfdd0412f7d5c899833d6f677e65d5478"
+  ],
+  "modules/nexus/pages/services/NotificationsPage.qml": [
+    "eda9f9cd54d7e3b6082c0ec9df9764d87318e1dabc3671f586ec693c8228af1f"
+  ],
+  "modules/nexus/pages/services/GameModeTargetsPage.qml": [
+    "1a45d19ce89d675b1b709cb4a2ec153d1fedbdf1e5443fe8fa5ba868f2863481"
+  ],
+  "modules/nexus/pages/services/ArpcPage.qml": [
+    "407bcc90166e16d4c72c7fe198b3e6b7b4eb4975cb2f844d4735e5764d75f5bd"
+  ],
+  "modules/nexus/pages/services/NotificationPreferencesPage.qml": [
+    "01fbeb915c4e9e97ced52a7fa36c31a9254d93ce2ee0ce94fa8a658a7f7d14bb"
+  ],
+  "modules/nexus/pages/services/QuickSharePage.qml": [
+    "68a0218b1b2a3a1813ca9663928461c0db44e3560e3da953b6ace9858273ee7d"
+  ],
+  "modules/nexus/pages/services/GameModePage.qml": [
+    "f7c7ceb367ad8f115a642dda57216376857beca78e12bac495fca61416a60e76"
+  ],
+  "modules/nexus/pages/services/ToastPreferencesPage.qml": [
+    "462d26d357713631dee81900ab8a886fe16c696ca108f8d051915fdf3bdc4134"
+  ],
+  "modules/nexus/pages/services/ToastEventsPage.qml": [
+    "405bb2954af58d5db9d1cc8585d74960dc49ee470122b3d5c6dfe1448b0c2a36"
+  ],
+  "modules/nexus/pages/apps/AppInfo.qml": [
+    "480199849f943c2dd713eb536d00886b52cdbac65cf4969db72e0cfc1a83ef49"
+  ],
+  "modules/nexus/pages/apps/AllApps.qml": [
+    "f81f71e25dff69cc242b74c17328d213a313d6e90a5f3a672b6293add5fa20a7"
+  ],
+  "modules/nexus/pages/desktop/KrohnkitePreview.qml": [
+    "09575cb29f15bde063de20cddf4fd7e128cc753bd20a73559e588c3574f4c691"
+  ],
+  "modules/nexus/pages/desktop/KrohnkitePage.qml": [
+    "63858488d6fa4677fcc7924db8860bb71607b6200a3225184737b38cc0c68dba"
+  ],
+  "modules/nexus/pages/audio/AppVolumes.qml": [
+    "cb87168d99ff5c11b9f79a260c5485cbe4479c817abbf7a9c492959e10f81f20"
+  ],
+  "modules/nexus/pages/audio/SoundEffectsPage.qml": [
+    "9557d3b3c8bf2379709ea343f9975d8f4355a915f6ede9b7e624615f753eb2b6"
+  ],
+  "modules/nexus/pages/audio/NotificationSilencingPage.qml": [
+    "ada802cadd3a7b39bdb5e8e4de1308cf9fd17bc7a823f58896dbf6f01cbdad92"
+  ],
+  "modules/nexus/pages/panels/DashboardPanel.qml": [
+    "58d4465b0ad45dc713013d4a3720645ba87fad17fa646457747cbae2d192da9b"
+  ],
+  "modules/nexus/pages/panels/TabSwitcherPanel.qml": [
+    "95fb01e50605a98305e4dd1bbb14efbca68b6053885a629d13ad0ec6c3cd0792"
+  ],
+  "modules/nexus/pages/panels/LauncherPanel.qml": [
+    "bdf97a9b0566fae60a9b1cbc20078fac4f2637a9e99d9cc301538bd9d9bd8e12"
+  ],
+  "modules/nexus/pages/panels/UtilitiesPanel.qml": [
+    "a5883914b46a4cda2561cdf849d5cf35d211b309e8c5e870603a0f5b001d9da7"
+  ],
+  "modules/nexus/pages/panels/OverviewPanel.qml": [
+    "247e4c9df426746d872534944a16322ecba98dc375a09170086c48a272fd17ae"
+  ],
+  "modules/nexus/pages/panels/TaskbarPanel.qml": [
+    "65da307f24db08011773b2467f4e0f1ccd479ab654849568575bf5537d898f07"
+  ],
+  "modules/nexus/pages/wallandstyle/ColourSelect.qml": [
+    "4d954511e6f60149252ead00334951fe5edd57c6627df23100223c87cd9b80a5"
+  ],
+  "modules/nexus/pages/wallandstyle/VideoWallpapersPage.qml": [
+    "62786927630917b645ca0efd0d34a520d978e69c35ae7ad03cbda4d4a5820dd5"
+  ],
+  "modules/nexus/pages/wallandstyle/ContextMenuPage.qml": [
+    "b690f3ad8cd281f4e6065456aebee4f18df1f9dde0c346c1455336a2bf695b17"
+  ],
+  "modules/nexus/pages/wallandstyle/AppearancePage.qml": [
+    "0360c1184920e1f8fb9c6c4626f499504a3a3cfea16bae1aceea34bf5524ef20"
+  ],
+  "modules/nexus/pages/wallandstyle/AddShortcutDialog.qml": [
+    "856002052f7d195af44523f097401f3f7b8747ec74784cf48f1848376782e04b"
+  ],
+  "modules/nexus/pages/wallandstyle/LockScreenPage.qml": [
+    "3fa637ebc8ac5fdaebb24a2ce1f69aea79c0c3b0c2f3a5cb05ef7d862759e940"
+  ],
+  "modules/nexus/pages/wallandstyle/WallpaperSelect.qml": [
+    "ebd866bcb6b115d8c1764f9798acd5caed1bfb405bb6eeaab5b093819b3fd0fe"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarPreviewScales.qml": [
+    "3b7ea7506ce62fca24db24fa634863ea0ae67434c9de45585dea1612beb745ff"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarWeather.qml": [
+    "12393865a57b1a5054df20fa0df5d577c26bc6a13a216262fac3730ca71c480b"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarWorkspaces.qml": [
+    "fa3462f8d74c9fd46dea2a7350f76834c63c814f9cb0084fecaff9e0535f94f6"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarUpdates.qml": [
+    "1d82d183b60b346620c5c91b5e72788cebdf8feceb009758cf2182f959b520c6"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarMedia.qml": [
+    "39a278f3bfeebfee67db5b88b6ae08ac2204e6ef2e861b66b45fb68c283c32be"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarClock.qml": [
+    "8413704b3ed47953dadfab44179ebe19dd50711700d093ee06c07a36007eea43"
+  ],
+  "modules/nexus/pages/panels/taskbar/TaskbarElements.qml": [
+    "891908d87708b4dd77eea9fad40f6f6220547c6b516ccd980f005cf70248ecd4"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarComponents.qml": [
+    "4c56be196b585071424b3edda5d946ab403b8551edc63447df3e7057b62c7283"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarTray.qml": [
+    "a82d5a55e4e758e7a7f9d80f758a0eff3c686e09339edbd57b3d7b59c0778fc3"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarKeepAwake.qml": [
+    "a70320b6257c6b33f3def08aee4dfa9fb2b6bdce5f6dbab118178f9e15bb90ae"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarGithub.qml": [
+    "a2855ec546a01b0fabb78826941e887402064de3246bf77b60334c6dae534dab"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarScreenCapture.qml": [
+    "e8d52a0e53051861e01961209d17d8ba3c307707e396a0cf30ff807d5f630d9d"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarStatusIcons.qml": [
+    "a0409904643f06d29c38222bb87982fce4b5317802d78ca9392fe5e8f02971e0"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarDock.qml": [
+    "bcf9e5e10825a81bb8eca836beab8946e73a8a0404c8e39e2f54d73a0a8b0de9"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarGreeter.qml": [
+    "c5440d8919ee07bccd8c29d9c0529801848aefa8aa3a48f4c27eb1cbfeb55c45"
+  ],
+  "modules/nexus/pages/panels/taskbar/BarPerformance.qml": [
+    "03d838ae9a05a748d175c49aff5f44204e288f325208d3a08215dceb0bbd3f87"
+  ],
+  "modules/nexus/flausen/FlausenStyle.qml": [
+    "0e379958a6d7f81fda165c57ace2254ec112d3511acd2919e4364578c215b5ea"
+  ],
+  "modules/nexus/common/SliderRow.qml": [
+    "96b10e8cc6dc74786cb5fd610de758c8bf2a6b9b377050f82f4f9496052c4426"
+  ],
+  "modules/nexus/common/NexusStyle.qml": [
+    "96ce0db955a9b07e721a2cb2af3b3949304d4fac6a4db13a9a9f70979dab164b"
+  ],
+  "modules/nexus/pages/FlausenSystemPage.qml": [
+    "38826f5767fa5e66b621ac7c011a9a5e8e9d1e0adfa6a53f599ce27dcff2dc33"
+  ],
+  "modules/nexus/PageRegistry.qml": [
+    "7bad34df7b1114312d84954914a368b8b0a57847e0ef70951767760461682cca"
+  ],
+  "modules/nexus/navpane/SearchResults.qml": [
+    "5bdfb86241a68504f7eb33166d6ab5fd303c19f71849039a04a4ff0b85b74b68"
+  ]
+}

@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Build the pinned, original Caelestia + M3Shapes into a user prefix."""
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+
+ROOT=Path(__file__).resolve().parents[1]
+lock=json.loads((ROOT/'config/upstream.lock.json').read_text())
+p=argparse.ArgumentParser(description=__doc__)
+p.add_argument('--workspace',type=Path,default=Path(os.environ.get('XDG_CACHE_HOME',str(Path.home()/'.cache')))/'ralleur-desktop/upstream')
+p.add_argument('--prefix',type=Path,default=Path(os.environ.get('XDG_DATA_HOME',str(Path.home()/'.local/share')))/'ralleur-caelestia-runtime'/lock['tag'])
+p.add_argument('--jobs',type=int,default=4)
+a=p.parse_args(); work=a.workspace.expanduser().resolve(); prefix=a.prefix.expanduser().resolve()
+if prefix == Path('/') or str(prefix).startswith('/usr'): raise SystemExit('Use a private user prefix; this script never needs root.')
+work.mkdir(parents=True,exist_ok=True)
+
+
+def run(*argv): subprocess.run(list(map(str,argv)),check=True)
+
+
+def checkout(name,url,rev):
+    dest=work/name
+    if not dest.exists():
+        run('git','init',dest); run('git','-C',dest,'remote','add','origin',url)
+    current=subprocess.run(['git','-C',str(dest),'rev-parse','HEAD'],text=True,capture_output=True).stdout.strip()
+    if current != rev:
+        if subprocess.check_output(['git','-C',str(dest),'status','--porcelain'],text=True).strip(): raise SystemExit('Refusing to replace dirty checkout: '+str(dest))
+        run('git','-C',dest,'fetch','--depth','1','origin',rev)
+        run('git','-C',dest,'checkout','--detach',rev)
+    return dest
+
+
+src=checkout('shell',lock['repository'],lock['commit'])
+m3=checkout('m3shapes','https://github.com/soramanew/m3shapes.git',lock['m3shapesCommit'])
+cli=checkout('cli','https://github.com/caelestia-dots/cli.git',lock['cliCommit'])
+# New libcava headers add scaling_mode. Detect the actual header, and preserve the
+# legacy linear mode. This is the only upstream source compatibility patch.
+probe='#include <cavacore.h>\nint main(){return cava_init(16,44100,1,1,.85,50,10000)==nullptr;}\n'
+result=subprocess.run(['c++','-x','c++','-fsyntax-only','-'],input=probe,text=True,capture_output=True)
+file=src/'plugin/src/Caelestia/Services/cavaprovider.cpp'
+text=file.read_text(); old='cava_init(m_bars, ac::k_sampleRate, 1, 1, 0.85, 50, 10000)'
+new='cava_init(m_bars, ac::k_sampleRate, 1, 1, 0.85, 50, 10000, 0)'
+if result.returncode and old in text:
+    check=probe.replace('50,10000)', '50,10000,0)')
+    subprocess.run(['c++','-x','c++','-fsyntax-only','-'],input=check,text=True,check=True)
+    file.write_text(text.replace(old,new))
+elif not result.returncode and new in text:
+    file.write_text(text.replace(new,old))
+for source,build,extra in [(m3,work/'m3-build',[]),(src,work/'shell-build',['-DVERSION='+lock['tag'],'-DENABLE_MODULES=plugin;extras'])]:
+    run('cmake','-S',source,'-B',build,'-G','Ninja','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_INSTALL_PREFIX='+str(prefix),'-DINSTALL_QMLDIR=lib/qt6/qml',*extra)
+    run('cmake','--build',build,'--parallel',a.jobs)
+    run('cmake','--install',build)
+run('python3','-m','venv',prefix/'cli')
+run(prefix/'cli/bin/pip','install','-r',ROOT/'config/requirements-cli.txt')
+run(prefix/'cli/bin/pip','install','--no-deps',cli)
+print('\nBuild complete. Install with:')
+print(ROOT/'bin/ralleur','install --upstream',src,'--plugin-prefix',prefix)
