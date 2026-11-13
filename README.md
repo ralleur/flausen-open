@@ -13,8 +13,12 @@ A familiar desktop built on CachyOS, KDE Plasma, KWin and Caelestia.
 
 ## Source availability
 
-This repository contains the public source snapshot. The desktop wallpaper sets,
-brand artwork, screenshots and videos are omitted pending redistribution review.
+This repository contains the public source snapshot and the
+[63 desktop wallpapers in 4K](kde-customizations/wallpapers/README.md):
+[Flausen Light](kde-customizations/wallpapers/flausen/light/png/),
+[Flausen Dark](kde-customizations/wallpapers/flausen/dark/png/) and
+[Ralleur](kde-customizations/wallpapers/png/).
+Other brand artwork, screenshots and videos are omitted pending redistribution review.
 Some desktop components and the website require those assets for their full appearance.
 The source snapshot has no public ISO builds attached.
 

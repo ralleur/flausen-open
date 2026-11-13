@@ -11,6 +11,11 @@ Exporte.
 | flausen dark | [flausen/dark/png/](flausen/dark/png/) | `~/Bilder/Wallpapers/flausen-4k/dark/png/` | 24 |
 | flausen light | [flausen/light/png/](flausen/light/png/) | `~/Bilder/Wallpapers/flausen-4k/light/png/` | 24 |
 
+Die 63 fertigen PNGs sind direkt in diesem öffentlichen Repository enthalten.
+Für ein einzelnes Motiv die Datei auf GitHub öffnen und „Download raw file“
+verwenden. Alle Sets lassen sich über „Code → Download ZIP“ auf der
+[Repository-Startseite](https://github.com/ralleur/flausen-open) herunterladen.
+
 Zur Installation den jeweiligen PNG-Ordner an das Ziel kopieren. Bei einem
 Upgrade den bisherigen PNG-Ordner zuvor beiseitelegen, damit ausgemusterte
 Motive wie „Colour Current“ aus der Bildliste verschwinden.

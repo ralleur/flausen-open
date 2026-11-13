@@ -17,9 +17,11 @@ separately. Each project's license text and copyright notices remain applicable.
 Original flausen. code is licensed under GPL-3.0-or-later.
 Existing component licenses and third-party notices continue to apply. The
 MIT-marked Dolphin folder icons use [the MIT license](LICENSES/MIT.txt).
-The license grant for code excludes project trademarks. Wallpaper sets, brand
-artwork and presentation assets with unresolved rights are omitted from this
-public source snapshot. System fonts come from the distribution.
+The license grant for code excludes project trademarks. The 63 final desktop
+wallpapers in `kde-customizations/wallpapers/` are included with the project
+owner's approval. Other brand artwork and presentation assets with unresolved
+rights are omitted from this public source snapshot.
+System fonts come from the distribution.
 
 API keys, tokens, chat histories, personal desktop configuration and backups are
 not installation payloads. The source snapshot does not bundle gaming clients,
